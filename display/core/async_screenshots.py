@@ -43,7 +43,7 @@ class AsyncScreenshots(object):
         self.headers = self.__default_headers
 
         self.splash_api = SplashApi(
-            (self.config.SPLASH_HOST, self.config.SPLASH_PORT), protocol="http"
+            (self.config.SPLASH_HOST, self.config.SPLASH_PORT), protocol="http", user_agent="GT_Display"
         )
 
         self.current_wd = os.path.dirname(os.path.abspath(__file__))
