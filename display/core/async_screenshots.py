@@ -158,7 +158,7 @@ class AsyncScreenshots(object):
                 headers=self.headers,
                 connector=aiohttp.TCPConnector(verify_ssl=False),
                 timeout=aiohttp.ClientTimeout(
-                    total=15.0, sock_connect=15.0, sock_read=15.0, connect=15.0
+                    total=30.0, sock_connect=30.0, sock_read=30.0, connect=30.0
                 ),
             ) as session:
                 results = await asyncio.gather(

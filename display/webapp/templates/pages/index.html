@@ -33,7 +33,7 @@
                 <div>{{ each['header'] }} <span id="mod_time_{{ each['url']|md5 }}" class="mod_time">{{ each['url']|md5|mod_time }}</span> </div>
                 <img
                         id="img_content_{{ each['url']|md5 }}"
-                        class="img_src {% if each['team'] = 'blue' %} blue_src {% else %} green_src {% endif %}"
+                        class="img_src {% if each['team'] == 'blue' %} blue_src {% else %} green_src {% endif %}"
                         src="{{ url_for('home.get_screenshot', filename=each['url']|md5) }}"
                         title="{{ each['header'] }}"
                 >
@@ -90,7 +90,7 @@
 
   $(window).ready( function() {
 
-      var refresh_time = 30
+      var refresh_time = {{ index_refresh }}
 
       setInterval( function() {
 
@@ -99,7 +99,6 @@
           $('#refresh_time').html(refresh_time);
 
           if (refresh_time === 0) {
-              console.log("Refreshing....");
 
               var elementsDELPLArray = DOMRegex(/^img_content_/);
 
@@ -118,7 +117,7 @@
 
               }
 
-              refresh_time = 30
+              refresh_time = {{ index_refresh }}
           }
 
       }, 1000 );

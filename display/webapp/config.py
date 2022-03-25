@@ -42,3 +42,5 @@ class Config(object):
     REDIS_BACKEND_DB = os.getenv("REDIS_BACKEND_DB", 6)
 
     SCREENSHOT_LOCATION = os.getenv("SCREENSHOT_LOCATION", "/app/data/screenshots/")
+
+    INDEX_REFRESH = os.getenv("INDEX_REFRESH", 60)

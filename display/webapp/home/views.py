@@ -32,6 +32,8 @@ def index():
 
         display_sources = [{}]
 
+    index_refresh = config.INDEX_REFRESH
+
     return render_template("pages/index.html", header="Display", **locals())
 
 
