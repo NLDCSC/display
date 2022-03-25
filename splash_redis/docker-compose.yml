@@ -1,0 +1,75 @@
+version: '3.5'
+
+services:
+
+  ha_proxy:
+    image: display-splash-ha_proxy
+    build:
+      context: .
+      dockerfile: ./ha_proxy
+    hostname: haproxy
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - 8050:8050
+    networks:
+      - frontend
+      - backend
+
+  splash1:
+    image: display-splash1
+    command: --maxrss 4096
+    build:
+      context: .
+      dockerfile: ./splash_screen
+    hostname: splash1
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - backend
+
+  splash2:
+    image: display-splash2
+    command: --maxrss 4096
+    build:
+      context: .
+      dockerfile: ./splash_screen
+    hostname: splash2
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - backend
+
+  splash3:
+    image: display-splash3
+    command: --maxrss 4096
+    build:
+      context: .
+      dockerfile: ./splash_screen
+    hostname: splash3
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - backend
+
+  redis:
+    image: display-redis
+    hostname: redis
+    restart: always
+    build:
+      context: .
+      dockerfile: ./dockerfile-redis
+    volumes:
+      - "../dev_data/redis:/data"
+    expose:
+      - 6379
+    networks:
+      - backend
+
+networks:
+  frontend:
+  backend:

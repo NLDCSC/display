@@ -1,0 +1,21 @@
+FROM python:3.8
+
+COPY . /app
+WORKDIR /app
+
+RUN pip install --upgrade pip
+
+RUN pip install -r requirements.txt
+
+COPY ./.docker/files/flask/install.sh .
+RUN sed -i -e 's/\r$//' ./install.sh
+
+RUN ./install.sh
+
+RUN rm ./install.sh
+
+ENTRYPOINT ["flask"]
+
+CMD ["runserver"]
+
+EXPOSE 5050
