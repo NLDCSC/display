@@ -35,7 +35,7 @@
                         id="img_content_{{ each['url']|md5 }}"
                         class="img_src {% if each['team'] == 'blue' %} blue_src {% else %} green_src {% endif %}"
                         src="{{ url_for('home.get_screenshot', filename=each['url']|md5) }}"
-                        title="{{ each['header'] }}"
+                        title="{{ each['header'] }} | ID: {{ each['url']|md5 }}"
                 >
               </div>
             </div>

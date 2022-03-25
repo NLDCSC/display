@@ -43,4 +43,4 @@ class Config(object):
 
     SCREENSHOT_LOCATION = os.getenv("SCREENSHOT_LOCATION", "/app/data/screenshots/")
 
-    INDEX_REFRESH = os.getenv("INDEX_REFRESH", 60)
+    INDEX_REFRESH = os.getenv("INDEX_REFRESH", 30)

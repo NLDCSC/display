@@ -84,7 +84,7 @@ def general_task_pre_run_config(task_id, task, *args, **kwargs):
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
     # Create screenshots every xx seconds
-    sender.add_periodic_task(120.0, make_screenshots.s())
+    sender.add_periodic_task(90.0, make_screenshots.s())
 
 
 @app.task(
