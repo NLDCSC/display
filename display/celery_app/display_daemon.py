@@ -110,6 +110,9 @@ def make_screenshots():
             f.write(json.dumps([{}]))
 
         display_sources = [{}]
+    except Exception as err:
+        logger.error(f"Unhandled error --> {err}")
+        return
 
     logger.info(f"Got display_sources: {display_sources}")
 

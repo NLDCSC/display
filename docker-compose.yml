@@ -102,7 +102,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=TRUE
     volumes:
-      - "./dev_data/celery_daemon:/app/data"
+      - "./dev_data/flask:/app/data"
     expose:
       - 5671
     networks:
