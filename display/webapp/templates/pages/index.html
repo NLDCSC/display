@@ -25,10 +25,10 @@
           </div>
         </div>
         <div>
-          {% for row in display_sources|batch(4) %}
+          {% for row in display_sources|batch(6) %}
           <div class="row content_row">
             {% for each in row %}
-            <div class="col-md-3 img_col">
+            <div class="col-md-2 img_col">
               <div class="img_wrap">
                 <div>{{ each['header'] }} <span id="mod_time_{{ each['url']|md5 }}" class="mod_time">{{ each['url']|md5|mod_time }}</span> </div>
                 <img
