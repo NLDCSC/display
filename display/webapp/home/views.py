@@ -85,3 +85,5 @@ def get_compare_image(filename):
         return "0"
     except cv2.error:
         return "0"
+    except ValueError:
+        return "0"
