@@ -31,12 +31,14 @@
             <div class="col-md-2 img_col">
               <div class="img_wrap">
                 <div>{{ each['header'] }} <span id="mod_time_{{ each['url']|md5 }}" class="mod_time">{{ each['url']|md5|mod_time }}</span> </div>
-                <img
-                        id="img_content_{{ each['url']|md5 }}"
-                        class="img_src {% if each['team'] == 'blue' %} blue_src {% else %} green_src {% endif %}"
-                        src="{{ url_for('home.get_screenshot', filename=each['url']|md5) }}"
-                        title="{{ each['header'] }} | ID: {{ each['url']|md5 }}"
-                >
+                <a href="{{each['url']}}" target="_blank">
+                  <img
+                          id="img_content_{{ each['url']|md5 }}"
+                          class="img_src {% if each['team'] == 'blue' %} blue_src {% else %} green_src {% endif %}"
+                          src="{{ url_for('home.get_screenshot', filename=each['url']|md5) }}"
+                          title="{{ each['header'] }} | ID: {{ each['url']|md5 }}"
+                  >
+                </a>
               </div>
             </div>
             {% endfor %}
@@ -60,7 +62,7 @@
 
   function getModTime(url, mod_id) {
     return fetchModTime(url).then((data) => {
-        $("#mod_time_" + mod_id).text(data);
+      $("#mod_time_" + mod_id).text(data);
     })
   }
 
@@ -73,54 +75,54 @@
   function getChanged(url, mod_id) {
     return fetchChanged(url).then((data) => {
 
-        if (data === "0") {
-          if(!$("#img_content_" + mod_id).hasClass('red_src')){
-            $("#img_content_" + mod_id).addClass('red_src');
-          }
+      if (data === "0") {
+        if(!$("#img_content_" + mod_id).hasClass('red_src')){
+          $("#img_content_" + mod_id).addClass('red_src');
         }
+      }
 
-        if (data === "1") {
-          if($("#img_content_" + mod_id).hasClass('red_src')){
-            $("#img_content_" + mod_id).removeClass('red_src');
-          }
+      if (data === "1") {
+        if($("#img_content_" + mod_id).hasClass('red_src')){
+          $("#img_content_" + mod_id).removeClass('red_src');
         }
+      }
 
     })
   }
 
   $(window).ready( function() {
 
-      var refresh_time = {{ index_refresh }}
+    var refresh_time = {{ index_refresh }}
 
-      setInterval( function() {
+    setInterval( function() {
 
-          refresh_time--;
+      refresh_time--;
 
-          $('#refresh_time').html(refresh_time);
+      $('#refresh_time').html(refresh_time);
 
-          if (refresh_time === 0) {
+      if (refresh_time === 0) {
 
-              var elementsDELPLArray = DOMRegex(/^img_content_/);
+        var elementsDELPLArray = DOMRegex(/^img_content_/);
 
-              for (i=0; i < elementsDELPLArray.length; i++) {
-                  d = new Date();
-                  clean_src = document.getElementById(elementsDELPLArray[i].id).src.split('?')[0]
-                  $("#" + elementsDELPLArray[i].id).attr("src", clean_src + '?' + d.getTime());
+        for (i=0; i < elementsDELPLArray.length; i++) {
+          d = new Date();
+          clean_src = document.getElementById(elementsDELPLArray[i].id).src.split('?')[0]
+          $("#" + elementsDELPLArray[i].id).attr("src", clean_src + '?' + d.getTime());
 
-                  mod_id = elementsDELPLArray[i].id.split('_')[2]
+          mod_id = elementsDELPLArray[i].id.split('_')[2]
 
-                  mod_src = clean_src.replace('screenshot', 'mod_time')
-                  changed_src = clean_src.replace('screenshot', 'compare_image')
+          mod_src = clean_src.replace('screenshot', 'mod_time')
+          changed_src = clean_src.replace('screenshot', 'compare_image')
 
-                  getModTime(mod_src, mod_id);
-                  getChanged(changed_src, mod_id)
+          getModTime(mod_src, mod_id);
+          getChanged(changed_src, mod_id)
 
-              }
+        }
 
-              refresh_time = {{ index_refresh }}
-          }
+        refresh_time = {{ index_refresh }}
+      }
 
-      }, 1000 );
+    }, 1000 );
   });
 
 </script>
