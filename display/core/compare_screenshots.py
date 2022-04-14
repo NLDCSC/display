@@ -60,7 +60,7 @@ class CompareScreenshots(object):
             f"Compared {imageApath} to {imageBpath} --> MSE: {m} and SSIM: {s}"
         )
 
-        if m == 0.0 and s == 1.0:
+        if m < 1.0 and round(s, 2) == 1.0:
             return True
         else:
             return False
