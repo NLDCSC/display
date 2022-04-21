@@ -2,23 +2,67 @@ version: '3.5'
 
 services:
 
-  flask:
-    image: display-flask
+  flask_lb:
+    image: display-flask_lb
+    build:
+      context: .
+      dockerfile: .docker/images/flask_lb/ha_proxy
+    hostname: flask_lb
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - 127.0.0.1:7000:7000
+    networks:
+      - frontend
+      - backend
+
+  flask1:
+    image: display-flask1
     build:
       context: .
       dockerfile: .docker/images/flask/dockerfile-flask
-    hostname: flask
+    hostname: flask1
     restart: always
     env_file:
       - .env
     environment:
       - PYTHONUNBUFFERED=TRUE
-    ports:
-      - 7000:5050
     volumes:
       - "./dev_data/flask:/app/data"
     networks:
-      - frontend
+      - backend
+
+  flask2:
+    image: display-flask2
+    build:
+      context: .
+      dockerfile: .docker/images/flask/dockerfile-flask
+    hostname: flask2
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=TRUE
+    volumes:
+      - "./dev_data/flask:/app/data"
+    networks:
+      - backend
+
+  flask3:
+    image: display-flask3
+    build:
+      context: .
+      dockerfile: .docker/images/flask/dockerfile-flask
+    hostname: flask3
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=TRUE
+    volumes:
+      - "./dev_data/flask:/app/data"
+    networks:
       - backend
 
   ha_proxy:
@@ -31,7 +75,7 @@ services:
     env_file:
       - .env
     ports:
-      - 8050:8050
+      - 127.0.0.1:8050:8050
     networks:
       - frontend
       - backend
@@ -81,7 +125,7 @@ services:
     build:
       context: .
       dockerfile: .docker/images/splash/splash_screen
-    hostname: splash3
+    hostname: splash4
     restart: always
     env_file:
       - .env
@@ -94,7 +138,7 @@ services:
     build:
       context: .
       dockerfile: .docker/images/splash/splash_screen
-    hostname: splash3
+    hostname: splash5
     restart: always
     env_file:
       - .env
