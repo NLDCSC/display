@@ -19,7 +19,7 @@ services:
 
   splash1:
     image: display-splash1
-    command: --maxrss 4096
+    command: --maxrss 4096 --disable-browser-caches
     build:
       context: .
       dockerfile: ./splash_screen
@@ -32,7 +32,7 @@ services:
 
   splash2:
     image: display-splash2
-    command: --maxrss 4096
+    command: --maxrss 4096 --disable-browser-caches
     build:
       context: .
       dockerfile: ./splash_screen
@@ -45,7 +45,7 @@ services:
 
   splash3:
     image: display-splash3
-    command: --maxrss 4096
+    command: --maxrss 4096 --disable-browser-caches
     build:
       context: .
       dockerfile: ./splash_screen
