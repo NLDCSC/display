@@ -28,9 +28,9 @@ def index():
 
     except FileNotFoundError:
         with open(os.path.join(config.CONFIG_PATH, config.CONFIG_FILE), "w") as f:
-            f.write(json.dumps([{}]))
+            f.write(json.dumps({"none": [{}]}))
 
-        display_sources = [{}]
+        display_sources = {"none": [{}]}
 
     index_refresh = config.INDEX_REFRESH
 

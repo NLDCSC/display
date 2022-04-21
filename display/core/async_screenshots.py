@@ -37,7 +37,17 @@ class AsyncScreenshots(object):
 
         self.logger = logging.getLogger(__name__)
 
-        self.workload = workload
+        self.workload = []
+
+        if isinstance(workload, dict):
+            for key, urls in workload.items():
+                if isinstance(urls, list):
+                    self.workload.extend(urls)
+                else:
+                    raise TypeError(f"Expecting list; got: {type(urls)}")
+        else:
+            raise TypeError(f"Expecting dict; got: {type(workload)}")
+
         self.user_agent = user_agent
 
         self.headers = self.__default_headers
