@@ -1,22 +1,31 @@
 import logging
+import time
+from datetime import datetime
 
-from flask import Flask, render_template
+import colors
+import rfc3339 as rfc3339
+from flask import Flask, render_template, request, g
 from flask_bootstrap import Bootstrap
 from flask_fontawesome import FontAwesome
 
 from display.helpers.app_logger import AppLogger
 from display.webapp.config import Config
 from display.webapp.helpers.utils.times import timestampTOdatetimestring
+from flask_socketio import SocketIO
 
 logging.setLoggerClass(AppLogger)
 
 fa = FontAwesome()
 bootstrap = Bootstrap()
 
+socketio = None
+
 config = Config()
 
 
 def create_app(version):
+    global socketio
+
     app = Flask(
         __name__,
         instance_relative_config=True,
@@ -35,6 +44,8 @@ def create_app(version):
 
     fa.init_app(app)
     bootstrap.init_app(app)
+
+    socketio = SocketIO(app)
 
     from display.webapp.home import home as home_blueprint
 
@@ -74,4 +85,45 @@ def create_app(version):
             500,
         )
 
-    return app
+    @app.before_request
+    def start_timer():
+        g.start = time.time()
+
+    @app.after_request
+    def log_request(response):
+
+        now = time.time()
+        duration = round(now - g.start, 2)
+        dt = datetime.fromtimestamp(now)
+        timestamp = rfc3339.rfc3339(dt, utc=True)
+
+        ip = request.headers.get("X-Forwarded-For", request.remote_addr)
+        host = request.host.split(":", 1)[0]
+        args = dict(request.args)
+
+        log_params = [
+            ("method", request.method, "blue"),
+            ("path", request.path, "blue"),
+            ("status", response.status, "yellow"),
+            ("duration", duration, "green"),
+            ("time", timestamp, "magenta"),
+            ("ip", ip, "gray"),
+            ("host", host, "gray"),
+            ("params", args, "blue"),
+        ]
+
+        request_id = request.headers.get("X-Request-ID")
+        if request_id:
+            log_params.append(("request_id", request_id, "yellow"))
+
+        parts = []
+        for name, value, color in log_params:
+            part = colors.color("{}={}".format(name, value), fg=color)
+            parts.append(part)
+        line = " ".join(parts)
+
+        app.logger.info(line)
+
+        return response
+
+    return app, socketio

@@ -6,22 +6,30 @@
 
 {% block head_scripts %}
     <script type="text/javascript" src="{{ url_for('static', filename='js/sweetalert2/sweetalert2.min.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='js/show_message.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='js/display.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/display.min.js') }}"></script>
+
+    <script type="text/javascript" src="{{ url_for('static', filename='js/socketio/socket.io.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/websocket/client.min.js') }}"></script>
+
+    <script type="text/javascript" src="{{ url_for('static', filename='js/ws_client.min.js') }}"></script>
+
 {% endblock %}
 
 {% block body %}
-    <div class="row full_height">
+    <div class="row full-height">
         <div class="col-12">
-            <div class="card content_card">
+            <div class="card content-card">
                 <div class="card-body">
                     <div class="row margin_bottom">
                         <div class="col-12">
-                            <h4 class="card-title pos_abs">DISPLAY WALL</h4>
-                            <p class="float-right refresh_counter">
-                                Refreshing in:
-                                <span id="refresh_time">30</span>
-                            </p>
+                            <h4 class="card-title pos-abs">DISPLAY WALL</h4>
+                            <div class="float-right">
+                                <span id="con_status" class="badge badge-danger float-right menu_badge conn-pads">CONN</span>
+                                <div class="float-right con-details">
+                                    <a>Async mode: <b><span id="async_mode">{{ async_mode }}</span></b></a><br/>
+                                    <a>Average latency: <b><span id="ping_pong"></span>ms</b></a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div>
@@ -37,15 +45,15 @@
                             {% for key in  display_sources %}
                                 <div class="tab-pane fade {% if loop.first %} show active {% endif %}" id="{{ key }}" role="tabpanel" aria-labelledby="{{ key }}-tab">
                                     {% for row in display_sources[key]|batch(6) %}
-                                        <div class="row content_row">
+                                        <div class="row content-row">
                                             {% for each in row %}
-                                                <div class="col-md-2 img_col">
-                                                    <div class="img_wrap">
-                                                        <div>{{ each['header'] }} <span id="mod_time_{{ each['url']|md5 }}" class="mod_time">{{ each['url']|md5|mod_time }}</span> </div>
+                                                <div class="col-md-2 img-col">
+                                                    <div class="img-wrap">
+                                                        <div>{{ each['header'] }} <span id="mod_time_{{ each['url']|md5 }}" class="mod-time">{{ each['url']|md5|mod_time }}</span> </div>
                                                         <a href="{{each['url']}}" target="_blank">
                                                             <img
                                                                     id="img_content_{{ each['url']|md5 }}"
-                                                                    class="img_src {% if each['team'] == 'blue' %} blue_src {% else %} green_src {% endif %}"
+                                                                    class="img-src {% if each['team'] == 'blue' %} blue-src {% else %} green-src {% endif %}"
                                                                     src="{{ url_for('home.get_screenshot', filename=each['url']|md5) }}"
                                                                     title="{{ each['header'] }} | ID: {{ each['url']|md5 }}"
                                                             >
@@ -66,78 +74,78 @@
 {% endblock %}
 
 {% block body_scripts %}
-    <script>
-        async function fetchModTime(url) {
-            let response = await fetch(url);
-            let data = await response.text();
-            return data;
-
-        }
-
-        function getModTime(url, mod_id) {
-            return fetchModTime(url).then((data) => {
-                $("#mod_time_" + mod_id).text(data);
-            })
-        }
-
-        async function fetchChanged(url) {
-            let response = await fetch(url);
-            let data = await response.text();
-            return data;
-        }
-
-        function getChanged(url, mod_id) {
-            return fetchChanged(url).then((data) => {
-
-                if (data === "0") {
-                    if(!$("#img_content_" + mod_id).hasClass('red_src')){
-                        $("#img_content_" + mod_id).addClass('red_src');
-                    }
-                }
-
-                if (data === "1") {
-                    if($("#img_content_" + mod_id).hasClass('red_src')){
-                        $("#img_content_" + mod_id).removeClass('red_src');
-                    }
-                }
-
-            })
-        }
-
-        $(window).ready( function() {
-
-            var refresh_time = {{ index_refresh }}
-
-                setInterval( function() {
-
-                    refresh_time--;
-
-                    $('#refresh_time').html(refresh_time);
-
-                    if (refresh_time === 0) {
-
-                        var elementsDELPLArray = DOMRegex(/^img_content_/);
-
-                        for (i=0; i < elementsDELPLArray.length; i++) {
-                            d = new Date();
-                            clean_src = document.getElementById(elementsDELPLArray[i].id).src.split('?')[0]
-                            $("#" + elementsDELPLArray[i].id).attr("src", clean_src + '?' + d.getTime());
-
-                            mod_id = elementsDELPLArray[i].id.split('_')[2]
-
-                            mod_src = clean_src.replace('screenshot', 'mod_time')
-                            changed_src = clean_src.replace('screenshot', 'compare_image')
-
-                            getModTime(mod_src, mod_id);
-                            getChanged(changed_src, mod_id)
-
-                        }
-
-                        refresh_time = {{ index_refresh }}
-                    }
-
-                }, 1000 );
-        });
-
-    </script>
+    {#    <script>#}
+    {#       async function fetchModTime(url) {#}
+    {#            let response = await fetch(url);#}
+    {#            let data = await response.text();#}
+    {#            return data;#}
+    {##}
+    {#        }#}
+    {##}
+    {#        function getModTime(url, mod_id) {#}
+    {#            return fetchModTime(url).then((data) => {#}
+    {#                $("#mod_time_" + mod_id).text(data);#}
+    {#            })#}
+    {#        }#}
+    {##}
+    {#        async function fetchChanged(url) {#}
+    {#            let response = await fetch(url);#}
+    {#            let data = await response.text();#}
+    {#            return data;#}
+    {#        }#}
+    {##}
+    {#        function getChanged(url, mod_id) {#}
+    {#            return fetchChanged(url).then((data) => {#}
+    {##}
+    {#                if (data === "0") {#}
+    {#                    if(!$("#img_content_" + mod_id).hasClass('red-src')){#}
+    {#                        $("#img_content_" + mod_id).addClass('red-src');#}
+    {#                    }#}
+    {#                }#}
+    {##}
+    {#                if (data === "1") {#}
+    {#                    if($("#img_content_" + mod_id).hasClass('red-src')){#}
+    {#                        $("#img_content_" + mod_id).removeClass('red-src');#}
+    {#                    }#}
+    {#                }#}
+    {##}
+    {#            })#}
+    {#        }#}
+    {##}
+    {#        $(window).ready( function() {#}
+    {##}
+    {#            var refresh_time = {{ index_refresh }}#}
+    {##}
+    {#            setInterval( function() {#}
+    {##}
+    {#                refresh_time--;#}
+    {##}
+    {#                $('#refresh_time').html(refresh_time);#}
+    {##}
+    {#                if (refresh_time === 0) {#}
+    {##}
+    {#                    var elementsDELPLArray = DOMRegex(/^img_content_/);#}
+    {##}
+    {#                    for (i=0; i < elementsDELPLArray.length; i++) {#}
+    {#                        d = new Date();#}
+    {#                        clean_src = document.getElementById(elementsDELPLArray[i].id).src.split('?')[0]#}
+    {#                        $("#" + elementsDELPLArray[i].id).attr("src", clean_src + '?' + d.getTime());#}
+    {##}
+    {#                        mod_id = elementsDELPLArray[i].id.split('_')[2]#}
+    {##}
+    {#                        mod_src = clean_src.replace('screenshot', 'mod_time')#}
+    {#                        changed_src = clean_src.replace('screenshot', 'compare_image')#}
+    {##}
+    {#                        getModTime(mod_src, mod_id);#}
+    {#                        getChanged(changed_src, mod_id)#}
+    {##}
+    {#                    }#}
+    {##}
+    {#                    refresh_time = {{ index_refresh }}#}
+    {#                    }#}
+    {##}
+    {#                }, 1000 );#}
+    {#        });#}
+    {##}
+    {#    </script>#}
 {% endblock %}
