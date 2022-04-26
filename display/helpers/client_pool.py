@@ -29,12 +29,13 @@ class ClientPool(object):
 
         return self.pool[client_sid]
 
-    @property
     def fetch_client_details(self):
 
-        return {key: value.client_details for (key, value) in self.pool.items()}
+        return {key: value.client_details() for (key, value) in self.pool.items()}
 
-    @property
     def fetch_clients(self):
 
         return [client for client in self.pool.values()]
+
+    def __repr__(self):
+        return f"<< ClientPool >>"

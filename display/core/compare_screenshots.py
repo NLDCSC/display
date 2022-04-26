@@ -56,7 +56,7 @@ class CompareScreenshots(object):
         m = self.mse(imageA, imageB)
         s = ssim(imageA, imageB)
 
-        self.logger.info(
+        self.logger.debug(
             f"Compared {imageApath} to {imageBpath} --> MSE: {m} and SSIM: {s}"
         )
 

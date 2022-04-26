@@ -18,7 +18,7 @@ logging.setLoggerClass(AppLogger)
 fa = FontAwesome()
 bootstrap = Bootstrap()
 
-socketio = None
+socketio = SocketIO()
 
 config = Config()
 
@@ -45,7 +45,7 @@ def create_app(version):
     fa.init_app(app)
     bootstrap.init_app(app)
 
-    socketio = SocketIO(app)
+    socketio.init_app(app, message_queue=app.config["REDIS_URL"])
 
     from display.webapp.home import home as home_blueprint
 

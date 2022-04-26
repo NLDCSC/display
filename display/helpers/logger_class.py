@@ -44,7 +44,7 @@ class HelperLogger(logging.Logger):
                 "formatter": "simpleFormatter",
             }
         },
-        "root": {"level": "DEBUG", "handlers": ["consoleHandler"]},
+        "root": {"level": config.LOG_LEVEL, "handlers": ["consoleHandler"]},
     }
 
     dictConfig(logDict)

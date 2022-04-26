@@ -79,6 +79,7 @@
   float: right;
   color: #7b7b7b;
   font-size: small;
+  transition: all 1.5s ease-out;
 }
 
 .nav-tabs .nav-link {
@@ -86,7 +87,7 @@
   color: #fff;
   border-radius: 0;
   border: 1px solid #2c2e33;
-  padding: 0.5rem 1rem;
+  padding: 0.2rem 1rem;
 }
 
 .card .card-body {
@@ -104,4 +105,20 @@
 
 .conn-pads {
   padding: 0.25em 0.4em;
+}
+
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-item.show .nav-link {
+  color: #fff;
+  background-color: #33601e;
+  border-color: #2c2e33 #2c2e33 black;
+}
+
+.tab-content {
+  padding: 1rem;
+}
+
+.mod-time.active {
+  color: #ead710;
+  transition: all 1.5s ease-out;
 }

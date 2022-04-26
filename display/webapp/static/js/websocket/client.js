@@ -8,18 +8,62 @@ $(document).ready(function () {
     // The callback function is invoked when a connection with the
     // server is established.
     socket.on('connect', function () {
-        var con_stat = document.getElementById("con_status");
+        let con_stat = document.getElementById("con_status");
         con_stat.classList.remove("badge-danger");
         con_stat.classList.add("badge-success");
         socket.emit('async_mode');
+        let elementsTabArray = DOMRegex(/^tab\_/);
+
+        elementsTabArray.forEach(item => {
+            if ($("#" + item.id).hasClass('active')) {
+                let current_selected = item.attributes["data-name"].nodeValue;
+                socket.emit("change_display_tab", {"data": current_selected})
+            }
+        });
     });
 
     socket.on('disconnect', function () {
-        var con_stat = document.getElementById("con_status");
+        let con_stat = document.getElementById("con_status");
         con_stat.classList.remove("badge-success");
         con_stat.classList.add("badge-danger");
         $('#async_mode').text("NA");
         $('#ping_pong').text("NA ");
+    });
+
+    socket.on('push_all_screenshots', function (msg) {
+        msg["data"].forEach(item => {
+
+            let img_content = $("#img_content_" + item.sc_id)
+            let mod_time = $("#mod_time_" + item.sc_id)
+
+            if (item.hasOwnProperty('sc_src')){
+                img_content.attr("src", item.sc_src);
+            }
+
+            mod_time.text(item.mod_time);
+
+            if (item.changed === "0") {
+                if (!img_content.hasClass('red-src')) {
+                    img_content.addClass('red-src');
+                }
+            }
+
+            if (item.changed === "1") {
+                if (img_content.hasClass('red-src')) {
+                    img_content.removeClass('red-src');
+                }
+            }
+
+            mod_time.toggleClass("active");
+            setTimeout(function () {
+                 mod_time.toggleClass("active");
+            },8000);
+
+        })
+    });
+
+    socket.on('config_change', function (msg) {
+        window.location.reload();
     });
 
     socket.on('con_request', function (msg, cb) {
@@ -34,11 +78,6 @@ $(document).ready(function () {
         $('#async_mode').text(msg.data);
 
         if (cb) {
-
-            var response = {
-                client_id: socket.sid,
-                data: msg.data
-            };
             cb(client_id = socket.sid, data = msg.data);
         }
     });
@@ -46,8 +85,8 @@ $(document).ready(function () {
     // Interval function that tests message latency by sending a "ping"
     // message. The server then responds with a "pong" message and the
     // round trip time is measured.
-    var ping_pong_times = [];
-    var start_time;
+    let ping_pong_times = [];
+    let start_time;
     window.setInterval(function () {
         start_time = (new Date).getTime();
         socket.emit('my_ping');
@@ -57,12 +96,13 @@ $(document).ready(function () {
     // time from the ping is stored, and the average of the last 30
     // samples is average and displayed.
     socket.on('my_pong', function () {
-        var latency = (new Date).getTime() - start_time;
+        let latency = (new Date).getTime() - start_time;
         ping_pong_times.push(latency);
         ping_pong_times = ping_pong_times.slice(-30); // keep last 30 samples
-        var sum = 0;
-        for (var i = 0; i < ping_pong_times.length; i++)
-            sum += ping_pong_times[i];
+        let sum = 0;
+        ping_pong_times.forEach(item => {
+            sum += item;
+        });
         $('#ping_pong').text(Math.round(10 * sum / ping_pong_times.length) / 10 + " ");
     });
 

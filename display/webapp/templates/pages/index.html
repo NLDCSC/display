@@ -36,25 +36,25 @@
                         <ul class="nav nav-tabs" id="myTab" role="tablist">
                             {% for key in  display_sources %}
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link {% if loop.first %} active {% endif %}" id="{{ key }}-tab" data-bs-toggle="tab" data-bs-target="#{{ key }}" type="button" role="tab" aria-controls="home" aria-selected="true">
+                                    <button class="nav-link {% if loop.first %} active {% endif %}" id="tab_{{ key|md5 }}" data-name="{{ key }}" data-bs-toggle="tab" data-bs-target="#content_{{ key|md5 }}" type="button" role="tab" aria-controls="home" aria-selected="true">
                                         {{ key }}</button>
                                 </li>
                             {% endfor %}
                         </ul>
                         <div class="tab-content" id="myTabContent">
                             {% for key in  display_sources %}
-                                <div class="tab-pane fade {% if loop.first %} show active {% endif %}" id="{{ key }}" role="tabpanel" aria-labelledby="{{ key }}-tab">
+                                <div class="tab-pane fade {% if loop.first %} show active {% endif %}" id="content_{{ key|md5 }}" role="tabpanel" aria-labelledby="{{ key|md5 }}-tab">
                                     {% for row in display_sources[key]|batch(6) %}
                                         <div class="row content-row">
                                             {% for each in row %}
                                                 <div class="col-md-2 img-col">
                                                     <div class="img-wrap">
-                                                        <div>{{ each['header'] }} <span id="mod_time_{{ each['url']|md5 }}" class="mod-time">{{ each['url']|md5|mod_time }}</span> </div>
+                                                        <div>{{ each['header'] }} <span id="mod_time_{{ each['url']|md5 }}" class="mod-time">never</span> </div>
                                                         <a href="{{each['url']}}" target="_blank">
                                                             <img
                                                                     id="img_content_{{ each['url']|md5 }}"
                                                                     class="img-src {% if each['team'] == 'blue' %} blue-src {% else %} green-src {% endif %}"
-                                                                    src="{{ url_for('home.get_screenshot', filename=each['url']|md5) }}"
+                                                                    src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="  {# JUST A transparent pixel as placeholder #}
                                                                     title="{{ each['header'] }} | ID: {{ each['url']|md5 }}"
                                                             >
                                                         </a>
@@ -74,78 +74,9 @@
 {% endblock %}
 
 {% block body_scripts %}
-    {#    <script>#}
-    {#       async function fetchModTime(url) {#}
-    {#            let response = await fetch(url);#}
-    {#            let data = await response.text();#}
-    {#            return data;#}
-    {##}
-    {#        }#}
-    {##}
-    {#        function getModTime(url, mod_id) {#}
-    {#            return fetchModTime(url).then((data) => {#}
-    {#                $("#mod_time_" + mod_id).text(data);#}
-    {#            })#}
-    {#        }#}
-    {##}
-    {#        async function fetchChanged(url) {#}
-    {#            let response = await fetch(url);#}
-    {#            let data = await response.text();#}
-    {#            return data;#}
-    {#        }#}
-    {##}
-    {#        function getChanged(url, mod_id) {#}
-    {#            return fetchChanged(url).then((data) => {#}
-    {##}
-    {#                if (data === "0") {#}
-    {#                    if(!$("#img_content_" + mod_id).hasClass('red-src')){#}
-    {#                        $("#img_content_" + mod_id).addClass('red-src');#}
-    {#                    }#}
-    {#                }#}
-    {##}
-    {#                if (data === "1") {#}
-    {#                    if($("#img_content_" + mod_id).hasClass('red-src')){#}
-    {#                        $("#img_content_" + mod_id).removeClass('red-src');#}
-    {#                    }#}
-    {#                }#}
-    {##}
-    {#            })#}
-    {#        }#}
-    {##}
-    {#        $(window).ready( function() {#}
-    {##}
-    {#            var refresh_time = {{ index_refresh }}#}
-    {##}
-    {#            setInterval( function() {#}
-    {##}
-    {#                refresh_time--;#}
-    {##}
-    {#                $('#refresh_time').html(refresh_time);#}
-    {##}
-    {#                if (refresh_time === 0) {#}
-    {##}
-    {#                    var elementsDELPLArray = DOMRegex(/^img_content_/);#}
-    {##}
-    {#                    for (i=0; i < elementsDELPLArray.length; i++) {#}
-    {#                        d = new Date();#}
-    {#                        clean_src = document.getElementById(elementsDELPLArray[i].id).src.split('?')[0]#}
-    {#                        $("#" + elementsDELPLArray[i].id).attr("src", clean_src + '?' + d.getTime());#}
-    {##}
-    {#                        mod_id = elementsDELPLArray[i].id.split('_')[2]#}
-    {##}
-    {#                        mod_src = clean_src.replace('screenshot', 'mod_time')#}
-    {#                        changed_src = clean_src.replace('screenshot', 'compare_image')#}
-    {##}
-    {#                        getModTime(mod_src, mod_id);#}
-    {#                        getChanged(changed_src, mod_id)#}
-    {##}
-    {#                    }#}
-    {##}
-    {#                    refresh_time = {{ index_refresh }}#}
-    {#                    }#}
-    {##}
-    {#                }, 1000 );#}
-    {#        });#}
-    {##}
-    {#    </script>#}
+    <script>
+        $(window).ready( function() {
+            SetAllEventListeners();
+        });
+    </script>
 {% endblock %}
