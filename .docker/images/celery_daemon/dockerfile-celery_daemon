@@ -13,8 +13,20 @@ WORKDIR $APP
 # Copy the current directory contents into the container at /app
 ADD . $APP
 
+#RUN apt-get update
+#RUN apt-get -y install python3-dev python3-pip
+
+RUN pip install --upgrade pip
+
 # Install the dependencies
 RUN pip install -r requirements.txt
+
+COPY ./.docker/files/flask/install.sh .
+RUN sed -i -e 's/\r$//' ./install.sh
+
+RUN ./install.sh
+
+RUN rm ./install.sh
 
 # run the command to start the celery daemon
 CMD ["/usr/local/bin/celery", "-A", "display.celery_app.display_daemon", "worker", "--loglevel=INFO", "-B", "-O", "fair" , "--without-heartbeat", "--without-gossip", "--without-mingle"]

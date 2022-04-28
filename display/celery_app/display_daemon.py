@@ -1,13 +1,9 @@
-import hashlib
-
-import redis
 from dotenv import load_dotenv
-from flask_socketio import SocketIO
-
-from display.core.screenshot_handler import ScreenShotHandler
 
 load_dotenv(".env")
 
+import hashlib
+import redis
 import logging
 import json
 import os
@@ -16,7 +12,9 @@ from celery import Celery
 from celery.app.log import TaskFormatter
 from celery.signals import task_prerun, after_setup_task_logger, after_setup_logger
 from celery.utils.log import get_task_logger
+from flask_socketio import SocketIO
 
+from display.core.screenshot_handler import ScreenShotHandler
 from display.helpers.app_logger import AppLogger
 from display.webapp.config import Config
 from display.core.async_screenshots import AsyncScreenshots
@@ -125,7 +123,11 @@ def guard_config():
     host, port = config.REDIS_URL.split("//")[1][:-1].split(":")
 
     with redis.Redis(host=host, port=port, db=7) as conn:
-        former_hash = conn.get("config_hash").decode("utf-8")
+        former_hash = conn.get("config_hash")
+
+        if former_hash is not None:
+            former_hash = former_hash.decode("utf-8")
+
         conn.set("config_hash", current_hash)
 
     logger.info(f"Current_hash: {current_hash} -- Former_hash: {former_hash}")
@@ -178,14 +180,16 @@ def make_screenshots():
     logger.info(f"Finished taking screenshots; processing updates!")
 
     sh = ScreenShotHandler()
-
-    for source in display_sources:
-        tab_data = sh.get_changed_screenshots_per_tab(tab_name=source)
-        socketio.emit(
-            "push_all_screenshots",
-            {"data": tab_data},
-            room=source,
-            namespace="/display",
-        )
+    try:
+        for source in display_sources:
+            tab_data = sh.get_changed_screenshots_per_tab(tab_name=source)
+            socketio.emit(
+                "push_all_screenshots",
+                {"data": tab_data},
+                room=source,
+                namespace="/display",
+            )
+    except Exception as err:
+        logger.error(f"Error processing updates.... --> Produced error: {err}")
 
     logger.info(f"Finished processing updates...")

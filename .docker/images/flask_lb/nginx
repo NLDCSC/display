@@ -1,0 +1,6 @@
+FROM nginx
+COPY .docker/images/flask_lb/nginx.conf /etc/nginx/conf.d/default.conf
+COPY .docker/images/flask_lb/proxy_params /etc/nginx/proxy_params
+
+RUN mkdir -p /app/static
+COPY display/webapp/static /app/static

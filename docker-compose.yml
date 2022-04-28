@@ -2,27 +2,42 @@ version: '3.5'
 
 services:
 
+#  flask_lb:
+#    image: display-flask_lb
+#    build:
+#      context: .
+#      dockerfile: .docker/images/flask_lb/ha_proxy
+#    hostname: flask_lb
+#    restart: always
+#    env_file:
+#      - .env
+#    ports:
+#      - 127.0.0.1:8000:8000
+#    networks:
+#      - frontend
+#      - backend
+
   flask_lb:
     image: display-flask_lb
     build:
       context: .
-      dockerfile: .docker/images/flask_lb/ha_proxy
+      dockerfile: .docker/images/flask_lb/nginx
     hostname: flask_lb
     restart: always
     env_file:
       - .env
     ports:
-      - 127.0.0.1:7000:7000
+      - "127.0.0.1:8000:80"
     networks:
       - frontend
       - backend
 
-  flask1:
-    image: display-flask1
+  flask_web1:
+    image: display-flask_web1
     build:
       context: .
       dockerfile: .docker/images/flask/dockerfile-flask
-    hostname: flask1
+    hostname: flask_web1
     restart: always
     env_file:
       - .env
@@ -33,12 +48,12 @@ services:
     networks:
       - backend
 
-  flask2:
-    image: display-flask2
+  flask_web2:
+    image: display-flask_web2
     build:
       context: .
       dockerfile: .docker/images/flask/dockerfile-flask
-    hostname: flask2
+    hostname: flask_web2
     restart: always
     env_file:
       - .env
@@ -49,12 +64,44 @@ services:
     networks:
       - backend
 
-  flask3:
-    image: display-flask3
+  flask_ws1:
+    image: display-flask_ws1
     build:
       context: .
       dockerfile: .docker/images/flask/dockerfile-flask
-    hostname: flask3
+    hostname: flask_ws1
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=TRUE
+    volumes:
+      - "./dev_data/flask:/app/data"
+    networks:
+      - backend
+
+  flask_ws2:
+    image: display-flask_ws2
+    build:
+      context: .
+      dockerfile: .docker/images/flask/dockerfile-flask
+    hostname: flask_ws2
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=TRUE
+    volumes:
+      - "./dev_data/flask:/app/data"
+    networks:
+      - backend
+
+  flask_ws3:
+    image: display-flask_ws3
+    build:
+      context: .
+      dockerfile: .docker/images/flask/dockerfile-flask
+    hostname: flask_ws3
     restart: always
     env_file:
       - .env
@@ -75,7 +122,7 @@ services:
     env_file:
       - .env
     ports:
-      - 127.0.0.1:8050:8050
+      - "127.0.0.1:8050:8050"
     networks:
       - frontend
       - backend

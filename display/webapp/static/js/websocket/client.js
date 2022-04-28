@@ -63,7 +63,17 @@ $(document).ready(function () {
     });
 
     socket.on('config_change', function (msg) {
-        window.location.reload();
+
+        let flashcontainer = $("#flash-container")
+        let flash = $("#flash")
+
+        flash.text("Configuration change detected; refreshing page in 5 seconds")
+        flashcontainer.fadeIn("slow")
+
+        setTimeout(function () {
+            window.location.reload();
+        }, 5000);
+
     });
 
     socket.on('con_request', function (msg, cb) {

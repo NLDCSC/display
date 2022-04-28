@@ -86,67 +86,83 @@ class AsyncScreenshots(object):
         self.logger.info(f"Processing results: {len(results)}")
 
         for each in results:
-            if isinstance(each, dict):
-                for k, v in each.items():
-                    self.logger.info(f"Processing: {k}")
+            try:
+                if isinstance(each, dict):
+                    for k, v in each.items():
+                        self.logger.info(f"Processing: {k}")
 
-                    if not os.path.exists(self.config.SCREENSHOT_LOCATION):
-                        self.logger.info(f"Creating {self.config.SCREENSHOT_LOCATION}")
-                        os.mkdir(self.config.SCREENSHOT_LOCATION)
+                        if not os.path.exists(self.config.SCREENSHOT_LOCATION):
+                            self.logger.info(
+                                f"Creating {self.config.SCREENSHOT_LOCATION}"
+                            )
+                            os.mkdir(self.config.SCREENSHOT_LOCATION)
 
-                    if not os.path.exists(
-                        os.path.join(self.config.SCREENSHOT_LOCATION, f"{k}.png")
-                    ):
-                        self.logger.info(
-                            f"Creating {os.path.join(self.config.SCREENSHOT_LOCATION, f'{k}.png')}"
-                        )
-                        Path(
+                        if not os.path.exists(
                             os.path.join(self.config.SCREENSHOT_LOCATION, f"{k}.png")
-                        ).touch()
+                        ):
+                            self.logger.info(
+                                f"Creating {os.path.join(self.config.SCREENSHOT_LOCATION, f'{k}.png')}"
+                            )
+                            Path(
+                                os.path.join(
+                                    self.config.SCREENSHOT_LOCATION, f"{k}.png"
+                                )
+                            ).touch()
 
-                    if v[:4] == b"\x89PNG":
-                        # picture taken; process
+                        if v[:4] == b"\x89PNG":
+                            # picture taken; process
 
-                        # First create a copy of the current file and rename to _old
-                        shutil.copyfile(
-                            os.path.join(self.config.SCREENSHOT_LOCATION, f"{k}.png"),
-                            os.path.join(
-                                self.config.SCREENSHOT_LOCATION, f"{k}_old.png"
-                            ),
-                        )
+                            # First create a copy of the current file and rename to _old
+                            shutil.copyfile(
+                                os.path.join(
+                                    self.config.SCREENSHOT_LOCATION, f"{k}.png"
+                                ),
+                                os.path.join(
+                                    self.config.SCREENSHOT_LOCATION, f"{k}_old.png"
+                                ),
+                            )
 
-                        self.logger.info(f"Setting screenshot picture for {k}")
-                        with open(
-                            os.path.join(self.config.SCREENSHOT_LOCATION, f"{k}.png"),
-                            "wb",
-                        ) as f:
-                            f.write(v)
-                    else:
-                        # set to error pic
+                            self.logger.info(f"Setting screenshot picture for {k}")
+                            with open(
+                                os.path.join(
+                                    self.config.SCREENSHOT_LOCATION, f"{k}.png"
+                                ),
+                                "wb",
+                            ) as f:
+                                f.write(v)
+                        else:
+                            # set to error pic
 
-                        # First create a copy of the current file and rename to _old
-                        shutil.copyfile(
-                            os.path.join(self.config.SCREENSHOT_LOCATION, f"{k}.png"),
-                            os.path.join(
-                                self.config.SCREENSHOT_LOCATION, f"{k}_old.png"
-                            ),
-                        )
+                            # First create a copy of the current file and rename to _old
+                            shutil.copyfile(
+                                os.path.join(
+                                    self.config.SCREENSHOT_LOCATION, f"{k}.png"
+                                ),
+                                os.path.join(
+                                    self.config.SCREENSHOT_LOCATION, f"{k}_old.png"
+                                ),
+                            )
 
-                        # retrieve bin data
-                        with open(
-                            os.path.join(
-                                self.current_wd, "../webapp/static/img/error.png"
-                            ),
-                            "rb",
-                        ) as f:
-                            data = f.read()
+                            # retrieve bin data
+                            with open(
+                                os.path.join(
+                                    self.current_wd, "../webapp/static/img/error.png"
+                                ),
+                                "rb",
+                            ) as f:
+                                data = f.read()
 
-                        self.logger.warning(f"Setting error picture for {k}")
-                        with open(
-                            os.path.join(self.config.SCREENSHOT_LOCATION, f"{k}.png"),
-                            "wb",
-                        ) as f:
-                            f.write(data)
+                            self.logger.warning(f"Setting error picture for {k}")
+                            with open(
+                                os.path.join(
+                                    self.config.SCREENSHOT_LOCATION, f"{k}.png"
+                                ),
+                                "wb",
+                            ) as f:
+                                f.write(data)
+            except Exception as err:
+                self.logger.error(f"Error processing {each}, Error produced --> {err}")
+                continue
 
     async def fetch(self, session, entry):
         url_hash = hashlib.md5(entry["url"].encode("utf-8")).hexdigest()[:6]

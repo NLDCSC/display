@@ -1,4 +1,10 @@
 function SetAllEventListeners() {
+
+    $('.nav-tabs').scrollingTabs({
+        cssClassLeftArrow: "mdi mdi-arrow-left-bold",
+        cssClassRightArrow: "mdi mdi-arrow-right-bold"
+    });
+
     let elementsTabArray = DOMRegex(/^tab\_/);
 
     elementsTabArray.forEach(function (elem) {

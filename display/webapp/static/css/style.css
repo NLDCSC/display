@@ -111,7 +111,7 @@
 .nav-tabs .nav-item.show .nav-link {
   color: #fff;
   background-color: #33601e;
-  border-color: #2c2e33 #2c2e33 black;
+  border-color: #2c2e33 #2c2e33 #191c24;
 }
 
 .tab-content {
@@ -121,4 +121,52 @@
 .mod-time.active {
   color: #ead710;
   transition: all 1.5s ease-out;
+}
+
+.flash-container {
+  background: rgb(0 0 0 / 50%);
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  z-index: 1;
+  display: none;
+}
+
+.flash {
+  padding: 25px;
+  border-radius: 15px;
+  background-color: rgb(241 95 7 / 87%);
+  text-align: center;
+  z-index: 2;
+  height: 20vh;
+  width: 40vw;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5rem;
+}
+
+.flash span {
+  display: block;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.scrtabs-tab-scroll-arrow {
+  height: 32px;
+  border: 1px solid #2c2e33;
+  background-color: black;
+  padding-top: 6px;
+  color: white;
+}
+
+.scrtabs-tab-container,
+.scrtabs-tabs-fixed-container {
+  height: 32px;
+}
+
+.scrtabs-tab-scroll-arrow:hover {
+  background-color: #33601e;
 }

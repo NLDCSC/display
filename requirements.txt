@@ -11,7 +11,7 @@ Jinja2==3.1.1
 requests==2.27.1
 aiohttp==3.8.1
 celery[redis]==5.2.6
-numpy==1.21
+numpy==1.21.2
 scikit-image==0.19.2
 opencv-python==4.5.5.64
 rfc3339==6.2

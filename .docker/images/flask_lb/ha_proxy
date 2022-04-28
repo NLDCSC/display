@@ -1,2 +1,0 @@
-FROM haproxy:latest
-COPY .docker/images/flask_lb/haproxy.cfg /usr/local/etc/haproxy/haproxy.cfg
