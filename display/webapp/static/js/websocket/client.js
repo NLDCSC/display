@@ -5,8 +5,6 @@ var socket = io(namespace);
 $(document).ready(function () {
 
     // Event handler for new connections.
-    // The callback function is invoked when a connection with the
-    // server is established.
     socket.on('connect', function () {
         let con_stat = document.getElementById("con_status");
         con_stat.classList.remove("badge-danger");
@@ -22,6 +20,7 @@ $(document).ready(function () {
         });
     });
 
+    // Event handler for disconnecting connections.
     socket.on('disconnect', function () {
         let con_stat = document.getElementById("con_status");
         con_stat.classList.remove("badge-success");
