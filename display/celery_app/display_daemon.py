@@ -145,7 +145,7 @@ def guard_config():
 def make_screenshots():
     logger = get_task_logger(__name__)
 
-    logger.info("Starting screenshot creation!")
+    logger.info("Starting repeating screenshot creation!")
 
     try:
 
@@ -177,3 +177,46 @@ def make_screenshots():
         logger.error(f"Error processing updates.... --> Produced error: {err}")
 
     logger.info(f"Finished processing updates...")
+
+
+@app.task(
+    autoretry_for=(ConnectionResetError,),
+    retry_kwargs={"max_retries": 3},
+    retry_backoff=60,
+    retry_jitter=False,
+    ignore_result=True,
+)
+def create_custom_screenshot(data):
+    logger = get_task_logger(__name__)
+
+    logger.info(f"Starting custom screenshot creation on {data}!")
+
+    sh = ScreenShotHandler()
+
+    url = sh.get_url_by_hash(data["data"])
+
+    display_sources = {sh.get_tab_by_hash(data["data"]): [{"url": url}]}
+
+    logger.info(f"Hash mapped to url: {display_sources}!")
+
+    ss = AsyncScreenshots(display_sources)
+
+    ss.process_async()
+
+    logger.info(f"Finished taking screenshot; processing....")
+
+    try:
+        for source in display_sources:
+            tab_data = sh.get_changed_data_from_custom_screenshots(
+                the_hash=data["data"]
+            )
+            socketio.emit(
+                "push_all_screenshots",
+                {"data": tab_data},
+                room=source,
+                namespace="/display",
+            )
+    except Exception as err:
+        logger.error(f"Error processing screenshot.... --> Produced error: {err}")
+
+    logger.info(f"Finished processing screenshot...")

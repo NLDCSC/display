@@ -24,14 +24,14 @@ class AsyncScreenshots(object):
     It is meant for processing a bulk list of dicts and uses the power of async processing to collect the screenshots
     as quick and efficient as possible.
 
-    :param workload: List with dict containing at minimal a key with the value of 'url' which shall be used to take the
-                     screenshot
-    :type workload: list
+    :param incoming_workload: Dict containing at minimal a key with a value and a list with urls which shall be used to
+                              take the screenshots
+    :type incoming_workload: dict
     :param user_agent: The user agent to use when retrieving the data
     :type user_agent: str
     """
 
-    def __init__(self, workload, user_agent="Display"):
+    def __init__(self, incoming_workload, user_agent="Display"):
 
         self.config = Config()
 
@@ -39,14 +39,14 @@ class AsyncScreenshots(object):
 
         self.workload = []
 
-        if isinstance(workload, dict):
-            for key, urls in workload.items():
+        if isinstance(incoming_workload, dict):
+            for key, urls in incoming_workload.items():
                 if isinstance(urls, list):
                     self.workload.extend(urls)
                 else:
                     raise TypeError(f"Expecting list; got: {type(urls)}")
         else:
-            raise TypeError(f"Expecting dict; got: {type(workload)}")
+            raise TypeError(f"Expecting dict; got: {type(incoming_workload)}")
 
         self.user_agent = user_agent
 

@@ -1,6 +1,4 @@
 import hashlib
-import json
-import os
 from collections import defaultdict
 
 from display.webapp.config import Config
@@ -9,25 +7,24 @@ from display.webapp.helpers.utils.screenshots import (
     get_mod_time,
     get_compare_image,
 )
+from display.webapp.helpers.utils.sources import get_display_sources
 
 
 class ScreenShotHandler(object):
     def __init__(self):
         self.config = Config()
 
-        with open(
-            os.path.join(self.config.CONFIG_PATH, self.config.CONFIG_FILE), "r"
-        ) as f:
-            config_json = json.loads(f.read())
-
-        self.display_sources = config_json
+        self.display_sources = get_display_sources()
 
         self.hash_to_tab_mapping = defaultdict()
 
         self.tab_to_hash_list = defaultdict(list)
 
+        self.hash_to_url_mapping = defaultdict()
+
         self.set_hash_to_tab_mapping()
         self.set_tab_to_hash_list()
+        self.set_hash_to_url_mapping()
 
     def set_hash_to_tab_mapping(self):
 
@@ -38,6 +35,16 @@ class ScreenShotHandler(object):
                 ] = key
 
         self.hash_to_tab_mapping = dict(self.hash_to_tab_mapping)
+
+    def set_hash_to_url_mapping(self):
+
+        for key, value in self.display_sources.items():
+            for item in value:
+                self.hash_to_url_mapping[
+                    hashlib.md5(item["url"].encode("utf-8")).hexdigest()[:6]
+                ] = item["url"]
+
+        self.hash_to_url_mapping = dict(self.hash_to_url_mapping)
 
     def set_tab_to_hash_list(self):
 
@@ -50,6 +57,13 @@ class ScreenShotHandler(object):
 
         try:
             return self.hash_to_tab_mapping[the_hash]
+        except KeyError:
+            return False
+
+    def get_url_by_hash(self, the_hash):
+
+        try:
+            return self.hash_to_url_mapping[the_hash]
         except KeyError:
             return False
 
@@ -108,6 +122,32 @@ class ScreenShotHandler(object):
                 return ret_data
         except KeyError:
             return ret_data
+
+    def get_changed_data_from_custom_screenshots(self, the_hash):
+
+        ret_data = []
+
+        is_changed = get_compare_image(the_hash)
+
+        if is_changed == "0":
+            ret_data.append(
+                {
+                    "sc_id": the_hash,
+                    "sc_src": getB64_screenshot(the_hash),
+                    "mod_time": get_mod_time(the_hash),
+                    "changed": is_changed,
+                }
+            )
+        else:
+            ret_data.append(
+                {
+                    "sc_id": the_hash,
+                    "mod_time": get_mod_time(the_hash),
+                    "changed": is_changed,
+                }
+            )
+
+        return ret_data
 
     def __repr__(self):
         return f"<< ScreenShotHandler >>"

@@ -10,6 +10,7 @@ from display.helpers.logger_class import HelperLogger
 from display.objects.client_connection import ClientConnection
 from display.webapp.helpers.utils.sources import get_display_sources
 from display.webapp.run import socketio
+from display.celery_app.display_daemon import create_custom_screenshot
 
 logging.setLoggerClass(HelperLogger)
 
@@ -165,3 +166,10 @@ def do_rebuild_request():
     )
 
     logger.debug(f"Client details: {req_client.client_details()}")
+
+
+@socketio.on("create_custom_screenshot", namespace="/display")
+def do_change_display_tab(data):
+    logger.info(f"Client: {request.sid} is creating custom screenshot...")
+
+    create_custom_screenshot.delay(data=data)
