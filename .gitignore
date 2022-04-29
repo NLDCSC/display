@@ -140,3 +140,4 @@ cython_debug/
 .idea
 /dev_data/
 /client_secrets.json
+*.pem
