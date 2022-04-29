@@ -34,7 +34,10 @@ try:
 
     logger.info("Trying to start the app...")
 
-    socketio.run(app, port=6050)
+    # socketio.run(app, port=6050)
+    socketio.run(
+        app, port=6050, keyfile="test.key.pem", certfile="test.cert.pem"
+    )
     # app.run()
 
 except Exception:

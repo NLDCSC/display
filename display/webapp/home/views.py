@@ -6,6 +6,7 @@ from display.helpers.app_logger import AppLogger
 from . import home
 from ..config import Config
 from ..helpers.utils.sources import get_display_sources
+from ...core.screenshot_handler import ScreenShotHandler
 
 logging.setLoggerClass(AppLogger)
 
@@ -24,8 +25,12 @@ def index():
 @home.route("/screenshot/<path:filename>")
 def get_screenshot(filename):
     try:
+        sh = ScreenShotHandler()
+
+        sh.set_timestamp_to_picture(filename=filename)
+
         data = send_from_directory(
-            current_app.config["SCREENSHOT_LOCATION"], f"{filename}.png"
+            current_app.config["SCREENSHOT_LOCATION"], f"{filename}_ts.png"
         )
         return data
     except Exception:

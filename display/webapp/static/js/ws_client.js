@@ -16,28 +16,64 @@ function SetAllEventListeners() {
 
     elementsImgArray.forEach(function (elem) {
         let my_id = elem.attributes["data-id"].nodeValue;
-        let my_elem = $("#create_screenshot_" + my_id)
+        let action_elem = $("#actions_" + my_id)
         let target_elem = $("#" + elem.id)
 
         target_elem.hover(function(){
-            my_elem.show()
+            action_elem.show()
         }, function(){
-            my_elem.hide()
+            action_elem.hide()
         });
     });
 
     let elementsCSArray = DOMRegex(/^create\_screenshot\_/);
 
     elementsCSArray.forEach(function (elem) {
+        let my_id = elem.attributes["data-id"].nodeValue;
         let target_elem = $("#" + elem.id)
+        let action_elem = $("#actions_" + my_id)
 
         target_elem.hover(function(){
-            target_elem.show()
+            action_elem.show()
         }, function(){
-            target_elem.hide()
+            action_elem.hide()
         });
 
         elem.addEventListener("click", CreateCustomScreenshot);
+
+    });
+
+    let elementsClipArray = DOMRegex(/^do\_clipboard\_/);
+
+    elementsClipArray.forEach(function (elem) {
+        let my_id = elem.attributes["data-id"].nodeValue;
+        let target_elem = $("#" + elem.id)
+        let action_elem = $("#actions_" + my_id)
+
+        target_elem.hover(function(){
+            action_elem.show()
+        }, function(){
+            action_elem.hide()
+        });
+
+        elem.addEventListener("click", CopyToClipboard);
+
+    });
+
+    let elementsDownloadArray = DOMRegex(/^do\_download\_/);
+
+    elementsDownloadArray.forEach(function (elem) {
+        let my_id = elem.attributes["data-id"].nodeValue;
+        let target_elem = $("#" + elem.id)
+        let action_elem = $("#actions_" + my_id)
+
+        target_elem.hover(function(){
+            action_elem.show()
+        }, function(){
+            action_elem.hide()
+        });
+
+        elem.addEventListener("click", Download);
 
     });
 
@@ -60,4 +96,41 @@ function CreateCustomScreenshot(evt) {
     window.socket.emit("create_custom_screenshot", {"data": screenshot_id})
 
     showMessage("success", "Create screenshot request send!")
+}
+
+function CopyToClipboard(evt) {
+    let attrs = evt.target.attributes;
+
+    let screenshot_id = attrs["data-id"].nodeValue;
+
+    handleScreenshot(BasePath + "/screenshot/" + screenshot_id)
+
+}
+
+function handleScreenshot(url) {
+  async function screenShot() {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const { ClipboardItem } = window;
+      await navigator.clipboard.write([
+        ClipboardItem({ "image/png": blob }),
+      ]);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  screenShot();
+}
+
+function Download(evt) {
+    let attrs = evt.target.attributes;
+
+    let screenshot_id = attrs["data-id"].nodeValue;
+
+    var link = document.createElement("a");
+    link.download = "Download_" + screenshot_id;
+    link.href = BasePath + "/screenshot/" + screenshot_id;
+    link.click();
+
 }

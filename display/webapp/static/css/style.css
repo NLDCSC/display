@@ -171,16 +171,34 @@
   background-color: #33601e;
 }
 
-.create-screenshot {
-  position: absolute;
+div[id^="actions_"] {
   display: none;
+}
+
+.create-screenshot,
+.clipboard,
+.download {
+  position: absolute;
   width: 30px;
   z-index: 1;
   bottom: -15px;
+}
+
+.create-screenshot {
   right: 20px;
 }
 
-.create-screenshot:hover {
+.clipboard {
+  right: 52px;
+}
+
+.download {
+  right: 84px;
+}
+
+.create-screenshot:hover,
+.clipboard:hover,
+.download:hover {
   border: 2px solid yellow;
   cursor: pointer;
 }

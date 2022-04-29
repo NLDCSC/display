@@ -158,26 +158,33 @@ class ScreenShotHandler(object):
 
     def set_timestamp_to_picture(self, filename):
 
-        photo = Image.open(os.path.join(self.config.SCREENSHOT_LOCATION, f"{filename}.png"))
+        photo = Image.open(
+            os.path.join(self.config.SCREENSHOT_LOCATION, f"{filename}.png")
+        )
 
         # Store image width and height
         w, h = photo.size
 
         # make the image editable
         drawing = ImageDraw.Draw(photo)
-        font = ImageFont.truetype(os.path.join(self.current_wd, "../webapp/static/fonts/Roboto/Roboto-Black.ttf"), 30)
+        font = ImageFont.truetype(
+            os.path.join(
+                self.current_wd, "../webapp/static/fonts/Roboto/Roboto-Black.ttf"
+            ),
+            30,
+        )
 
         # get text width and height
-        text = f"    {get_mod_time(filename)}    "
+        text = f"    {get_mod_time(filename, False)}    "
         text_w, text_h = drawing.textsize(text, font)
 
         pos = w - text_w, (h - text_h) - 50
 
-        c_text = Image.new('RGB', (text_w, text_h + 10), color='#000000')
+        c_text = Image.new("RGB", (text_w, text_h + 10), color="#000")
         drawing = ImageDraw.Draw(c_text)
 
         drawing.text((0, 0), text, fill="#FFFF00FF", font=font)
-        c_text.putalpha(100)
+        c_text.putalpha(1000)
 
         photo.paste(c_text, pos, c_text)
         photo.save(os.path.join(self.config.SCREENSHOT_LOCATION, f"{filename}_ts.png"))

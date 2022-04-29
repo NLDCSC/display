@@ -27,7 +27,7 @@ def getB64_screenshot(filename):
         return f"data:image/png;base64, {encoded_string.decode('utf-8')}"
 
 
-def get_mod_time(filename):
+def get_mod_time(filename, no_timezone=True):
     try:
         time = timestampTOdatetimestring(
             int(
@@ -35,7 +35,7 @@ def get_mod_time(filename):
                     os.path.join(config.SCREENSHOT_LOCATION, f"{filename}.png")
                 )
             ),
-            True,
+            no_timezone,
         )
         return time
     except FileNotFoundError:
