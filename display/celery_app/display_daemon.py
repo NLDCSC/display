@@ -6,7 +6,6 @@ import hashlib
 import redis
 import logging
 import json
-import os
 
 from celery import Celery
 from celery.app.log import TaskFormatter
@@ -18,6 +17,7 @@ from display.core.screenshot_handler import ScreenShotHandler
 from display.helpers.app_logger import AppLogger
 from display.webapp.config import Config
 from display.core.async_screenshots import AsyncScreenshots
+from display.webapp.helpers.utils.sources import get_display_sources
 
 
 logging.setLoggerClass(AppLogger)
@@ -101,16 +101,8 @@ def guard_config():
     logger.info("Starting guard config..")
 
     try:
-        with open(os.path.join(config.CONFIG_PATH, config.CONFIG_FILE), "r") as f:
-            config_json = json.loads(f.read())
 
-        display_sources = config_json
-
-    except FileNotFoundError:
-        with open(os.path.join(config.CONFIG_PATH, config.CONFIG_FILE), "w") as f:
-            f.write(json.dumps({"none": [{}]}))
-
-        display_sources = {"none": [{}]}
+        display_sources = get_display_sources()
 
     except Exception as err:
         logger.error(f"Unhandled error --> {err}")
@@ -156,16 +148,8 @@ def make_screenshots():
     logger.info("Starting screenshot creation!")
 
     try:
-        with open(os.path.join(config.CONFIG_PATH, config.CONFIG_FILE), "r") as f:
-            config_json = json.loads(f.read())
 
-        display_sources = config_json
-
-    except FileNotFoundError:
-        with open(os.path.join(config.CONFIG_PATH, config.CONFIG_FILE), "w") as f:
-            f.write(json.dumps({"none": [{}]}))
-
-        display_sources = {"none": [{}]}
+        display_sources = get_display_sources()
 
     except Exception as err:
         logger.error(f"Unhandled error --> {err}")

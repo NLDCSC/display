@@ -30,35 +30,37 @@ $(document).ready(function () {
     });
 
     socket.on('push_all_screenshots', function (msg) {
-        msg["data"].forEach(item => {
+        if (msg["data"] !== null){
+            msg["data"].forEach(item => {
 
-            let img_content = $("#img_content_" + item.sc_id)
-            let mod_time = $("#mod_time_" + item.sc_id)
+                let img_content = $("#img_content_" + item.sc_id)
+                let mod_time = $("#mod_time_" + item.sc_id)
 
-            if (item.hasOwnProperty('sc_src')){
-                img_content.attr("src", item.sc_src);
-            }
-
-            mod_time.text(item.mod_time);
-
-            if (item.changed === "0") {
-                if (!img_content.hasClass('red-src')) {
-                    img_content.addClass('red-src');
+                if (item.hasOwnProperty('sc_src')){
+                    img_content.attr("src", item.sc_src);
                 }
-            }
 
-            if (item.changed === "1") {
-                if (img_content.hasClass('red-src')) {
-                    img_content.removeClass('red-src');
+                mod_time.text(item.mod_time);
+
+                if (item.changed === "0") {
+                    if (!img_content.hasClass('red-src')) {
+                        img_content.addClass('red-src');
+                    }
                 }
-            }
 
-            mod_time.toggleClass("active");
-            setTimeout(function () {
-                 mod_time.toggleClass("active");
-            },8000);
+                if (item.changed === "1") {
+                    if (img_content.hasClass('red-src')) {
+                        img_content.removeClass('red-src');
+                    }
+                }
 
-        })
+                mod_time.toggleClass("active");
+                setTimeout(function () {
+                     mod_time.toggleClass("active");
+                },8000);
+
+            })
+        }
     });
 
     socket.on('config_change', function (msg) {
@@ -66,13 +68,40 @@ $(document).ready(function () {
         let flashcontainer = $("#flash-container")
         let flash = $("#flash")
 
-        flash.text("Configuration change detected; refreshing page in 5 seconds")
+        flash.text("Configuration change detected; rebuilding page....")
         flashcontainer.fadeIn("slow")
 
-        setTimeout(function () {
-            window.location.reload();
-        }, 5000);
+        let delay = (Math.floor(Math.random() * 8) * 0.5) * 1000;
 
+        setTimeout(function () {
+            socket.emit('rebuild_request')
+        }, delay);
+
+    });
+
+    socket.on('rebuild_page', function (msg) {
+
+        let flashcontainer = $("#flash-container")
+        let contentdiv = $("#display-content")
+
+        if (msg["data"] !== null){
+            contentdiv.html(msg["data"])
+        }
+
+        SetAllEventListeners();
+
+        let tab_select = $("#tab_" + msg["tab"])
+
+        if (tab_select.length) {
+            tab_select.click();
+            $('.nav-tabs').scrollingTabs('scrollToActiveTab');
+        } else {
+            let elementsTabArray = DOMRegex(/^tab\_/);
+            let tab_select = $("#" + elementsTabArray[0].id);
+            tab_select.click();
+        }
+
+        flashcontainer.fadeOut("slow");
     });
 
     socket.on('con_request', function (msg, cb) {

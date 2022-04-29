@@ -1,12 +1,14 @@
+import hashlib
 import logging
 
-from flask import copy_current_request_context, request
+from flask import copy_current_request_context, request, render_template
 from flask_socketio import emit, disconnect, join_room, leave_room
 
 from display.core.screenshot_handler import ScreenShotHandler
 from display.helpers.client_pool import ClientPool
 from display.helpers.logger_class import HelperLogger
 from display.objects.client_connection import ClientConnection
+from display.webapp.helpers.utils.sources import get_display_sources
 from display.webapp.run import socketio
 
 logging.setLoggerClass(HelperLogger)
@@ -137,5 +139,29 @@ def do_change_display_tab(tab_name):
     tab_data = sh.get_all_screenshots(tab_name=tab_name["data"])
 
     emit("push_all_screenshots", {"data": tab_data})
+
+    logger.debug(f"Client details: {req_client.client_details()}")
+
+
+@socketio.on("rebuild_request", namespace="/display")
+def do_rebuild_request():
+    global clients
+
+    req_client = clients.get(request.sid)
+
+    display_sources = get_display_sources()
+
+    html_data = render_template("partials/content.html", **locals())
+
+    logger.info(f"Client: {req_client.sid} is rebuilding page...")
+
+    emit(
+        "rebuild_page",
+        {
+            "data": html_data,
+            "tab": hashlib.md5(req_client.current_tab.encode("utf-8")).hexdigest()[:6],
+        },
+        room=request.sid,
+    )
 
     logger.debug(f"Client details: {req_client.client_details()}")
