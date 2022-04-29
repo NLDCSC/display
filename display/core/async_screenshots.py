@@ -130,6 +130,7 @@ class AsyncScreenshots(object):
                                 "wb",
                             ) as f:
                                 f.write(v)
+
                         else:
                             # set to error pic
 

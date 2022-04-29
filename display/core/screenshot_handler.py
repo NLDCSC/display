@@ -1,5 +1,10 @@
 import hashlib
+import os
 from collections import defaultdict
+
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
 
 from display.webapp.config import Config
 from display.webapp.helpers.utils.screenshots import (
@@ -25,6 +30,8 @@ class ScreenShotHandler(object):
         self.set_hash_to_tab_mapping()
         self.set_tab_to_hash_list()
         self.set_hash_to_url_mapping()
+
+        self.current_wd = os.path.dirname(os.path.abspath(__file__))
 
     def set_hash_to_tab_mapping(self):
 
@@ -148,6 +155,32 @@ class ScreenShotHandler(object):
             )
 
         return ret_data
+
+    def set_timestamp_to_picture(self, filename):
+
+        photo = Image.open(os.path.join(self.config.SCREENSHOT_LOCATION, f"{filename}.png"))
+
+        # Store image width and height
+        w, h = photo.size
+
+        # make the image editable
+        drawing = ImageDraw.Draw(photo)
+        font = ImageFont.truetype(os.path.join(self.current_wd, "../webapp/static/fonts/Roboto/Roboto-Black.ttf"), 30)
+
+        # get text width and height
+        text = f"    {get_mod_time(filename)}    "
+        text_w, text_h = drawing.textsize(text, font)
+
+        pos = w - text_w, (h - text_h) - 50
+
+        c_text = Image.new('RGB', (text_w, text_h + 10), color='#000000')
+        drawing = ImageDraw.Draw(c_text)
+
+        drawing.text((0, 0), text, fill="#FFFF00FF", font=font)
+        c_text.putalpha(100)
+
+        photo.paste(c_text, pos, c_text)
+        photo.save(os.path.join(self.config.SCREENSHOT_LOCATION, f"{filename}_ts.png"))
 
     def __repr__(self):
         return f"<< ScreenShotHandler >>"
