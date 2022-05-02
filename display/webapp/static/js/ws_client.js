@@ -37,7 +37,7 @@ function SetAllEventListeners() {
     elem.addEventListener("click", CreateCustomScreenshot);
   });
 
-  let elementsClipArray = DOMRegex(/^do\_clipboard\_/);
+  let elementsClipArray = DOMRegex(/^do\_open-sc\_/);
 
   elementsClipArray.forEach(function (elem) {
     let my_id = elem.attributes["data-id"].nodeValue;
@@ -53,7 +53,7 @@ function SetAllEventListeners() {
       }
     );
 
-    elem.addEventListener("click", CopyToClipboard);
+    elem.addEventListener("click", OpenScreenshot);
   });
 
   let elementsDownloadArray = DOMRegex(/^do\_download\_/);
@@ -104,7 +104,7 @@ function SetTabClick(evt) {
 
   let selected_tab = attrs["data-name"].nodeValue;
 
-  window.socket.emit("change_display_tab", { data: selected_tab });
+  window.socket.emit("change_display_tab", { "data": selected_tab });
 }
 
 function CreateCustomScreenshot(evt) {
@@ -112,31 +112,18 @@ function CreateCustomScreenshot(evt) {
 
   let screenshot_id = attrs["data-id"].nodeValue;
 
-  window.socket.emit("create_custom_screenshot", { data: screenshot_id });
+  window.socket.emit("create_custom_screenshot", { "data": screenshot_id });
 
   showMessage("success", "Create screenshot request send!");
 }
 
-function CopyToClipboard(evt) {
+function OpenScreenshot(evt) {
   let attrs = evt.target.attributes;
 
   let screenshot_id = attrs["data-id"].nodeValue;
 
-  handleScreenshot(BasePath + "/screenshot/" + screenshot_id);
-}
+  window.socket.emit("see_custom_screenshot", { "data": screenshot_id });
 
-function handleScreenshot(url) {
-  async function screenShot() {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const { ClipboardItem } = window;
-      await navigator.clipboard.write([ClipboardItem({ "image/png": blob })]);
-    } catch (err) {
-      console.error(err);
-    }
-  }
-  screenShot();
 }
 
 function Download(evt) {

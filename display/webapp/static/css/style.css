@@ -177,7 +177,7 @@ div[id^="actions_"] {
 }
 
 .create-screenshot,
-.clipboard,
+.open-sc,
 .download {
   position: absolute;
   width: 30px;
@@ -189,7 +189,7 @@ div[id^="actions_"] {
   right: 20px;
 }
 
-.clipboard {
+.open-sc {
   right: 52px;
 }
 
@@ -198,7 +198,7 @@ div[id^="actions_"] {
 }
 
 .create-screenshot:hover,
-.clipboard:hover,
+.open-sc:hover,
 .download:hover {
   border: 2px solid yellow;
   cursor: pointer;

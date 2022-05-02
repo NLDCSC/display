@@ -30,13 +30,13 @@ $(document).ready(function () {
     });
 
     socket.on('push_all_screenshots', function (msg) {
-        if (msg["data"] !== null){
+        if (msg["data"] !== null) {
             msg["data"].forEach(item => {
 
                 let img_content = $("#img_content_" + item.sc_id)
                 let mod_time = $("#mod_time_" + item.sc_id)
 
-                if (item.hasOwnProperty('sc_src')){
+                if (item.hasOwnProperty('sc_src')) {
                     img_content.attr("src", item.sc_src);
                 }
 
@@ -56,8 +56,8 @@ $(document).ready(function () {
 
                 mod_time.toggleClass("active");
                 setTimeout(function () {
-                     mod_time.toggleClass("active");
-                },8000);
+                    mod_time.toggleClass("active");
+                }, 8000);
 
             })
         }
@@ -84,7 +84,7 @@ $(document).ready(function () {
         let flashcontainer = $("#flash-container")
         let contentdiv = $("#display-content")
 
-        if (msg["data"] !== null){
+        if (msg["data"] !== null) {
             contentdiv.html(msg["data"])
         }
 
@@ -95,39 +95,58 @@ $(document).ready(function () {
         if (tab_select.length) {
             tab_select.click();
             $(".nav-tabs")
-            .scrollingTabs({
-              cssClassLeftArrow: "mdi mdi-arrow-left-bold",
-              cssClassRightArrow: "mdi mdi-arrow-right-bold",
-              disableScrollArrowsOnFullyScrolled: true,
-              bootstrapVersion: 4
-            })
-            .on("ready.scrtabs", function () {
-              $(".tab-content").show();
-              SetAllEventListeners();
+                .scrollingTabs({
+                    cssClassLeftArrow: "mdi mdi-arrow-left-bold",
+                    cssClassRightArrow: "mdi mdi-arrow-right-bold",
+                    disableScrollArrowsOnFullyScrolled: true,
+                    bootstrapVersion: 4
+                })
+                .on("ready.scrtabs", function () {
+                    $(".tab-content").show();
+                    SetAllEventListeners();
 
-              setTimeout(() => {
-                  //tab_select.click();
-                  $('.nav-tabs').scrollingTabs('scrollToActiveTab');
-              }, 2000);
-            });
+                    setTimeout(() => {
+                        //tab_select.click();
+                        $('.nav-tabs').scrollingTabs('scrollToActiveTab');
+                    }, 2000);
+                });
         } else {
             let elementsTabArray = DOMRegex(/^tab\_/);
             let tab_select = $("#" + elementsTabArray[0].id);
             tab_select.click();
             $(".nav-tabs")
-            .scrollingTabs({
-              cssClassLeftArrow: "mdi mdi-arrow-left-bold",
-              cssClassRightArrow: "mdi mdi-arrow-right-bold",
-              disableScrollArrowsOnFullyScrolled: true,
-              bootstrapVersion: 4
-            })
-            .on("ready.scrtabs", function () {
-              $(".tab-content").show();
-              SetAllEventListeners();
-            });
+                .scrollingTabs({
+                    cssClassLeftArrow: "mdi mdi-arrow-left-bold",
+                    cssClassRightArrow: "mdi mdi-arrow-right-bold",
+                    disableScrollArrowsOnFullyScrolled: true,
+                    bootstrapVersion: 4
+                })
+                .on("ready.scrtabs", function () {
+                    $(".tab-content").show();
+                    SetAllEventListeners();
+                });
         }
 
         flashcontainer.fadeOut("slow");
+    });
+
+    socket.on('show_screenshot', function (msg) {
+        var modal = document.getElementById("the-modal");
+
+        var modalImg = document.getElementById("img-placeholder");
+        var captionText = document.getElementById("caption");
+
+        modal.style.display = "block";
+        modalImg.src = msg["data"];
+        captionText.innerHTML = msg["hash"];
+
+        // Get the <span> element that closes the modal
+        var span = document.getElementsByClassName("close")[0];
+
+        span.onclick = function () {
+            modal.style.display = "none";
+        }
+
     });
 
     socket.on('con_request', function (msg, cb) {

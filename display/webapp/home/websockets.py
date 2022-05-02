@@ -8,6 +8,7 @@ from display.core.screenshot_handler import ScreenShotHandler
 from display.helpers.client_pool import ClientPool
 from display.helpers.logger_class import HelperLogger
 from display.objects.client_connection import ClientConnection
+from display.webapp.helpers.utils.screenshots import getB64_screenshot
 from display.webapp.helpers.utils.sources import get_display_sources
 from display.webapp.run import socketio
 from display.celery_app.display_daemon import create_custom_screenshot
@@ -173,3 +174,25 @@ def do_change_display_tab(data):
     logger.info(f"Client: {request.sid} is creating custom screenshot...")
 
     create_custom_screenshot.delay(data=data)
+
+
+@socketio.on("see_custom_screenshot", namespace="/display")
+def do_change_display_tab(reqdata):
+    logger.info(f"Client: {request.sid} is requesting to see custom screenshot...")
+
+    sh = ScreenShotHandler()
+
+    sh.set_timestamp_to_picture(filename=reqdata["data"])
+
+    data = getB64_screenshot(filename=reqdata["data"], with_timestamp=True)
+
+    emit(
+        "show_screenshot",
+        {
+            "data": data,
+            "hash": reqdata["data"],
+        },
+        room=request.sid,
+    )
+
+    logger.info(f"Request from Client: {request.sid} is send...")

@@ -3,6 +3,7 @@
 {% block head_css %}
     <link href="{{ url_for('static', filename='css/sweetalert2/bootstrap-4.min.css') }}" rel="stylesheet"/>
     <link href="{{ url_for('static', filename='css/scroll_tabs/jquery.scrolling-tabs.min.css') }}" rel="stylesheet"/>
+    <link href="{{ url_for('static', filename='css/modal.min.css') }}" rel="stylesheet"/>
 {% endblock %}
 
 {% block head_scripts %}
@@ -40,6 +41,16 @@
                 </div>
             </div>
         </div>
+    </div>
+    <img id="screenshot-placeholder" src="#" alt="placeholder" class="sc-placeholder">
+    <!-- The Modal -->
+    <div id="the-modal" class="modal">
+        <!-- The Close Button -->
+        <span class="close">&times;</span>
+        <!-- Modal Content (The Image) -->
+        <img class="modal-content" id="img-placeholder">
+        <!-- Modal Caption (Image Text) -->
+        <div id="caption"></div>
     </div>
 {% endblock %}
 

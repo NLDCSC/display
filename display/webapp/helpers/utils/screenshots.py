@@ -12,11 +12,14 @@ config = Config()
 my_file_location = os.path.dirname(os.path.abspath(__file__))
 
 
-def getB64_screenshot(filename):
+def getB64_screenshot(filename, with_timestamp=False):
     try:
-        with open(
-            os.path.join(config.SCREENSHOT_LOCATION, f"{filename}.png"), "rb"
-        ) as image_file:
+        if with_timestamp:
+            the_filename = os.path.join(config.SCREENSHOT_LOCATION, f"{filename}_ts.png")
+        else:
+            the_filename = os.path.join(config.SCREENSHOT_LOCATION, f"{filename}.png")
+
+        with open(the_filename, "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read())
         return f"data:image/png;base64, {encoded_string.decode('utf-8')}"
     except Exception:
