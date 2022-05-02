@@ -33,6 +33,7 @@
 .img-src {
   width: 100%;
   height: 100%;
+  border-radius: 10px;
 }
 
 .blue-src {
@@ -183,6 +184,7 @@ div[id^="actions_"] {
   width: 30px;
   z-index: 1;
   bottom: -15px;
+  border-radius: 5px;
 }
 
 .create-screenshot {
