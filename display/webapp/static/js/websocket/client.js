@@ -138,7 +138,7 @@ $(document).ready(function () {
 
         modal.style.display = "block";
         modalImg.src = msg["data"];
-        captionText.innerHTML = msg["hash"];
+        captionText.innerHTML = msg["url"];
 
         // Get the <span> element that closes the modal
         var span = document.getElementsByClassName("close")[0];

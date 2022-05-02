@@ -190,7 +190,7 @@ def do_change_display_tab(reqdata):
         "show_screenshot",
         {
             "data": data,
-            "hash": reqdata["data"],
+            "url": sh.get_url_by_hash(reqdata["data"]),
         },
         room=request.sid,
     )

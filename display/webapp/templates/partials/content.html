@@ -21,7 +21,7 @@
                                             data-id="{{ each['url']|md5 }}"
                                             class="img-src {% if each['team'] == 'blue' %} blue-src {% else %} green-src {% endif %}"
                                             src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="  {# JUST A transparent pixel as placeholder #}
-                                            title="{{ each['header'] }} | ID: {{ each['url']|md5 }}"
+                                            title="{{ each['header'] }} | ID: {{ each['url']|md5 }} | URL: {{ each['url'] }}"
                                     >
                                 </a>
                                 <div id="actions_{{ each['url']|md5 }}">
