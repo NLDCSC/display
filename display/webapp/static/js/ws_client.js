@@ -1,110 +1,128 @@
 function SetAllEventListeners() {
+  SetTabEvents();
 
-    $('.nav-tabs').scrollingTabs({
-        cssClassLeftArrow: "mdi mdi-arrow-left-bold",
-        cssClassRightArrow: "mdi mdi-arrow-right-bold",
-        disableScrollArrowsOnFullyScrolled: true,
+  let elementsImgArray = DOMRegex(/^img\_content\_/);
+
+  elementsImgArray.forEach(function (elem) {
+    let my_id = elem.attributes["data-id"].nodeValue;
+    let action_elem = $("#actions_" + my_id);
+    let target_elem = $("#" + elem.id);
+
+    target_elem.hover(
+      function () {
+        action_elem.show();
+      },
+      function () {
+        action_elem.hide();
+      }
+    );
+  });
+
+  let elementsCSArray = DOMRegex(/^create\_screenshot\_/);
+
+  elementsCSArray.forEach(function (elem) {
+    let my_id = elem.attributes["data-id"].nodeValue;
+    let target_elem = $("#" + elem.id);
+    let action_elem = $("#actions_" + my_id);
+
+    target_elem.hover(
+      function () {
+        action_elem.show();
+      },
+      function () {
+        action_elem.hide();
+      }
+    );
+
+    elem.addEventListener("click", CreateCustomScreenshot);
+  });
+
+  let elementsClipArray = DOMRegex(/^do\_clipboard\_/);
+
+  elementsClipArray.forEach(function (elem) {
+    let my_id = elem.attributes["data-id"].nodeValue;
+    let target_elem = $("#" + elem.id);
+    let action_elem = $("#actions_" + my_id);
+
+    target_elem.hover(
+      function () {
+        action_elem.show();
+      },
+      function () {
+        action_elem.hide();
+      }
+    );
+
+    elem.addEventListener("click", CopyToClipboard);
+  });
+
+  let elementsDownloadArray = DOMRegex(/^do\_download\_/);
+
+  elementsDownloadArray.forEach(function (elem) {
+    let my_id = elem.attributes["data-id"].nodeValue;
+    let target_elem = $("#" + elem.id);
+    let action_elem = $("#actions_" + my_id);
+
+    target_elem.hover(
+      function () {
+        action_elem.show();
+      },
+      function () {
+        action_elem.hide();
+      }
+    );
+
+    elem.addEventListener("click", Download);
+  });
+}
+
+function SetTabEvents() {
+  let elementsTabArray = DOMRegex(/^tab\_/);
+
+  elementsTabArray.forEach(function (elem) {
+    elem.addEventListener("click", SetTabClick);
+  });
+
+}
+
+function InitScrollingTabs() {
+  $(".nav-tabs")
+    .scrollingTabs({
+      cssClassLeftArrow: "mdi mdi-arrow-left-bold",
+      cssClassRightArrow: "mdi mdi-arrow-right-bold",
+      disableScrollArrowsOnFullyScrolled: true,
+      bootstrapVersion: 4
+    })
+    .on("ready.scrtabs", function () {
+      $(".tab-content").show();
+      SetAllEventListeners();
     });
-
-    let elementsTabArray = DOMRegex(/^tab\_/);
-
-    elementsTabArray.forEach(function (elem) {
-        elem.addEventListener("click", SetTabClick);
-    });
-
-    let elementsImgArray = DOMRegex(/^img\_content\_/);
-
-    elementsImgArray.forEach(function (elem) {
-        let my_id = elem.attributes["data-id"].nodeValue;
-        let action_elem = $("#actions_" + my_id)
-        let target_elem = $("#" + elem.id)
-
-        target_elem.hover(function(){
-            action_elem.show()
-        }, function(){
-            action_elem.hide()
-        });
-    });
-
-    let elementsCSArray = DOMRegex(/^create\_screenshot\_/);
-
-    elementsCSArray.forEach(function (elem) {
-        let my_id = elem.attributes["data-id"].nodeValue;
-        let target_elem = $("#" + elem.id)
-        let action_elem = $("#actions_" + my_id)
-
-        target_elem.hover(function(){
-            action_elem.show()
-        }, function(){
-            action_elem.hide()
-        });
-
-        elem.addEventListener("click", CreateCustomScreenshot);
-
-    });
-
-    let elementsClipArray = DOMRegex(/^do\_clipboard\_/);
-
-    elementsClipArray.forEach(function (elem) {
-        let my_id = elem.attributes["data-id"].nodeValue;
-        let target_elem = $("#" + elem.id)
-        let action_elem = $("#actions_" + my_id)
-
-        target_elem.hover(function(){
-            action_elem.show()
-        }, function(){
-            action_elem.hide()
-        });
-
-        elem.addEventListener("click", CopyToClipboard);
-
-    });
-
-    let elementsDownloadArray = DOMRegex(/^do\_download\_/);
-
-    elementsDownloadArray.forEach(function (elem) {
-        let my_id = elem.attributes["data-id"].nodeValue;
-        let target_elem = $("#" + elem.id)
-        let action_elem = $("#actions_" + my_id)
-
-        target_elem.hover(function(){
-            action_elem.show()
-        }, function(){
-            action_elem.hide()
-        });
-
-        elem.addEventListener("click", Download);
-
-    });
-
 }
 
 function SetTabClick(evt) {
-    let attrs = evt.target.attributes;
+  let attrs = evt.target.attributes;
 
-    let selected_tab = attrs["data-name"].nodeValue;
+  let selected_tab = attrs["data-name"].nodeValue;
 
-    window.socket.emit("change_display_tab", {"data": selected_tab})
+  window.socket.emit("change_display_tab", { data: selected_tab });
 }
 
-
 function CreateCustomScreenshot(evt) {
-    let attrs = evt.target.attributes;
+  let attrs = evt.target.attributes;
 
-    let screenshot_id = attrs["data-id"].nodeValue;
+  let screenshot_id = attrs["data-id"].nodeValue;
 
-    window.socket.emit("create_custom_screenshot", {"data": screenshot_id})
+  window.socket.emit("create_custom_screenshot", { data: screenshot_id });
 
-    showMessage("success", "Create screenshot request send!")
+  showMessage("success", "Create screenshot request send!");
 }
 
 function CopyToClipboard(evt) {
-    let attrs = evt.target.attributes;
+  let attrs = evt.target.attributes;
 
-    let screenshot_id = attrs["data-id"].nodeValue;
+  let screenshot_id = attrs["data-id"].nodeValue;
 
-    handleScreenshot(BasePath + "/screenshot/" + screenshot_id)
-
+  handleScreenshot(BasePath + "/screenshot/" + screenshot_id);
 }
 
 function handleScreenshot(url) {
@@ -113,9 +131,7 @@ function handleScreenshot(url) {
       const response = await fetch(url);
       const blob = await response.blob();
       const { ClipboardItem } = window;
-      await navigator.clipboard.write([
-        ClipboardItem({ "image/png": blob }),
-      ]);
+      await navigator.clipboard.write([ClipboardItem({ "image/png": blob })]);
     } catch (err) {
       console.error(err);
     }
@@ -124,13 +140,12 @@ function handleScreenshot(url) {
 }
 
 function Download(evt) {
-    let attrs = evt.target.attributes;
+  let attrs = evt.target.attributes;
 
-    let screenshot_id = attrs["data-id"].nodeValue;
+  let screenshot_id = attrs["data-id"].nodeValue;
 
-    var link = document.createElement("a");
-    link.download = "Download_" + screenshot_id;
-    link.href = BasePath + "/screenshot/" + screenshot_id;
-    link.click();
-
+  var link = document.createElement("a");
+  link.download = "Download_" + screenshot_id;
+  link.href = BasePath + "/screenshot/" + screenshot_id;
+  link.click();
 }

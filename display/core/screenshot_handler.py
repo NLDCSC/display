@@ -87,16 +87,17 @@ class ScreenShotHandler(object):
 
         try:
             screenshot_list = self.get_hashes_by_tab_name(tab_name=tab_name)
-            for each in screenshot_list:
-                ret_data.append(
-                    {
-                        "sc_id": each,
-                        "sc_src": getB64_screenshot(each),
-                        "mod_time": get_mod_time(each),
-                        "changed": get_compare_image(each),
-                    }
-                )
-            return ret_data
+            if screenshot_list is not False:
+                for each in screenshot_list:
+                    ret_data.append(
+                        {
+                            "sc_id": each,
+                            "sc_src": getB64_screenshot(each),
+                            "mod_time": get_mod_time(each),
+                            "changed": get_compare_image(each),
+                        }
+                    )
+                return ret_data
         except KeyError:
             return ret_data
 

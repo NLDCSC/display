@@ -88,17 +88,43 @@ $(document).ready(function () {
             contentdiv.html(msg["data"])
         }
 
-        SetAllEventListeners();
+        SetTabEvents();
 
         let tab_select = $("#tab_" + msg["tab"])
 
         if (tab_select.length) {
             tab_select.click();
-            $('.nav-tabs').scrollingTabs('scrollToActiveTab');
+            $(".nav-tabs")
+            .scrollingTabs({
+              cssClassLeftArrow: "mdi mdi-arrow-left-bold",
+              cssClassRightArrow: "mdi mdi-arrow-right-bold",
+              disableScrollArrowsOnFullyScrolled: true,
+              bootstrapVersion: 4
+            })
+            .on("ready.scrtabs", function () {
+              $(".tab-content").show();
+              SetAllEventListeners();
+
+              setTimeout(() => {
+                  //tab_select.click();
+                  $('.nav-tabs').scrollingTabs('scrollToActiveTab');
+              }, 2000);
+            });
         } else {
             let elementsTabArray = DOMRegex(/^tab\_/);
             let tab_select = $("#" + elementsTabArray[0].id);
             tab_select.click();
+            $(".nav-tabs")
+            .scrollingTabs({
+              cssClassLeftArrow: "mdi mdi-arrow-left-bold",
+              cssClassRightArrow: "mdi mdi-arrow-right-bold",
+              disableScrollArrowsOnFullyScrolled: true,
+              bootstrapVersion: 4
+            })
+            .on("ready.scrtabs", function () {
+              $(".tab-content").show();
+              SetAllEventListeners();
+            });
         }
 
         flashcontainer.fadeOut("slow");
