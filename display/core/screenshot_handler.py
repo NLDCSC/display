@@ -176,7 +176,7 @@ class ScreenShotHandler(object):
         )
 
         # get text width and height
-        text = f"    {get_mod_time(filename, False)}    "
+        text = f"    {self.get_url_by_hash(the_hash=filename)} @ {get_mod_time(filename, False)}    "
         text_w, text_h = drawing.textsize(text, font)
 
         pos = w - text_w, (h - text_h) - 50
