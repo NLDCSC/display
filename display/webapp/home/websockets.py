@@ -109,9 +109,13 @@ def active_connect():
 def do_disconnect():
     global clients
 
+    req_client = clients.get(request.sid)
+
     clients.remove(request.sid)
 
     leave_room(request.sid)
+    if req_client.current_tab is not None:
+        leave_room(req_client.current_tab)
 
     logger.info(f"Client disconnected: {request.sid}")
     logger.info(f"Total clients connected: {len(clients.fetch_clients())}")
