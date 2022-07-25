@@ -2,21 +2,6 @@ version: '3.5'
 
 services:
 
-#  flask_lb:
-#    image: display-flask_lb
-#    build:
-#      context: .
-#      dockerfile: .docker/images/flask_lb/ha_proxy
-#    hostname: flask_lb
-#    restart: always
-#    env_file:
-#      - .env
-#    ports:
-#      - 127.0.0.1:8000:8000
-#    networks:
-#      - frontend
-#      - backend
-
   flask_lb:
     image: display-flask_lb
     build:
