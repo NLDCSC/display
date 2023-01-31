@@ -124,6 +124,13 @@ services:
       - .env
     networks:
       - backend
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8050" ]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
 
   splash2:
     image: display-splash2
@@ -137,6 +144,13 @@ services:
       - .env
     networks:
       - backend
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8050" ]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
 
   splash3:
     image: display-splash3
@@ -150,6 +164,13 @@ services:
       - .env
     networks:
       - backend
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8050" ]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
 
   splash4:
     image: display-splash4
@@ -163,6 +184,13 @@ services:
       - .env
     networks:
       - backend
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8050" ]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
 
   splash5:
     image: display-splash5
@@ -172,6 +200,24 @@ services:
       dockerfile: .docker/images/splash/splash_screen
     hostname: splash5
     restart: always
+    env_file:
+      - .env
+    networks:
+      - backend
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8050" ]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+
+  autoheal:
+    image: willfarrell/autoheal:latest
+    hostname: autoheal
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     env_file:
       - .env
     networks:
