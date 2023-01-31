@@ -74,6 +74,45 @@ function SetAllEventListeners() {
 
     elem.addEventListener("click", Download);
   });
+
+  let DisplayFilter = DOMRegex(/^display-filter/);
+
+  DisplayFilter.forEach(function (elem){
+    elem.addEventListener("click", SetDisplayFilter)
+  })
+
+  let BtnClose = DOMRegex(/^btn_close/)
+
+  BtnClose.forEach(function (elem){
+    elem.addEventListener("click", CloseDisplayFilter)
+  })
+
+  let CheckBoxes = DOMRegex(/^cb\_/)
+
+  CheckBoxes.forEach(function (elem){
+    elem.addEventListener("click", SetTabVisibility)
+  })
+
+}
+
+function SetDisplayFilter(){
+
+  $('#checkbox_div').children('input').each(function () {
+      if ($("#tab_" + this.value).is(":visible")){
+        $("#cb_" + this.value).prop('checked', true)
+      } else {
+        $("#cb_" + this.value).prop('checked', false)
+      }
+  });
+
+  $("#popup1").show()
+}
+
+function SetTabVisibility(el){
+  $("#tab_" + el.target.value).toggle()
+}
+function CloseDisplayFilter(){
+  $("#popup1").hide()
 }
 
 function SetTabEvents() {

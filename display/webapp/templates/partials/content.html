@@ -1,13 +1,28 @@
+<div id="popup1" class="overlay">
+    <div class="popup">
+        <h2>Display filter settings:</h2>
+        <button class="close" id="btn_close">&times;</button>
+        <hr class="ruler">
+        <div id="checkbox_div" class="content">
+            {% for key in display_sources %}
+                <input type="checkbox" name="{{ key|md5 }}" value="{{ key|md5 }}" id="cb_{{ key|md5 }}" checked>
+                <label for="{{ key|md5 }}"> {{ key }} </label><br>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
 <ul class="nav nav-tabs" id="myTab" role="tablist">
-    {% for key in  display_sources %}
+    {% for key in display_sources %}
         <li class="nav-item" role="presentation">
             <button class="nav-link {% if loop.first %} active {% endif %}" id="tab_{{ key|md5 }}" data-name="{{ key }}" data-bs-toggle="tab" data-bs-target="#content_{{ key|md5 }}" type="button" role="tab" aria-controls="home" aria-selected="true">
                 {{ key }}</button>
         </li>
     {% endfor %}
 </ul>
+
 <div class="tab-content" id="myTabContent">
-    {% for key in  display_sources %}
+    {% for key in display_sources %}
         <div class="tab-pane fade {% if loop.first %} show active {% endif %}" id="content_{{ key|md5 }}" role="tabpanel" aria-labelledby="{{ key|md5 }}-tab">
             {% for row in display_sources[key]|batch(6) %}
                 <div class="row content-row">

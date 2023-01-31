@@ -25,7 +25,11 @@
                 <div class="card-body">
                     <div class="row margin_bottom">
                         <div class="col-12">
-                            <h4 class="card-title pos-abs">DISPLAY WALL</h4>
+                            <h4 class="card-title pos-abs">DISPLAY WALL
+                                <button id="display-filter" type="button" class="btn btn-outline" >
+                                    <span class="mdi mdi-filter-outline"></span>
+                                </button>
+                            </h4>
                             <div class="float-right">
                                 <span id="con_status" class="badge badge-danger float-right menu_badge conn-pads">CONN</span>
                                 <div class="float-right con-details">
@@ -52,6 +56,8 @@
         <!-- Modal Caption (Image Text) -->
         <div id="caption"></div>
     </div>
+
+
 {% endblock %}
 
 {% block body_scripts %}
