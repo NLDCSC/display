@@ -17,39 +17,14 @@ services:
       - frontend
       - backend
 
-  splash1:
-    image: display-splash1
+  splash:
+    image: display-splash
     command: --maxrss 4096 --disable-browser-caches
     build:
       context: .
       dockerfile: ./splash_screen
-    hostname: splash1
-    restart: always
-    env_file:
-      - .env
-    networks:
-      - backend
-
-  splash2:
-    image: display-splash2
-    command: --maxrss 4096 --disable-browser-caches
-    build:
-      context: .
-      dockerfile: ./splash_screen
-    hostname: splash2
-    restart: always
-    env_file:
-      - .env
-    networks:
-      - backend
-
-  splash3:
-    image: display-splash3
-    command: --maxrss 4096 --disable-browser-caches
-    build:
-      context: .
-      dockerfile: ./splash_screen
-    hostname: splash3
+    deploy:
+      replicas: 3
     restart: always
     env_file:
       - .env
