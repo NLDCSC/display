@@ -221,6 +221,6 @@ function Timeline(evt) {
 
     let url = BasePath + "timeline/" + screenshot_id
 
-    window.location.href = url
+    window.open(url, '_blank');
 
 }

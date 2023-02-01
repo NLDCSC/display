@@ -1,3 +1,3 @@
-FROM scrapinghub/splash:latest
+FROM scrapinghub/splash:3.4.1
 
 EXPOSE 8050

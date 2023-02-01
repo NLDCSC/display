@@ -1,3 +1,7 @@
+import os
+import shutil
+import uuid
+
 from dotenv import load_dotenv
 
 load_dotenv(".env")
@@ -236,4 +240,18 @@ def handle_changes_for_timeline(data: list):
     for each in data:
         if int(each['changed']) == 0:
             # changed content; save a copy of the current screenshot
-            pass
+            if not os.path.exists(os.path.join(config.TIMELINE_LOCATION, each['sc_id'])):
+                logger.info(
+                    f"Creating {os.path.join(config.TIMELINE_LOCATION, each['sc_id'])}"
+                )
+                os.mkdir(os.path.join(config.TIMELINE_LOCATION, each['sc_id']))
+
+            # create a copy of the changed screenshot and copy it to the timeline directory
+            shutil.copyfile(
+                os.path.join(
+                    config.SCREENSHOT_LOCATION, f"{each['sc_id']}.png"
+                ),
+                os.path.join(
+                    config.TIMELINE_LOCATION, each['sc_id'], f"{uuid.uuid4()}.png"
+                ),
+            )
