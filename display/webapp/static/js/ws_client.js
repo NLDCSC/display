@@ -121,7 +121,6 @@ function SetTabVisibility(el) {
             let vis_tab = $("#tab_" + this.value)
             if (vis_tab.is(":visible")) {
                 if (this.value !== el.target.value) {
-                    console.log(this.value)
                     vis_tab.click()
                     return false;
                 }
