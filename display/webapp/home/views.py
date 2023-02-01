@@ -35,3 +35,31 @@ def get_screenshot(filename):
         return data
     except Exception:
         return send_from_directory(current_app.static_folder, "img/noScreenShot.png")
+
+
+@home.route("/timeline/<url_hash>")
+def timeline(url_hash):
+    sh = ScreenShotHandler()
+
+    timeline_url = sh.get_url_by_hash(the_hash=url_hash)
+
+    return render_template("pages/timeline.html", header="Display", **locals())
+
+
+@home.route("/last_screenshot/<path:filename>")
+def get_last_screenshot(filename):
+    try:
+        data = send_from_directory(
+            current_app.config["SCREENSHOT_LOCATION"], f"{filename}.png"
+        )
+        return data
+    except Exception:
+        return send_from_directory(current_app.static_folder, "img/noScreenShot.png")
+
+
+@home.route("/timeline/get_picture/<path:filename>")
+def get_timeline_picture(filename):
+    data = send_from_directory(
+        current_app.config["TIMELINE_LOCATION"], f"{filename}.png"
+    )
+    return data

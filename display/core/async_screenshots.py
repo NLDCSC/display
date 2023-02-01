@@ -97,6 +97,12 @@ class AsyncScreenshots(object):
                             )
                             os.mkdir(self.config.SCREENSHOT_LOCATION)
 
+                        if not os.path.exists(self.config.TIMELINE_LOCATION):
+                            self.logger.info(
+                                f"Creating {self.config.TIMELINE_LOCATION}"
+                            )
+                            os.mkdir(self.config.TIMELINE_LOCATION)
+
                         if not os.path.exists(
                             os.path.join(self.config.SCREENSHOT_LOCATION, f"{k}.png")
                         ):

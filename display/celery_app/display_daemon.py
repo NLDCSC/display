@@ -19,7 +19,6 @@ from display.webapp.config import Config
 from display.core.async_screenshots import AsyncScreenshots
 from display.webapp.helpers.utils.sources import get_display_sources
 
-
 logging.setLoggerClass(AppLogger)
 
 config = Config()
@@ -77,9 +76,7 @@ def setup_task_logger(logger, *args, **kwargs):
 
 @task_prerun.connect
 def general_task_pre_run_config(task_id, task, *args, **kwargs):
-
     if not task.ignore_result:
-
         logger = get_task_logger(__name__)
 
         task.update_state(state="STARTED")
@@ -173,6 +170,7 @@ def make_screenshots():
                 room=source,
                 namespace="/display",
             )
+            handle_changes_for_timeline.delay(data=tab_data)
     except Exception as err:
         logger.error(f"Error processing updates.... --> Produced error: {err}")
 
@@ -216,7 +214,26 @@ def create_custom_screenshot(data):
                 room=source,
                 namespace="/display",
             )
+            handle_changes_for_timeline.delay(data=tab_data)
     except Exception as err:
         logger.error(f"Error processing screenshot.... --> Produced error: {err}")
 
     logger.info(f"Finished processing screenshot...")
+
+
+@app.task(
+    autoretry_for=(ConnectionResetError,),
+    retry_kwargs={"max_retries": 3},
+    retry_backoff=60,
+    retry_jitter=False,
+    ignore_result=True,
+)
+def handle_changes_for_timeline(data: list):
+    logger = get_task_logger(__name__)
+
+    logger.info(f"Starting saving changed screenshots on: {len(data)} data items!")
+
+    for each in data:
+        if int(each['changed']) == 0:
+            # changed content; save a copy of the current screenshot
+            pass

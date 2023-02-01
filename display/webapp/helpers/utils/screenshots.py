@@ -49,11 +49,11 @@ def get_compare_image(filename):
     cs = CompareScreenshots()
 
     try:
-        changed = cs.compare_images(
+        not_changed = cs.compare_images(
             os.path.join(config.SCREENSHOT_LOCATION, f"{filename}.png"),
             os.path.join(config.SCREENSHOT_LOCATION, f"{filename}_old.png"),
         )
-        if changed:
+        if not_changed:
             return "1"
         else:
             return "0"
