@@ -17,12 +17,13 @@ services:
       - frontend
       - backend
 
-  flask_web1:
-    image: display-flask_web1
+  flask_web:
+    image: display-flask_web
     build:
       context: .
       dockerfile: .docker/images/flask/dockerfile-flask
-    hostname: flask_web1
+    deploy:
+      replicas: 2
     restart: always
     env_file:
       - .env
@@ -33,60 +34,13 @@ services:
     networks:
       - backend
 
-  flask_web2:
-    image: display-flask_web2
+  flask_ws:
+    image: display-flask_ws
     build:
       context: .
       dockerfile: .docker/images/flask/dockerfile-flask
-    hostname: flask_web2
-    restart: always
-    env_file:
-      - .env
-    environment:
-      - PYTHONUNBUFFERED=TRUE
-    volumes:
-      - "./dev_data/flask:/app/data"
-    networks:
-      - backend
-
-  flask_ws1:
-    image: display-flask_ws1
-    build:
-      context: .
-      dockerfile: .docker/images/flask/dockerfile-flask
-    hostname: flask_ws1
-    restart: always
-    env_file:
-      - .env
-    environment:
-      - PYTHONUNBUFFERED=TRUE
-    volumes:
-      - "./dev_data/flask:/app/data"
-    networks:
-      - backend
-
-  flask_ws2:
-    image: display-flask_ws2
-    build:
-      context: .
-      dockerfile: .docker/images/flask/dockerfile-flask
-    hostname: flask_ws2
-    restart: always
-    env_file:
-      - .env
-    environment:
-      - PYTHONUNBUFFERED=TRUE
-    volumes:
-      - "./dev_data/flask:/app/data"
-    networks:
-      - backend
-
-  flask_ws3:
-    image: display-flask_ws3
-    build:
-      context: .
-      dockerfile: .docker/images/flask/dockerfile-flask
-    hostname: flask_ws3
+    deploy:
+      replicas: 3
     restart: always
     env_file:
       - .env
@@ -112,66 +66,32 @@ services:
       - frontend
       - backend
 
-  splash1:
-    image: display-splash1
+  splash:
+    image: display-splash
     command: --maxrss 4096 --disable-browser-caches
     build:
       context: .
       dockerfile: .docker/images/splash/splash_screen
-    hostname: splash1
+    deploy:
+      replicas: 5
     restart: always
     env_file:
       - .env
     networks:
       - backend
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8050" ]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-  splash2:
-    image: display-splash2
-    command: --maxrss 4096 --disable-browser-caches
-    build:
-      context: .
-      dockerfile: .docker/images/splash/splash_screen
-    hostname: splash2
+  autoheal:
+    image: willfarrell/autoheal:latest
+    hostname: autoheal
     restart: always
-    env_file:
-      - .env
-    networks:
-      - backend
-
-  splash3:
-    image: display-splash3
-    command: --maxrss 4096 --disable-browser-caches
-    build:
-      context: .
-      dockerfile: .docker/images/splash/splash_screen
-    hostname: splash3
-    restart: always
-    env_file:
-      - .env
-    networks:
-      - backend
-
-  splash4:
-    image: display-splash4
-    command: --maxrss 4096 --disable-browser-caches
-    build:
-      context: .
-      dockerfile: .docker/images/splash/splash_screen
-    hostname: splash4
-    restart: always
-    env_file:
-      - .env
-    networks:
-      - backend
-
-  splash5:
-    image: display-splash5
-    command: --maxrss 4096 --disable-browser-caches
-    build:
-      context: .
-      dockerfile: .docker/images/splash/splash_screen
-    hostname: splash5
-    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     env_file:
       - .env
     networks:
