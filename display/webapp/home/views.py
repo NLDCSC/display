@@ -77,6 +77,6 @@ def get_last_screenshot(filename):
 @home.route("/timeline/get_picture/<path:url_hash>/<path:filename>")
 def get_timeline_picture(url_hash, filename):
     data = send_from_directory(
-        current_app.config["TIMELINE_LOCATION"],  f"{url_hash}/{filename}.png"
+        current_app.config["TIMELINE_LOCATION"], f"{url_hash}/{filename}.png"
     )
     return data
