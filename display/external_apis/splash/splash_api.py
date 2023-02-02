@@ -9,12 +9,12 @@ from display.external_apis.generic_api import GenericApi
 
 class SplashApi(GenericApi):
     def __init__(
-        self,
-        address,
-        api_path=None,
-        proxies=None,
-        protocol="https",
-        user_agent="Display",
+            self,
+            address,
+            api_path=None,
+            proxies=None,
+            protocol="https",
+            user_agent="Display",
     ):
         self.address = address
         self.api_path = api_path
@@ -27,13 +27,11 @@ class SplashApi(GenericApi):
         )
 
     def render_png(self, url, wait=5, timeout=60):
-
         resource = f"render.png?url={quote(url)}&timeout={timeout}&wait={wait}"
 
         return self.call("GET", resource=resource)
 
     def get_render_url(self, url, wait=5, timeout=60):
-
         resource = f"render.png?url={quote(url)}&timeout={timeout}&wait={wait}"
 
         return self._build_url(resource)

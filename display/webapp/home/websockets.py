@@ -4,6 +4,7 @@ import logging
 from flask import copy_current_request_context, request, render_template
 from flask_socketio import emit, disconnect, join_room, leave_room
 
+from display.celery_app.display_daemon import create_custom_screenshot
 from display.core.screenshot_handler import ScreenShotHandler
 from display.helpers.client_pool import ClientPool
 from display.helpers.logger_class import HelperLogger
@@ -11,7 +12,6 @@ from display.objects.client_connection import ClientConnection
 from display.webapp.helpers.utils.screenshots import getB64_screenshot
 from display.webapp.helpers.utils.sources import get_display_sources
 from display.webapp.run import socketio
-from display.celery_app.display_daemon import create_custom_screenshot
 
 logging.setLoggerClass(HelperLogger)
 

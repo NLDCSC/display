@@ -24,7 +24,7 @@ def getB64_screenshot(filename, with_timestamp=False):
         return f"data:image/png;base64, {encoded_string.decode('utf-8')}"
     except Exception:
         with open(
-            os.path.join(my_file_location, "../../static", "img/noScreenShot.png"), "rb"
+                os.path.join(my_file_location, "../../static", "img/noScreenShot.png"), "rb"
         ) as image_file:
             encoded_string = base64.b64encode(image_file.read())
         return f"data:image/png;base64, {encoded_string.decode('utf-8')}"
@@ -49,11 +49,11 @@ def get_compare_image(filename):
     cs = CompareScreenshots()
 
     try:
-        changed = cs.compare_images(
+        not_changed = cs.compare_images(
             os.path.join(config.SCREENSHOT_LOCATION, f"{filename}.png"),
             os.path.join(config.SCREENSHOT_LOCATION, f"{filename}_old.png"),
         )
-        if changed:
+        if not_changed:
             return "1"
         else:
             return "0"
