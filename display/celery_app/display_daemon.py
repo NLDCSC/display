@@ -1,5 +1,6 @@
 import os
 import shutil
+import time
 import uuid
 
 from dotenv import load_dotenv
@@ -93,6 +94,7 @@ def setup_periodic_tasks(sender, **kwargs):
     # Create screenshots every xx seconds
     sender.add_periodic_task(90.0, make_screenshots.s())
     sender.add_periodic_task(30.0, guard_config.s())
+    sender.add_periodic_task(1800.0, delete_old_timeline_screenshots.s())
 
 
 @app.task()
@@ -260,3 +262,23 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
                     config.TIMELINE_LOCATION, each['sc_id'], new_filename
                 ),
             )
+
+
+@app.task(ignore_result=True, )
+def delete_old_timeline_screenshots():
+    logger = get_task_logger(__name__)
+
+    current_time = time.time()
+    days_to_delete = 7
+    directory = config.TIMELINE_LOCATION
+
+    for dirpath, _, filenames in os.walk(directory):
+        for f in filenames:
+            file_path = os.path.abspath(os.path.join(dirpath, f))
+            creation_time = os.path.getmtime(file_path)
+            logger.info("file available:", file_path)
+            if (current_time - creation_time) // (24 * 3600) >= days_to_delete:
+                os.unlink(file_path)
+                logger.info('{} removed'.format(file_path))
+            else:
+                logger.info('{} not removed'.format(file_path))
