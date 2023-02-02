@@ -1,4 +1,3 @@
-import collections
 import logging
 
 from flask import render_template, send_from_directory, current_app
@@ -40,7 +39,6 @@ def get_screenshot(filename):
 
 
 def get_timeline_data(url_hash):
-
     ret_data = []
 
     path_list = get_mtime_sorted_timeline_dir_from_hash(url_hash=url_hash)

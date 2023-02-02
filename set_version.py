@@ -3,7 +3,6 @@ import re
 import subprocess  # nosec
 from shutil import copy
 
-
 _PKG_DIR = os.path.dirname(os.path.realpath(__file__))
 
 

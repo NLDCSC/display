@@ -2,13 +2,11 @@ from collections import namedtuple
 
 
 class ClientConnection(object):
-
     connection_status = namedtuple(
         "connection_status", ("CON_REQ", "CON_ACK", "CON_CFM")
     )(1, 2, 3)
 
     def __init__(self, sid):
-
         self.sid = sid
 
         self.con_status = self.connection_status.CON_REQ

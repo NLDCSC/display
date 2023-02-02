@@ -7,11 +7,11 @@ import rfc3339 as rfc3339
 from flask import Flask, render_template, request, g
 from flask_bootstrap import Bootstrap
 from flask_fontawesome import FontAwesome
+from flask_socketio import SocketIO
 
 from display.helpers.app_logger import AppLogger
 from display.webapp.config import Config
 from display.webapp.helpers.utils.times import timestampTOdatetimestring
-from flask_socketio import SocketIO
 
 logging.setLoggerClass(AppLogger)
 

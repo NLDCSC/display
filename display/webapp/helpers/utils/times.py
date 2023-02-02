@@ -42,12 +42,10 @@ def timestringTOtimestamp(timestring):
 
 
 def datetimeTOtimestamp(date_time_object):
-
     return calendar.timegm(date_time_object.utctimetuple())
 
 
 def dateTOtimestamp(date_time_object):
-
     return calendar.timegm(date_time_object.timetuple())
 
 
