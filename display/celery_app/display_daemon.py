@@ -218,7 +218,7 @@ def create_custom_screenshot(data):
                 room=source,
                 namespace="/display",
             )
-            handle_changes_for_timeline.delay(data=tab_data)
+            handle_changes_for_timeline.delay(data=tab_data, csc=True)
     except Exception as err:
         logger.error(f"Error processing screenshot.... --> Produced error: {err}")
 
@@ -232,7 +232,7 @@ def create_custom_screenshot(data):
     retry_jitter=False,
     ignore_result=True,
 )
-def handle_changes_for_timeline(data: list):
+def handle_changes_for_timeline(data: list, csc: bool = False):
     logger = get_task_logger(__name__)
 
     logger.info(f"Starting saving changed screenshots on: {len(data)} data items!")
@@ -246,12 +246,17 @@ def handle_changes_for_timeline(data: list):
                 )
                 os.mkdir(os.path.join(config.TIMELINE_LOCATION, each['sc_id']))
 
+            if csc:
+                new_filename = f"csc-{uuid.uuid4()}.png"
+            else:
+                new_filename = f"{uuid.uuid4()}.png"
+
             # create a copy of the changed screenshot and copy it to the timeline directory
             shutil.copyfile(
                 os.path.join(
                     config.SCREENSHOT_LOCATION, f"{each['sc_id']}.png"
                 ),
                 os.path.join(
-                    config.TIMELINE_LOCATION, each['sc_id'], f"{uuid.uuid4()}.png"
+                    config.TIMELINE_LOCATION, each['sc_id'], new_filename
                 ),
             )

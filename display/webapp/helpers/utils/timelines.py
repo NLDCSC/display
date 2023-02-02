@@ -8,7 +8,7 @@ config = Config()
 
 
 def get_mtime_sorted_timeline_dir_from_hash(url_hash: str):
-    paths = sorted(Path(os.path.join(config.TIMELINE_LOCATION, url_hash)).iterdir(), key=os.path.getmtime)
+    paths = sorted(Path(os.path.join(config.TIMELINE_LOCATION, url_hash)).iterdir(), key=os.path.getmtime, reverse=True)
 
     return paths
 
