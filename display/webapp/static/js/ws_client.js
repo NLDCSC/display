@@ -1,3 +1,5 @@
+const display_cookie = CookieList("display_filter");
+
 function SetAllEventListeners() {
     SetTabEvents();
 
@@ -116,8 +118,7 @@ function SetAllEventListeners() {
 
 function SetDisplayFilter() {
 
-    $('#checkbox_div').children('input').each(function () {
-
+    $('#checkbox_div > .row > .col-sm').children('input').each(function () {
         let tab_element = $("#tab_" + this.value)
 
         if (tab_element.is(":visible")) {
@@ -127,19 +128,55 @@ function SetDisplayFilter() {
         }
     });
 
+    $("#check_all").click(function () {
+        $('input:checkbox').not(this).prop('checked', true);
+        $('#checkbox_div > .row > .col-sm').children('input').each(function () {
+            let vis_tab = $("#tab_" + this.value)
+            if (vis_tab.is(":hidden")) {
+                SetTabVisibility(this.value)
+            }
+        })
+    });
+
+    $("#uncheck_all").click(function () {
+        $('input:checkbox').prop('checked', false);
+        $('#checkbox_div > .row > .col-sm').children('input').each(function () {
+            let vis_tab = $("#tab_" + this.value)
+            if (vis_tab.is(":visible")) {
+                SetTabVisibility(this.value)
+            }
+        })
+    });
+
     $("#popup1").show()
 }
 
 function SetTabVisibility(el) {
 
-    let tab_element = $("#tab_" + el.target.value)
+    if (typeof el === 'string' || el instanceof String) {
+        var tab_value = el
+    } else {
+        var tab_value = el.target.value
+    }
+
+    let tab_element = $("#tab_" + tab_value)
     tab_element.toggle()
 
+    if (tab_element.is(":visible")) {
+        display_cookie.remove(tab_value)
+        // check if this the only visible tab; if so, click it...
+        if ($('button[id^="tab_"]:visible').length === 1) {
+            tab_element.click()
+        }
+    } else {
+        display_cookie.add(tab_value)
+    }
+
     if (tab_element.hasClass("active")) {
-        $('#checkbox_div').children('input').each(function () {
+        $('#checkbox_div > .row > .col-sm').children('input').each(function () {
             let vis_tab = $("#tab_" + this.value)
             if (vis_tab.is(":visible")) {
-                if (this.value !== el.target.value) {
+                if (this.value !== tab_value) {
                     vis_tab.click()
                     return false;
                 }
@@ -155,6 +192,27 @@ function CloseDisplayFilter() {
     $("#popup1").hide()
 }
 
+function ReEnableDisplayFilter() {
+    display_cookie.items().forEach(function (value) {
+        SetTabVisibility(tab_val = value)
+    })
+}
+
+function SetKeyDownEvents() {
+    $(document).keydown(function (event) {
+        if (event.keyCode === 27) {
+            let modal_sel = $('#the-modal')
+            let popup_sel = $('#popup1')
+            if (modal_sel.is(":visible")) {
+                modal_sel.hide();
+            }
+            if (popup_sel.is(":visible")) {
+                CloseDisplayFilter();
+            }
+        }
+    });
+}
+
 function SetTabEvents() {
     let elementsTabArray = DOMRegex(/^tab\_/);
 
@@ -164,7 +222,7 @@ function SetTabEvents() {
 
 }
 
-function DestroyScrollingTabs(){
+function DestroyScrollingTabs() {
     $('.nav-tabs').scrollingTabs('destroy');
 }
 

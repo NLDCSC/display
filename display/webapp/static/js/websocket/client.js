@@ -92,6 +92,10 @@ $(document).ready(function () {
 
         let tab_select = $("#tab_" + msg["tab"])
 
+        DestroyScrollingTabs()
+        ReEnableDisplayFilter();
+        SetKeyDownEvents();
+
         if (tab_select.length) {
             tab_select.click();
             $(".nav-tabs")

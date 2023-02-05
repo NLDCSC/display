@@ -15,7 +15,8 @@
     <script type="text/javascript" src="{{ url_for('static', filename='js/websocket/client.min.js') }}"></script>
 
     <script type="text/javascript" src="{{ url_for('static', filename='js/ws_client.min.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='js/scroll_tabs/jquery.scrolling-tabs.min.js') }}"></script>
+    <script type="text/javascript"
+            src="{{ url_for('static', filename='js/scroll_tabs/jquery.scrolling-tabs.min.js') }}"></script>
 
 {% endblock %}
 
@@ -27,12 +28,13 @@
                     <div class="row margin_bottom">
                         <div class="col-12">
                             <h4 class="card-title pos-abs">DISPLAY WALL
-                                <button id="display-filter" type="button" class="btn btn-outline" >
+                                <button id="display-filter" type="button" class="btn btn-outline">
                                     <span class="mdi mdi-filter-outline"></span>
                                 </button>
                             </h4>
                             <div class="float-right">
-                                <span id="con_status" class="badge badge-danger float-right menu_badge conn-pads">CONN</span>
+                                <span id="con_status"
+                                      class="badge badge-danger float-right menu_badge conn-pads">CONN</span>
                                 <div class="float-right con-details">
                                     <a>Async mode: <b><span id="async_mode">{{ async_mode }}</span></b></a><br/>
                                     <a>Average latency: <b><span id="ping_pong"></span>ms</b></a>
@@ -63,20 +65,13 @@
 
 {% block body_scripts %}
     <script>
-        $(window).ready( function() {
+        $(window).ready(function () {
+
+            ReEnableDisplayFilter();
+
             InitScrollingTabs();
-            $(document).keydown(function(event) {
-              if (event.keyCode === 27) {
-                  let modal_sel = $('#the-modal')
-                  let popup_sel = $('#popup1')
-                  if (modal_sel.is(":visible")) {
-                      modal_sel.hide();
-                  }
-                  if (popup_sel.is(":visible")) {
-                      CloseDisplayFilter();
-                  }
-              }
-            });
+
+            SetKeyDownEvents();
         });
     </script>
 {% endblock %}

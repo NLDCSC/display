@@ -67,3 +67,7 @@ hr.ruler {
   overflow-y: auto;
   overflow-x: hidden;
 }
+
+#checkbox_div {
+  margin-top: 5px;
+}

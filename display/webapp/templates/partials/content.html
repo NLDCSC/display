@@ -3,6 +3,8 @@
         <h2>Display filter settings:</h2>
         <button class="popup-close" id="btn_close">&times;</button>
         <hr class="ruler">
+        <button id="check_all" type="button" class="btn btn-outline-secondary">check all</button>
+        <button id="uncheck_all" type="button" class="btn btn-outline-secondary">uncheck all</button>
         <div id="checkbox_div" class="content">
             {% for row in display_sources|batch(3) %}
                 <div class="row">
