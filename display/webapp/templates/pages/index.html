@@ -67,7 +67,14 @@
             InitScrollingTabs();
             $(document).keydown(function(event) {
               if (event.keyCode === 27) {
-                $('#the-modal').hide();
+                  let modal_sel = $('#the-modal')
+                  let popup_sel = $('#popup1')
+                  if (modal_sel.is(":visible")) {
+                      modal_sel.hide();
+                  }
+                  if (popup_sel.is(":visible")) {
+                      CloseDisplayFilter();
+                  }
               }
             });
         });

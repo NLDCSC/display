@@ -106,7 +106,6 @@ $(document).ready(function () {
                     SetAllEventListeners();
 
                     setTimeout(() => {
-                        //tab_select.click();
                         $('.nav-tabs').scrollingTabs('scrollToActiveTab');
                     }, 2000);
                 });

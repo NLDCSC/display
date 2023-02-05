@@ -63,6 +63,7 @@ hr.ruler {
 }
 
 .popup .content {
-  max-height: 30%;
-  overflow: auto;
+  height: 50vh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }

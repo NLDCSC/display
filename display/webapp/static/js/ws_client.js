@@ -150,6 +150,8 @@ function SetTabVisibility(el) {
 }
 
 function CloseDisplayFilter() {
+    DestroyScrollingTabs()
+    InitScrollingTabs()
     $("#popup1").hide()
 }
 
@@ -160,6 +162,10 @@ function SetTabEvents() {
         elem.addEventListener("click", SetTabClick);
     });
 
+}
+
+function DestroyScrollingTabs(){
+    $('.nav-tabs').scrollingTabs('destroy');
 }
 
 function InitScrollingTabs() {
