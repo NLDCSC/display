@@ -44,5 +44,6 @@ class Config(object):
 
     SCREENSHOT_LOCATION = os.getenv("SCREENSHOT_LOCATION", "/app/data/screenshots/")
     TIMELINE_LOCATION = os.getenv("TIMELINE_LOCATION", "/app/data/timeline")
+    DAYS_TO_KEEP_TIMELINE_SCREENSHOTS = os.getenv("DAYS_TO_KEEP_TIMELINE_SCREENSHOTS", 5)
 
     INDEX_REFRESH = os.getenv("INDEX_REFRESH", 30)

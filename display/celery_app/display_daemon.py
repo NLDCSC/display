@@ -269,7 +269,7 @@ def delete_old_timeline_screenshots():
     logger = get_task_logger(__name__)
 
     current_time = time.time()
-    days_to_delete = 7
+    days_to_delete = config.DAYS_TO_KEEP_TIMELINE_SCREENSHOTS
     directory = config.TIMELINE_LOCATION
 
     for dirpath, _, filenames in os.walk(directory):
