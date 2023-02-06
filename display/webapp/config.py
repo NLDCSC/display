@@ -46,4 +46,6 @@ class Config(object):
     TIMELINE_LOCATION = os.getenv("TIMELINE_LOCATION", "/app/data/timeline")
     DAYS_TO_KEEP_TIMELINE_SCREENSHOTS = os.getenv("DAYS_TO_KEEP_TIMELINE_SCREENSHOTS", 5)
 
+    USER_AGENT = os.getenv("USER_AGENT", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/109.0")
+
     INDEX_REFRESH = os.getenv("INDEX_REFRESH", 30)
