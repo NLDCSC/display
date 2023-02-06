@@ -31,7 +31,7 @@ class AsyncScreenshots(object):
     :type user_agent: str
     """
 
-    def __init__(self, incoming_workload, user_agent="Display"):
+    def __init__(self, incoming_workload):
 
         self.config = Config()
 
@@ -48,7 +48,7 @@ class AsyncScreenshots(object):
         else:
             raise TypeError(f"Expecting dict; got: {type(incoming_workload)}")
 
-        self.user_agent = user_agent
+        self.user_agent = self.config.USER_AGENT
 
         self.headers = self.__default_headers
 
