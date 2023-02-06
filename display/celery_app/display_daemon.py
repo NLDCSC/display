@@ -169,9 +169,9 @@ def balance_screenshot_workload():
     with redis.Redis(host=host, port=port, db=7) as conn:
         last_run_number = conn.get("last_run_number")
 
-        last_run_number = int(last_run_number.decode('utf-8'))
-
         if last_run_number is not None:
+
+            last_run_number = int(last_run_number.decode('utf-8'))
 
             if last_run_number < total_chunks_needed:
                 conn.set("last_run_number", last_run_number + 1)
