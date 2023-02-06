@@ -1,8 +1,6 @@
-# this module primary focus is for use inside the docker container of spectacles.
-# from gevent import monkey
-#
-# monkey.patch_all()
+# this module primary focus is for use inside the docker container of display.
 import eventlet
+
 eventlet.monkey_patch()
 
 from dotenv import load_dotenv

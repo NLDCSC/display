@@ -24,11 +24,10 @@ def get_display_sources():
 
 def chunks(a, n):
     k, m = divmod(len(a), n)
-    return (a[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n))
+    return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
 
 
 def get_display_source_chunk(number=0, chunk_size=1):
-
     ds = get_display_sources()
 
     chunk_list = list(chunks(list(ds.keys()), chunk_size))
