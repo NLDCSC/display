@@ -276,9 +276,9 @@ def delete_old_timeline_screenshots():
         for f in filenames:
             file_path = os.path.abspath(os.path.join(dirpath, f))
             creation_time = os.path.getmtime(file_path)
-            logger.info("file available: {}".format(file_path))
+            logger.debug("file available: {}".format(file_path))
             if (current_time - creation_time) // (24 * 3600) >= days_to_delete:
                 os.unlink(file_path)
                 logger.info('{} removed'.format(file_path))
             else:
-                logger.info('{} not removed'.format(file_path))
+                logger.debug('{} not removed'.format(file_path))
