@@ -172,23 +172,18 @@ function SetTabVisibility(el) {
         display_cookie.add(tab_value)
     }
 
-    if (tab_element.hasClass("active")) {
-        $('#checkbox_div > .row > .col-sm').children('input').each(function () {
-            let vis_tab = $("#tab_" + this.value)
-            if (vis_tab.is(":visible")) {
-                if (this.value !== tab_value) {
-                    vis_tab.click()
-                    return false;
-                }
-            }
-        })
-    }
-
 }
 
 function CloseDisplayFilter() {
     DestroyScrollingTabs()
     InitScrollingTabs()
+
+    let check_visible = $('button[id^="tab_"]:visible')
+
+    if (!check_visible.hasClass('active')){
+        check_visible[0].click()
+    }
+
     $("#popup1").hide()
 }
 
@@ -196,6 +191,12 @@ function ReEnableDisplayFilter() {
     display_cookie.items().forEach(function (value) {
         SetTabVisibility(tab_val = value)
     })
+
+    let check_visible = $('button[id^="tab_"]:visible')
+
+    if (!check_visible.hasClass('active')){
+        check_visible[0].click()
+    }
 }
 
 function SetKeyDownEvents() {
