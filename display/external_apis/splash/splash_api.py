@@ -26,12 +26,12 @@ class SplashApi(GenericApi):
             self.address, self.api_path, self.proxies, self.protocol, self.user_agent
         )
 
-    def render_png(self, url, wait=5, timeout=60):
+    def render_png(self, url, wait=5, timeout=30):
         resource = f"render.png?url={quote(url)}&timeout={timeout}&wait={wait}"
 
         return self.call("GET", resource=resource)
 
-    def get_render_url(self, url, wait=5, timeout=60):
+    def get_render_url(self, url, wait=5, timeout=30):
         resource = f"render.png?url={quote(url)}&timeout={timeout}&wait={wait}"
 
         return self._build_url(resource)
