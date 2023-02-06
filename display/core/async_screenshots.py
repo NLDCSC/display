@@ -175,7 +175,7 @@ class AsyncScreenshots(object):
         url_hash = hashlib.md5(entry["url"].encode("utf-8")).hexdigest()[:6]
         try:
             async with session.get(
-                    self.splash_api.get_render_url(entry["url"])
+                    self.splash_api.get_render_url(entry["url"], entry["wait"], entry["timeout"])
             ) as response:
                 data = await response.content.read()
                 return {url_hash: data}

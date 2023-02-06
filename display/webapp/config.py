@@ -48,4 +48,5 @@ class Config(object):
 
     USER_AGENT = os.getenv("USER_AGENT", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/109.0")
 
-    INDEX_REFRESH = os.getenv("INDEX_REFRESH", 30)
+    SCREENSHOT_REFRESH = os.getenv("SCREENSHOT_REFRESH", 30)
+    SCREENSHOT_CHUNK_SIZE = os.getenv("SCREENSHOT_CHUNK_SIZE", 6)

@@ -1,3 +1,4 @@
+import math
 import os
 import shutil
 import time
@@ -22,7 +23,7 @@ from display.core.screenshot_handler import ScreenShotHandler
 from display.helpers.app_logger import AppLogger
 from display.webapp.config import Config
 from display.core.async_screenshots import AsyncScreenshots
-from display.webapp.helpers.utils.sources import get_display_sources
+from display.webapp.helpers.utils.sources import get_display_sources, get_display_source_chunk
 
 logging.setLoggerClass(AppLogger)
 
@@ -92,12 +93,12 @@ def general_task_pre_run_config(task_id, task, *args, **kwargs):
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
     # Create screenshots every xx seconds
-    sender.add_periodic_task(90.0, make_screenshots.s())
+    sender.add_periodic_task(float(config.SCREENSHOT_REFRESH), balance_screenshot_workload.s())
     sender.add_periodic_task(30.0, guard_config.s())
     sender.add_periodic_task(1800.0, delete_old_timeline_screenshots.s())
 
 
-@app.task()
+@app.task(ignore_result=True, )
 def guard_config():
     logger = get_task_logger(__name__)
 
@@ -138,6 +139,59 @@ def guard_config():
     logger.info("Done with guard config")
 
 
+@app.task(autoretry_for=(ConnectionResetError,),
+          retry_kwargs={"max_retries": 3},
+          retry_backoff=60,
+          retry_jitter=False,
+          ignore_result=True, )
+def balance_screenshot_workload():
+    logger = get_task_logger(__name__)
+
+    logger.info("Creating balanced workload!")
+
+    try:
+        display_sources = get_display_sources()
+    except Exception as err:
+        logger.error(f"Unhandled error --> {err}")
+        return
+
+    # Total size of display sources
+    tot_size_ds = len(display_sources)
+
+    # divide total size by total_chunks by config
+    total_chunks_needed = math.ceil(tot_size_ds / config.SCREENSHOT_CHUNK_SIZE)
+
+    logger.info(f"Total needed chunks calculated: {total_chunks_needed}")
+
+    # check last run chunk number in redis
+    host, port = config.REDIS_URL.split("//")[1][:-1].split(":")
+
+    with redis.Redis(host=host, port=port, db=7) as conn:
+        last_run_number = conn.get("last_run_number")
+
+        last_run_number = int(last_run_number.decode('utf-8'))
+
+        if last_run_number is not None:
+
+            if last_run_number < total_chunks_needed:
+                conn.set("last_run_number", last_run_number + 1)
+            else:
+                conn.set("last_run_number", 0)
+                last_run_number = 0
+        else:
+            # never run before, storing 0
+            conn.set("last_run_number", 0)
+            last_run_number = 0
+
+    logger.info(f"Getting display source with number: {last_run_number}")
+
+    display_sources_chunk = get_display_source_chunk(number=last_run_number, chunk_size=total_chunks_needed)
+
+    make_screenshots.delay(display_sources_chunk)
+
+    logger.info("Done with distributing workload!")
+
+
 @app.task(
     autoretry_for=(ConnectionResetError,),
     retry_kwargs={"max_retries": 3},
@@ -145,18 +199,10 @@ def guard_config():
     retry_jitter=False,
     ignore_result=True,
 )
-def make_screenshots():
+def make_screenshots(display_sources):
     logger = get_task_logger(__name__)
 
     logger.info("Starting repeating screenshot creation!")
-
-    try:
-
-        display_sources = get_display_sources()
-
-    except Exception as err:
-        logger.error(f"Unhandled error --> {err}")
-        return
 
     logger.info(f"Got urls of {len(display_sources)} sources")
 
@@ -197,9 +243,9 @@ def create_custom_screenshot(data):
 
     sh = ScreenShotHandler()
 
-    url = sh.get_url_by_hash(data["data"])
+    url_data = sh.get_data_by_hash(data["data"])
 
-    display_sources = {sh.get_tab_by_hash(data["data"]): [{"url": url}]}
+    display_sources = {sh.get_tab_by_hash(data["data"]): [url_data]}
 
     logger.info(f"Hash mapped to url: {display_sources}!")
 

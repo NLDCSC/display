@@ -24,7 +24,7 @@ services:
       context: .
       dockerfile: ./splash_screen
     deploy:
-      replicas: 5
+      replicas: 15
     restart: always
     env_file:
       - .env

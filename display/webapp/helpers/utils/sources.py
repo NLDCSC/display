@@ -20,3 +20,25 @@ def get_display_sources():
         display_sources = {"none": [{}]}
 
     return display_sources
+
+
+def chunks(a, n):
+    k, m = divmod(len(a), n)
+    return (a[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n))
+
+
+def get_display_source_chunk(number=0, chunk_size=1):
+
+    ds = get_display_sources()
+
+    chunk_list = list(chunks(list(ds.keys()), chunk_size))
+
+    ret_data = {}
+
+    if number >= len(chunk_list):
+        number = len(chunk_list) - 1
+
+    for each in chunk_list[number]:
+        ret_data[each] = ds[each]
+
+    return ret_data

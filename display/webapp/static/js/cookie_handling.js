@@ -1,12 +1,17 @@
 function parseCookieValue(cookiedata) {
-    var parsed_data = cookiedata
+    try {
+        var parsed_data = cookiedata
         .split(';')
         .map(v => v.split('='))
         .reduce((acc, v) => {
             acc[decodeURIComponent(v[0].trim())] = decodeURIComponent(v[1].trim());
         })
 
-    return parsed_data[1].split(",")
+        return parsed_data[1].split(",")
+    } catch (error) {
+        return [];
+    }
+
 }
 
 function onlyUnique(value, index, self) {
@@ -24,7 +29,7 @@ function CookieList(cookieName, exdays = 1) {
     var cookie = (document.cookie)
 
     //Load the items or a new array if null.
-    var items = cookie ? parseCookieValue(cookie) : new Array();
+    var items = cookie ? parseCookieValue(cookie) : [];
 
 
     return {

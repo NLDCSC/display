@@ -27,9 +27,12 @@ class ScreenShotHandler(object):
 
         self.hash_to_url_mapping = defaultdict()
 
+        self.hash_to_data_mapping = defaultdict()
+
         self.set_hash_to_tab_mapping()
         self.set_tab_to_hash_list()
         self.set_hash_to_url_mapping()
+        self.set_hash_to_data_mapping()
 
         self.current_wd = os.path.dirname(os.path.abspath(__file__))
 
@@ -53,6 +56,16 @@ class ScreenShotHandler(object):
 
         self.hash_to_url_mapping = dict(self.hash_to_url_mapping)
 
+    def set_hash_to_data_mapping(self):
+
+        for key, value in self.display_sources.items():
+            for item in value:
+                self.hash_to_data_mapping[
+                    hashlib.md5(item["url"].encode("utf-8")).hexdigest()[:6]
+                ] = {"url": item["url"], "wait": item["wait"], "timeout": item["timeout"]}
+
+        self.hash_to_data_mapping = dict(self.hash_to_data_mapping)
+
     def set_tab_to_hash_list(self):
 
         for key, value in self.hash_to_tab_mapping.items():
@@ -71,6 +84,13 @@ class ScreenShotHandler(object):
 
         try:
             return self.hash_to_url_mapping[the_hash]
+        except KeyError:
+            return False
+
+    def get_data_by_hash(self, the_hash):
+
+        try:
+            return self.hash_to_data_mapping[the_hash]
         except KeyError:
             return False
 
