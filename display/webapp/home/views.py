@@ -21,6 +21,12 @@ config = Config()
 def index():
     display_sources = get_display_sources()
 
+    all_display_sources = display_sources
+
+    # display_sources = {list(display_sources.keys())[0]: display_sources[list(display_sources.keys())[0]]}
+
+    display_sources = {}
+
     return render_template("pages/index.html", header="Display", **locals())
 
 

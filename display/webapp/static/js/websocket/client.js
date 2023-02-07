@@ -22,6 +22,8 @@ $(document).ready(function () {
 
     socket.on('connect_error', function (err){
         console.log('Connection error due to: ' + err)
+        // revert to classic upgrade
+        socket.io.opts.transports = ["polling", "websocket"];
     });
 
     // Event handler for disconnecting connections.
@@ -35,6 +37,11 @@ $(document).ready(function () {
 
     socket.on('push_all_screenshots', function (msg) {
         if (msg["data"] !== null) {
+
+            let tab_content = $("#content_" + msg["tab_hash"])
+
+            tab_content.html(msg["html_data"])
+
             msg["data"].forEach(item => {
 
                 let img_content = $("#img_content_" + item.sc_id)

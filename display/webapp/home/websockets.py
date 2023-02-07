@@ -145,7 +145,16 @@ def do_change_display_tab(tab_name):
 
     tab_data = sh.get_all_screenshots(tab_name=tab_name["data"])
 
-    emit("push_all_screenshots", {"data": tab_data})
+    display_sources = get_display_sources()
+
+    display_sources = {tab_name["data"]: display_sources[tab_name["data"]]}
+
+    key = tab_name["data"]
+
+    html_data = render_template("partials/content_rows.html", display_sources=display_sources, key=key)
+
+    emit("push_all_screenshots", {"data": tab_data, "html_data": html_data,
+                                  "tab_hash": hashlib.md5(tab_name["data"].encode("utf-8")).hexdigest()[:6]})
 
     logger.info(f"Client details: {req_client.client_details()}")
 
