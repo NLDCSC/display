@@ -15,9 +15,9 @@ from display.webapp.run import socketio
 
 logging.setLoggerClass(HelperLogger)
 
-logging.getLogger("socketio.server").setLevel("ERROR")
+# logging.getLogger("socketio.server").setLevel("ERROR")
 logging.getLogger("geventwebsocket.handler").setLevel("ERROR")
-logging.getLogger("engineio.server").setLevel("ERROR")
+# logging.getLogger("engineio.server").setLevel("ERROR")
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +88,7 @@ def connect():
 
     this_client.con_status = this_client.connection_status.CON_ACK
 
-    logger.debug(f"Client details: {clients.fetch_client_details()}")
+    logger.info(f"Client details: {clients.fetch_client_details()}")
 
 
 @socketio.on("active_connect", namespace="/display")
@@ -98,11 +98,12 @@ def active_connect():
     this_client = clients.get(request.sid)
 
     this_client.con_status = this_client.connection_status.CON_CFM
+
     logger.info(f"Client connected: {request.sid}")
 
     logger.info(f"Total clients connected: {len(clients.fetch_clients())}")
 
-    logger.debug(f"Client details: {clients.fetch_client_details()}")
+    logger.info(f"Client details: {clients.fetch_client_details()}")
 
 
 @socketio.on("disconnect", namespace="/display")
@@ -120,7 +121,7 @@ def do_disconnect():
     logger.info(f"Client disconnected: {request.sid}")
     logger.info(f"Total clients connected: {len(clients.fetch_clients())}")
 
-    logger.debug(f"Client details: {clients.fetch_client_details()}")
+    logger.info(f"Client details: {clients.fetch_client_details()}")
 
 
 @socketio.on("change_display_tab", namespace="/display")
@@ -146,7 +147,7 @@ def do_change_display_tab(tab_name):
 
     emit("push_all_screenshots", {"data": tab_data})
 
-    logger.debug(f"Client details: {req_client.client_details()}")
+    logger.info(f"Client details: {req_client.client_details()}")
 
 
 @socketio.on("rebuild_request", namespace="/display")
@@ -170,7 +171,7 @@ def do_rebuild_request():
         room=request.sid,
     )
 
-    logger.debug(f"Client details: {req_client.client_details()}")
+    logger.info(f"Client details: {req_client.client_details()}")
 
 
 @socketio.on("create_custom_screenshot", namespace="/display")

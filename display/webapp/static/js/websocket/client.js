@@ -20,6 +20,10 @@ $(document).ready(function () {
         });
     });
 
+    socket.on('connect_error', function (err){
+        console.log('Connection error due to: ' + err)
+    });
+
     // Event handler for disconnecting connections.
     socket.on('disconnect', function () {
         let con_stat = document.getElementById("con_status");
