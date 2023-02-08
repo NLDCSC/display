@@ -152,7 +152,9 @@ def do_change_display_tab(tab_name):
 
     key = tab_name["data"]
 
-    html_data = render_template("partials/content_rows.html", display_sources=display_sources, key=key)
+    html_data = render_template(
+        "partials/content_rows.html", display_sources=display_sources, key=key
+    )
 
     @copy_current_request_context
     def cfm_received(client_id, data):
@@ -161,13 +163,30 @@ def do_change_display_tab(tab_name):
     # using call here to wait for the callback of the client; timeout error is raised is callback is not received in
     # time; retrying the second time with the emit event
     try:
-        call("push_all_screenshots", {"data": tab_data, "html_data": html_data,
-                                      "tab_hash": hashlib.md5(tab_name["data"].encode("utf-8")).hexdigest()[:6]},
-             callback=cfm_received(client_id=req_client.sid, data=tab_name["data"]), timeout=10)
+        call(
+            "push_all_screenshots",
+            {
+                "data": tab_data,
+                "html_data": html_data,
+                "tab_hash": hashlib.md5(tab_name["data"].encode("utf-8")).hexdigest()[
+                    :6
+                ],
+            },
+            callback=cfm_received(client_id=req_client.sid, data=tab_name["data"]),
+            timeout=10,
+        )
     except SocketIOTimeOutError:
         logger.warning(f"Timeout error on client: {req_client}; retrying!")
-        emit("push_all_screenshots", {"data": tab_data, "html_data": html_data,
-                                      "tab_hash": hashlib.md5(tab_name["data"].encode("utf-8")).hexdigest()[:6]})
+        emit(
+            "push_all_screenshots",
+            {
+                "data": tab_data,
+                "html_data": html_data,
+                "tab_hash": hashlib.md5(tab_name["data"].encode("utf-8")).hexdigest()[
+                    :6
+                ],
+            },
+        )
 
     logger.info(f"Client details: {req_client.client_details()}")
 

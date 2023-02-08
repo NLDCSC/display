@@ -22,9 +22,29 @@ def get_display_sources():
     return display_sources
 
 
+def get_screenshot_sources():
+    try:
+        with open(
+            os.path.join(config.CONFIG_PATH, config.SCREENSHOT_SOURCE_CONFIG_FILE), "r"
+        ) as f:
+            screenshot_config_json = json.loads(f.read())
+
+        screenshot_sources = screenshot_config_json
+
+    except FileNotFoundError:
+        with open(
+            os.path.join(config.CONFIG_PATH, config.SCREENSHOT_SOURCE_CONFIG_FILE), "w"
+        ) as f:
+            f.write(json.dumps({"none": ["none"]}))
+
+        screenshot_sources = {"none": ["none"]}
+
+    return screenshot_sources
+
+
 def chunks(a, n):
     k, m = divmod(len(a), n)
-    return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
+    return (a[i * k + min(i, m) : (i + 1) * k + min(i + 1, m)] for i in range(n))
 
 
 def get_display_source_chunk(number=0, chunk_size=1):

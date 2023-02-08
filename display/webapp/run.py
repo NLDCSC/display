@@ -46,9 +46,16 @@ def create_app(version):
     bootstrap.init_app(app)
 
     if config.DEBUG:
-        socketio.init_app(app, message_queue=app.config["REDIS_URL"], cors_allowed_origins='*', async_mode="gevent")
+        socketio.init_app(
+            app,
+            message_queue=app.config["REDIS_URL"],
+            cors_allowed_origins="*",
+            async_mode="gevent",
+        )
     else:
-        socketio.init_app(app, message_queue=app.config["REDIS_URL"], cors_allowed_origins='*')
+        socketio.init_app(
+            app, message_queue=app.config["REDIS_URL"], cors_allowed_origins="*"
+        )
 
     from display.webapp.home import home as home_blueprint
 

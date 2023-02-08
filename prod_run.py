@@ -29,7 +29,7 @@ logger.info("Running async mode: {}".format(socketio.async_mode))
 logger.info("Starting display server...")
 
 if os.path.exists(app.config["WEB_TLS_KEY_PATH"]) and os.path.exists(
-        app.config["WEB_TLS_KEY_PATH"]
+    app.config["WEB_TLS_KEY_PATH"]
 ):
     socketio.run(
         app,

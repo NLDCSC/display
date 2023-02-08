@@ -62,7 +62,11 @@ class ScreenShotHandler(object):
             for item in value:
                 self.hash_to_data_mapping[
                     hashlib.md5(item["url"].encode("utf-8")).hexdigest()[:6]
-                ] = {"url": item["url"], "wait": item["wait"], "timeout": item["timeout"]}
+                ] = {
+                    "url": item["url"],
+                    "wait": item["wait"],
+                    "timeout": item["timeout"],
+                }
 
         self.hash_to_data_mapping = dict(self.hash_to_data_mapping)
 

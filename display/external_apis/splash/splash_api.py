@@ -9,12 +9,12 @@ from display.external_apis.generic_api import GenericApi
 
 class SplashApi(GenericApi):
     def __init__(
-            self,
-            address,
-            api_path=None,
-            proxies=None,
-            protocol="https",
-            user_agent="Display",
+        self,
+        address,
+        api_path=None,
+        proxies=None,
+        protocol="https",
+        user_agent="Display",
     ):
         self.address = address
         self.api_path = api_path

@@ -23,7 +23,10 @@ from display.core.screenshot_handler import ScreenShotHandler
 from display.helpers.app_logger import AppLogger
 from display.webapp.config import Config
 from display.core.async_screenshots import AsyncScreenshots
-from display.webapp.helpers.utils.sources import get_display_sources, get_display_source_chunk
+from display.webapp.helpers.utils.sources import (
+    get_display_sources,
+    get_display_source_chunk,
+)
 
 logging.setLoggerClass(AppLogger)
 
@@ -93,12 +96,16 @@ def general_task_pre_run_config(task_id, task, *args, **kwargs):
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
     # Create screenshots every xx seconds
-    sender.add_periodic_task(float(config.SCREENSHOT_REFRESH), balance_screenshot_workload.s())
+    sender.add_periodic_task(
+        float(config.SCREENSHOT_REFRESH), balance_screenshot_workload.s()
+    )
     sender.add_periodic_task(30.0, guard_config.s())
     sender.add_periodic_task(1800.0, delete_old_timeline_screenshots.s())
 
 
-@app.task(ignore_result=True, )
+@app.task(
+    ignore_result=True,
+)
 def guard_config():
     logger = get_task_logger(__name__)
 
@@ -139,11 +146,13 @@ def guard_config():
     logger.info("Done with guard config")
 
 
-@app.task(autoretry_for=(ConnectionResetError,),
-          retry_kwargs={"max_retries": 3},
-          retry_backoff=60,
-          retry_jitter=False,
-          ignore_result=True, )
+@app.task(
+    autoretry_for=(ConnectionResetError,),
+    retry_kwargs={"max_retries": 3},
+    retry_backoff=60,
+    retry_jitter=False,
+    ignore_result=True,
+)
 def balance_screenshot_workload():
     logger = get_task_logger(__name__)
 
@@ -171,7 +180,7 @@ def balance_screenshot_workload():
 
         if last_run_number is not None:
 
-            last_run_number = int(last_run_number.decode('utf-8'))
+            last_run_number = int(last_run_number.decode("utf-8"))
 
             if last_run_number < total_chunks_needed:
                 conn.set("last_run_number", last_run_number + 1)
@@ -185,7 +194,9 @@ def balance_screenshot_workload():
 
     logger.info(f"Getting display source with number: {last_run_number}")
 
-    display_sources_chunk = get_display_source_chunk(number=last_run_number, chunk_size=total_chunks_needed)
+    display_sources_chunk = get_display_source_chunk(
+        number=last_run_number, chunk_size=total_chunks_needed
+    )
 
     make_screenshots.delay(display_sources_chunk)
 
@@ -286,13 +297,15 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
     logger.info(f"Starting saving changed screenshots on: {len(data)} data items!")
 
     for each in data:
-        if int(each['changed']) == 0:
+        if int(each["changed"]) == 0:
             # changed content; save a copy of the current screenshot
-            if not os.path.exists(os.path.join(config.TIMELINE_LOCATION, each['sc_id'])):
+            if not os.path.exists(
+                os.path.join(config.TIMELINE_LOCATION, each["sc_id"])
+            ):
                 logger.info(
                     f"Creating {os.path.join(config.TIMELINE_LOCATION, each['sc_id'])}"
                 )
-                os.mkdir(os.path.join(config.TIMELINE_LOCATION, each['sc_id']))
+                os.mkdir(os.path.join(config.TIMELINE_LOCATION, each["sc_id"]))
 
             if csc:
                 new_filename = f"csc-{uuid.uuid4()}.png"
@@ -301,16 +314,14 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
 
             # create a copy of the changed screenshot and copy it to the timeline directory
             shutil.copyfile(
-                os.path.join(
-                    config.SCREENSHOT_LOCATION, f"{each['sc_id']}.png"
-                ),
-                os.path.join(
-                    config.TIMELINE_LOCATION, each['sc_id'], new_filename
-                ),
+                os.path.join(config.SCREENSHOT_LOCATION, f"{each['sc_id']}.png"),
+                os.path.join(config.TIMELINE_LOCATION, each["sc_id"], new_filename),
             )
 
 
-@app.task(ignore_result=True, )
+@app.task(
+    ignore_result=True,
+)
 def delete_old_timeline_screenshots():
     logger = get_task_logger(__name__)
 
@@ -318,13 +329,13 @@ def delete_old_timeline_screenshots():
     days_to_delete = config.DAYS_TO_KEEP_TIMELINE_SCREENSHOTS
     directory = config.TIMELINE_LOCATION
 
-    for dirpath, _, filenames in os.walk(directory):
+    for dir_path, _, filenames in os.walk(directory):
         for f in filenames:
-            file_path = os.path.abspath(os.path.join(dirpath, f))
+            file_path = os.path.abspath(os.path.join(dir_path, f))
             creation_time = os.path.getmtime(file_path)
             logger.debug("file available: {}".format(file_path))
             if (current_time - creation_time) // (24 * 3600) >= days_to_delete:
                 os.unlink(file_path)
-                logger.info('{} removed'.format(file_path))
+                logger.info("{} removed".format(file_path))
             else:
-                logger.debug('{} not removed'.format(file_path))
+                logger.debug("{} not removed".format(file_path))

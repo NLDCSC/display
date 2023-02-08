@@ -15,7 +15,9 @@ my_file_location = os.path.dirname(os.path.abspath(__file__))
 def getB64_screenshot(filename, with_timestamp=False):
     try:
         if with_timestamp:
-            the_filename = os.path.join(config.SCREENSHOT_LOCATION, f"{filename}_ts.png")
+            the_filename = os.path.join(
+                config.SCREENSHOT_LOCATION, f"{filename}_ts.png"
+            )
         else:
             the_filename = os.path.join(config.SCREENSHOT_LOCATION, f"{filename}.png")
 
@@ -24,7 +26,7 @@ def getB64_screenshot(filename, with_timestamp=False):
         return f"data:image/png;base64, {encoded_string.decode('utf-8')}"
     except Exception:
         with open(
-                os.path.join(my_file_location, "../../static", "img/noScreenShot.png"), "rb"
+            os.path.join(my_file_location, "../../static", "img/noScreenShot.png"), "rb"
         ) as image_file:
             encoded_string = base64.b64encode(image_file.read())
         return f"data:image/png;base64, {encoded_string.decode('utf-8')}"

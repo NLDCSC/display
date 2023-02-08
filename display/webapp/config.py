@@ -32,6 +32,9 @@ class Config(object):
 
     CONFIG_PATH = os.getenv("CONFIG_PATH", "/app/data/config/")
     CONFIG_FILE = os.getenv("CONFIG_FILE", "config.json")
+    SCREENSHOT_SOURCE_CONFIG_FILE = os.getenv(
+        "SCREENSHOT_SOURCE_CONFIG_FILE", "screenshot_config.json"
+    )
 
     LAST_BLUE_TEAM = os.getenv("LAST_BLUE_TEAM", 24)
 
@@ -44,10 +47,14 @@ class Config(object):
 
     SCREENSHOT_LOCATION = os.getenv("SCREENSHOT_LOCATION", "/app/data/screenshots/")
     TIMELINE_LOCATION = os.getenv("TIMELINE_LOCATION", "/app/data/timeline")
-    DAYS_TO_KEEP_TIMELINE_SCREENSHOTS = os.getenv("DAYS_TO_KEEP_TIMELINE_SCREENSHOTS", 5)
+    DAYS_TO_KEEP_TIMELINE_SCREENSHOTS = os.getenv(
+        "DAYS_TO_KEEP_TIMELINE_SCREENSHOTS", 5
+    )
 
-    USER_AGENT = os.getenv("USER_AGENT",
-                           "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/109.0")
+    USER_AGENT = os.getenv(
+        "USER_AGENT",
+        "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/109.0",
+    )
 
     SCREENSHOT_REFRESH = os.getenv("SCREENSHOT_REFRESH", 30)
     SCREENSHOT_CHUNK_SIZE = os.getenv("SCREENSHOT_CHUNK_SIZE", 6)
