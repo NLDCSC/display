@@ -2,7 +2,8 @@ import hashlib
 import logging
 
 from flask import copy_current_request_context, request, render_template
-from flask_socketio import emit, disconnect, join_room, leave_room
+from flask_socketio import emit, disconnect, join_room, leave_room, call
+from socketio.exceptions import TimeoutError as SocketIOTimeOutError
 
 from display.celery_app.display_daemon import create_custom_screenshot
 from display.core.screenshot_handler import ScreenShotHandler
@@ -15,9 +16,9 @@ from display.webapp.run import socketio
 
 logging.setLoggerClass(HelperLogger)
 
-# logging.getLogger("socketio.server").setLevel("ERROR")
+logging.getLogger("socketio.server").setLevel("ERROR")
 logging.getLogger("geventwebsocket.handler").setLevel("ERROR")
-# logging.getLogger("engineio.server").setLevel("ERROR")
+logging.getLogger("engineio.server").setLevel("ERROR")
 
 logger = logging.getLogger(__name__)
 
@@ -153,8 +154,20 @@ def do_change_display_tab(tab_name):
 
     html_data = render_template("partials/content_rows.html", display_sources=display_sources, key=key)
 
-    emit("push_all_screenshots", {"data": tab_data, "html_data": html_data,
-                                  "tab_hash": hashlib.md5(tab_name["data"].encode("utf-8")).hexdigest()[:6]})
+    @copy_current_request_context
+    def cfm_received(client_id, data):
+        cfm_received_data(client_id=client_id, data=data)
+
+    # using call here to wait for the callback of the client; timeout error is raised is callback is not received in
+    # time; retrying the second time with the emit event
+    try:
+        call("push_all_screenshots", {"data": tab_data, "html_data": html_data,
+                                      "tab_hash": hashlib.md5(tab_name["data"].encode("utf-8")).hexdigest()[:6]},
+             callback=cfm_received(client_id=req_client.sid, data=tab_name["data"]), timeout=10)
+    except SocketIOTimeOutError:
+        logger.warning(f"Timeout error on client: {req_client}; retrying!")
+        emit("push_all_screenshots", {"data": tab_data, "html_data": html_data,
+                                      "tab_hash": hashlib.md5(tab_name["data"].encode("utf-8")).hexdigest()[:6]})
 
     logger.info(f"Client details: {req_client.client_details()}")
 
@@ -166,6 +179,10 @@ def do_rebuild_request():
     req_client = clients.get(request.sid)
 
     display_sources = get_display_sources()
+
+    all_display_sources = display_sources
+
+    display_sources = {}
 
     html_data = render_template("partials/content.html", **locals())
 

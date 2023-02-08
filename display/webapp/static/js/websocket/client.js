@@ -22,8 +22,6 @@ $(document).ready(function () {
 
     socket.on('connect_error', function (err){
         console.log('Connection error due to: ' + err)
-        // revert to classic upgrade
-        socket.io.opts.transports = ["polling", "websocket"];
     });
 
     // Event handler for disconnecting connections.
@@ -35,7 +33,7 @@ $(document).ready(function () {
         $('#ping_pong').text("NA ");
     });
 
-    socket.on('push_all_screenshots', function (msg) {
+    socket.on('push_all_screenshots', function (msg, cb) {
         if (msg["data"] !== null) {
 
             let tab_content = $("#content_" + msg["tab_hash"])
@@ -71,7 +69,15 @@ $(document).ready(function () {
                 }, 8000);
 
             })
+
+            SetAllEventListeners()
+
+            if (cb) {
+                cb(client_id = socket.sid, data = msg["tab_hash"]);
+            }
+
         }
+
     });
 
     socket.on('config_change', function (msg) {

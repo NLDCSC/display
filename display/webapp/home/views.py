@@ -23,8 +23,6 @@ def index():
 
     all_display_sources = display_sources
 
-    # display_sources = {list(display_sources.keys())[0]: display_sources[list(display_sources.keys())[0]]}
-
     display_sources = {}
 
     return render_template("pages/index.html", header="Display", **locals())
