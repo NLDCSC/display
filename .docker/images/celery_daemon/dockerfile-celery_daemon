@@ -13,8 +13,10 @@ WORKDIR $APP
 # Copy the current directory contents into the container at /app
 ADD . $APP
 
-#RUN apt-get update
-#RUN apt-get -y install python3-dev python3-pip
+RUN echo "deb http://deb.debian.org/debian/ unstable main contrib non-free" >> /etc/apt/sources.list.d/debian.list
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends firefox-esr
+RUN curl -L https://github.com/mozilla/geckodriver/releases/download/v0.32.2/geckodriver-v0.32.2-linux64.tar.gz | tar xz -C /usr/local/bin
 
 RUN pip install --upgrade pip
 

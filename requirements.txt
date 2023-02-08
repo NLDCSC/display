@@ -19,3 +19,4 @@ rfc3339==6.2
 redis==4.4.2
 Pillow==9.4.0
 setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
+selenium==4.8.0

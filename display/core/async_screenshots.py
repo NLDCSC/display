@@ -8,6 +8,7 @@ import hashlib
 import logging
 import os
 import shutil
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -44,6 +45,9 @@ class AsyncScreenshots(object):
 
         self.screen_shot_sources = get_screenshot_sources()
 
+        self.tab_to_screenshotsource_mapping = defaultdict()
+        self.set_tab_to_screenshotsource_mapping()
+
         self.map_screenshot_sources = {
             "default": "workload",
             "selenium": "selenium_workload",
@@ -54,10 +58,23 @@ class AsyncScreenshots(object):
 
         if isinstance(incoming_workload, dict):
             for key, urls in incoming_workload.items():
-                if isinstance(urls, list):
-                    self.workload.extend(urls)
+                if key in self.tab_to_screenshotsource_mapping:
+                    if isinstance(urls, list):
+                        getattr(
+                            self,
+                            self.map_screenshot_sources[
+                                self.tab_to_screenshotsource_mapping[key]
+                            ],
+                        ).extend(urls)
+                    else:
+                        raise TypeError(f"Expecting list; got: {type(urls)}")
                 else:
-                    raise TypeError(f"Expecting list; got: {type(urls)}")
+                    if isinstance(urls, list):
+                        getattr(self, self.map_screenshot_sources["default"]).extend(
+                            urls
+                        )
+                    else:
+                        raise TypeError(f"Expecting list; got: {type(urls)}")
         else:
             raise TypeError(f"Expecting dict; got: {type(incoming_workload)}")
 
@@ -87,14 +104,32 @@ class AsyncScreenshots(object):
             "User-Agent": f"{self.user_agent}",
         }
 
+    def set_tab_to_screenshotsource_mapping(self):
+
+        for key, value in self.screen_shot_sources.items():
+            for item in value:
+                self.tab_to_screenshotsource_mapping[item] = key
+
+        self.tab_to_screenshotsource_mapping = dict(
+            self.tab_to_screenshotsource_mapping
+        )
+
     def process_async(self):
         """
         Method for processing the workload of sites to be screenshotted into files for displaying in the display gui
         """
 
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        results = loop.run_until_complete(self.fetch_all(loop))
+        results = []
+
+        if hasattr(self, "workload"):
+            if len(self.workload) != 0:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                results.extend(loop.run_until_complete(self.fetch_all(loop)))
+
+        if hasattr(self, "selenium_workload"):
+            if len(self.selenium_workload) != 0:
+                results.extend(self.get_threaded_screenshots())
 
         self.logger.info(f"Processing splash results: {len(results)}")
 
@@ -217,12 +252,15 @@ class AsyncScreenshots(object):
                 )
                 return results
 
-    def get_threaded_screenshots(self, links):
-        self.logger.info(f"Starting fetching url's on {len(links)} items")
+    def get_threaded_screenshots(self):
+        self.logger.info(
+            f"Starting fetching url's on {len(self.selenium_workload)} items"
+        )
 
         with ThreadPoolExecutor() as executor:
-
-            results = list(executor.map(self.selenium_screenshot, links))
+            results = list(
+                executor.map(self.selenium_screenshot, self.selenium_workload)
+            )
 
         return results
 
@@ -238,7 +276,7 @@ class AsyncScreenshots(object):
         try:
             driver.get(entry["url"])
             driver.execute_script("scroll(0, -500);")
-            driver.set_window_size(1024, 1024)
+            driver.set_window_size(1024, 853)
 
             data = driver.get_screenshot_as_base64()
             data = {url_hash: base64.b64decode(data.encode("utf-8"))}
