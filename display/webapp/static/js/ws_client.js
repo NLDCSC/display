@@ -246,7 +246,17 @@ function SetTabClick(evt) {
 
     let selected_tab = attrs["data-name"].nodeValue;
 
+    let tab_hash = attrs["data-hash"].nodeValue;
+
+    if($('#content_' + tab_hash).find('div.loading-container').length === 0){
+        let tab_change = $("#tab_change_loading")
+        tab_change.show()
+        tab_change.addClass("put_on_top")
+        $("#content_" + tab_hash).addClass("grey_out")
+    }
+
     window.socket.emit("change_display_tab", {"data": selected_tab});
+
 }
 
 function CreateCustomScreenshot(evt) {

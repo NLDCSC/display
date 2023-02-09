@@ -70,6 +70,11 @@ $(document).ready(function () {
 
             })
 
+            let tab_change = $("#tab_change_loading")
+            tab_change.hide()
+            tab_change.removeClass("put_on_top")
+            tab_content.removeClass("grey_out")
+
             SetAllEventListeners()
 
             if (cb) {
