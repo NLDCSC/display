@@ -3,7 +3,7 @@ version: '3.5'
 services:
 
   ha_proxy:
-    image: display-splash-ha_proxy
+    image: display-splash-ha_proxy-dev
     build:
       context: .
       dockerfile: ./ha_proxy

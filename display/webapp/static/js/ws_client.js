@@ -249,9 +249,7 @@ function SetTabClick(evt) {
     let tab_hash = attrs["data-hash"].nodeValue;
 
     if($('#content_' + tab_hash).find('div.loading-container').length === 0){
-        let tab_change = $("#tab_change_loading")
-        tab_change.show()
-        tab_change.addClass("put_on_top")
+        $("#tab_change_loading").show()
         $("#content_" + tab_hash).addClass("grey_out")
     }
 

@@ -220,10 +220,6 @@ body {
     display: none;
 }
 
-.put_on_top {
-    z-index: 1;
-}
-
 .grey_out {
     opacity: 0.3;
 }
