@@ -26,7 +26,7 @@ class Config(object):
 
     SYSLOG_ENABLE = getenv_bool("SYSLOG_ENABLE", "False")
     SYSLOG_SERVER = os.getenv("SYSLOG_SERVER", "172.16.1.1")
-    SYSLOG_PORT = os.getenv("SYSLOG_PORT", "5140")
+    SYSLOG_PORT = int(os.getenv("SYSLOG_PORT", 5140))
 
     OPENID_LOGIN = getenv_bool("OPENID_LOGIN", "True")
 
@@ -36,25 +36,25 @@ class Config(object):
         "SCREENSHOT_SOURCE_CONFIG_FILE", "screenshot_config.json"
     )
 
-    LAST_BLUE_TEAM = os.getenv("LAST_BLUE_TEAM", 24)
+    LAST_BLUE_TEAM = int(os.getenv("LAST_BLUE_TEAM", 24))
 
     SPLASH_HOST = os.getenv("SPLASH_HOST", "ha_proxy")
-    SPLASH_PORT = os.getenv("SPLASH_PORT", 8050)
+    SPLASH_PORT = int(os.getenv("SPLASH_PORT", 8050))
 
     REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/")
-    REDIS_BROKER_DB = os.getenv("REDIS_BROKER_DB", 5)
-    REDIS_BACKEND_DB = os.getenv("REDIS_BACKEND_DB", 6)
+    REDIS_BROKER_DB = int(os.getenv("REDIS_BROKER_DB", 5))
+    REDIS_BACKEND_DB = int(os.getenv("REDIS_BACKEND_DB", 6))
 
     SCREENSHOT_LOCATION = os.getenv("SCREENSHOT_LOCATION", "/app/data/screenshots/")
     TIMELINE_LOCATION = os.getenv("TIMELINE_LOCATION", "/app/data/timeline")
-    DAYS_TO_KEEP_TIMELINE_SCREENSHOTS = os.getenv(
+    DAYS_TO_KEEP_TIMELINE_SCREENSHOTS = int(os.getenv(
         "DAYS_TO_KEEP_TIMELINE_SCREENSHOTS", 5
-    )
+    ))
 
     USER_AGENT = os.getenv(
         "USER_AGENT",
         "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/109.0",
     )
 
-    SCREENSHOT_REFRESH = os.getenv("SCREENSHOT_REFRESH", 30)
-    SCREENSHOT_CHUNK_SIZE = os.getenv("SCREENSHOT_CHUNK_SIZE", 6)
+    SCREENSHOT_REFRESH = int(os.getenv("SCREENSHOT_REFRESH", 30))
+    SCREENSHOT_CHUNK_SIZE = int(os.getenv("SCREENSHOT_CHUNK_SIZE", 6))

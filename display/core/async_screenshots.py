@@ -9,12 +9,11 @@ import logging
 import os
 import shutil
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import aiohttp
 from selenium import webdriver
-from selenium.common import TimeoutException
 
 from display.external_apis.splash.splash_api import SplashApi
 from display.helpers.logger_class import HelperLogger
@@ -258,9 +257,23 @@ class AsyncScreenshots(object):
         )
 
         with ThreadPoolExecutor() as executor:
-            results = list(
-                executor.map(self.selenium_screenshot, self.selenium_workload)
-            )
+            results = []
+            future_entries = {
+                executor.submit(self.selenium_screenshot, entry): entry["url"]
+                for entry in self.selenium_workload
+            }
+            for future in as_completed(future_entries):
+                url = future_entries[future]
+                url_hash = hashlib.md5(url.encode("utf-8")).hexdigest()[:6]
+                try:
+                    data = future.result(timeout=35)
+                except Exception as err:
+                    self.logger.warning(
+                        f"Screenshot of: {url} generated an exception: {err}"
+                    )
+                    data = {url_hash: "ERROR"}
+                finally:
+                    results.append(data)
 
         return results
 
@@ -270,25 +283,18 @@ class AsyncScreenshots(object):
         options.add_argument("-headless")
         options.add_argument("--start-maximized")
 
-        driver = webdriver.Firefox(options=options)
-        driver.set_page_load_timeout(entry["timeout"])
-        driver.implicitly_wait(entry["wait"])
-        try:
+        with webdriver.Firefox(options=options) as driver:
+            driver.set_page_load_timeout(entry["timeout"])
+            driver.implicitly_wait(entry["wait"])
+
             driver.get(entry["url"])
             driver.execute_script("scroll(0, -500);")
             driver.set_window_size(1024, 853)
 
             data = driver.get_screenshot_as_base64()
             data = {url_hash: base64.b64decode(data.encode("utf-8"))}
-        except TimeoutException:
-            data = {url_hash: "ERROR"}
-        except Exception as err:
-            self.logger.warning(
-                f"Error getting {entry['url']} data.... Error observed: {err}"
-            )
-            data = {url_hash: "ERROR"}
-        driver.quit()
-        return data
+
+            return data
 
     def __repr__(self):
         return "<< AsyncScreenshots >>"
