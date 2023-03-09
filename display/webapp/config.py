@@ -47,9 +47,9 @@ class Config(object):
 
     SCREENSHOT_LOCATION = os.getenv("SCREENSHOT_LOCATION", "/app/data/screenshots/")
     TIMELINE_LOCATION = os.getenv("TIMELINE_LOCATION", "/app/data/timeline")
-    DAYS_TO_KEEP_TIMELINE_SCREENSHOTS = int(os.getenv(
-        "DAYS_TO_KEEP_TIMELINE_SCREENSHOTS", 5
-    ))
+    DAYS_TO_KEEP_TIMELINE_SCREENSHOTS = int(
+        os.getenv("DAYS_TO_KEEP_TIMELINE_SCREENSHOTS", 5)
+    )
 
     USER_AGENT = os.getenv(
         "USER_AGENT",

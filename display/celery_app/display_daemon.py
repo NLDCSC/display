@@ -324,7 +324,9 @@ def monitoring_nodes_results(data):
 
                         source = sh.get_tab_by_hash(url_hash)
                         try:
-                            tab_data = sh.get_changed_data_from_custom_screenshots(the_hash=url_hash)
+                            tab_data = sh.get_changed_data_from_custom_screenshots(
+                                the_hash=url_hash
+                            )
                             socketio.emit(
                                 "push_all_screenshots",
                                 {"data": tab_data},
@@ -333,7 +335,9 @@ def monitoring_nodes_results(data):
                             )
                             handle_changes_for_timeline.delay(data=tab_data)
                         except Exception as err:
-                            logger.error(f"Error processing updates.... --> Produced error: {err}")
+                            logger.error(
+                                f"Error processing updates.... --> Produced error: {err}"
+                            )
 
                         resulting_tasks = len(data) - len(tasks_ready)
 
