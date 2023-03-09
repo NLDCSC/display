@@ -3,17 +3,14 @@ async_header_collector.py
 =========================
 """
 import asyncio
-import base64
 import hashlib
 import logging
 import os
 import shutil
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import aiohttp
-from selenium import webdriver
 
 from display.external_apis.splash.splash_api import SplashApi
 from display.helpers.logger_class import HelperLogger
@@ -36,7 +33,7 @@ class AsyncScreenshots(object):
     :type user_agent: str
     """
 
-    def __init__(self, incoming_workload):
+    def __init__(self, incoming_workload=None):
 
         self.config = Config()
 
@@ -51,6 +48,9 @@ class AsyncScreenshots(object):
             "default": "workload",
             "selenium": "selenium_workload",
         }
+
+        if incoming_workload is None:
+            incoming_workload = {}
 
         for k, v in self.map_screenshot_sources.items():
             setattr(self, v, [])
@@ -113,24 +113,21 @@ class AsyncScreenshots(object):
             self.tab_to_screenshotsource_mapping
         )
 
-    def process_async(self):
+    def process_async(self, results: list = None):
         """
         Method for processing the workload of sites to be screenshotted into files for displaying in the display gui
         """
 
-        results = []
+        if results is None:
+            results = []
 
-        if hasattr(self, "workload"):
-            if len(self.workload) != 0:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                results.extend(loop.run_until_complete(self.fetch_all(loop)))
+            if hasattr(self, "workload"):
+                if len(self.workload) != 0:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    results.extend(loop.run_until_complete(self.fetch_all(loop)))
 
-        if hasattr(self, "selenium_workload"):
-            if len(self.selenium_workload) != 0:
-                results.extend(self.get_threaded_screenshots())
-
-        self.logger.info(f"Processing splash results: {len(results)}")
+        self.logger.info(f"Processing screenshot results: {len(results)}")
 
         for each in results:
             try:
@@ -250,51 +247,6 @@ class AsyncScreenshots(object):
                     return_exceptions=True,
                 )
                 return results
-
-    def get_threaded_screenshots(self):
-        self.logger.info(
-            f"Starting fetching url's on {len(self.selenium_workload)} items"
-        )
-
-        with ThreadPoolExecutor() as executor:
-            results = []
-            future_entries = {
-                executor.submit(self.selenium_screenshot, entry): entry["url"]
-                for entry in self.selenium_workload
-            }
-            for future in as_completed(future_entries):
-                url = future_entries[future]
-                url_hash = hashlib.md5(url.encode("utf-8")).hexdigest()[:6]
-                try:
-                    data = future.result(timeout=35)
-                except Exception as err:
-                    self.logger.warning(
-                        f"Screenshot of: {url} generated an exception: {err}"
-                    )
-                    data = {url_hash: "ERROR"}
-                finally:
-                    results.append(data)
-
-        return results
-
-    def selenium_screenshot(self, entry):
-        url_hash = hashlib.md5(entry["url"].encode("utf-8")).hexdigest()[:6]
-        options = webdriver.FirefoxOptions()
-        options.add_argument("-headless")
-        options.add_argument("--start-maximized")
-
-        with webdriver.Firefox(options=options) as driver:
-            driver.set_page_load_timeout(entry["timeout"])
-            driver.implicitly_wait(entry["wait"])
-
-            driver.get(entry["url"])
-            driver.execute_script("scroll(0, -500);")
-            driver.set_window_size(1024, 853)
-
-            data = driver.get_screenshot_as_base64()
-            data = {url_hash: base64.b64decode(data.encode("utf-8"))}
-
-            return data
 
     def __repr__(self):
         return "<< AsyncScreenshots >>"

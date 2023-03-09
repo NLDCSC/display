@@ -139,6 +139,7 @@ dmypy.json
 cython_debug/
 .idea
 /dev_data/
+/docker_data/
 /client_secrets.json
 *.pem
 /dev_data/flask/config/config_test.json

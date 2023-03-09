@@ -1,18 +1,21 @@
+import base64
+import hashlib
+import json
+import logging
 import math
 import os
 import shutil
 import time
 import uuid
+from io import BytesIO
 
+import redis
+from celery.result import AsyncResult, allow_join_result
 from dotenv import load_dotenv
 
 load_dotenv(".env")
 
-import hashlib
-import redis
-import logging
-import json
-
+from kombu import Queue
 from celery import Celery
 from celery.app.log import TaskFormatter
 from celery.signals import task_prerun, after_setup_task_logger, after_setup_logger
@@ -27,6 +30,8 @@ from display.webapp.helpers.utils.sources import (
     get_display_sources,
     get_display_source_chunk,
 )
+from pyvirtualdisplay.smartdisplay import SmartDisplay
+from selenium import webdriver
 
 logging.setLoggerClass(AppLogger)
 
@@ -40,6 +45,9 @@ app = Celery(
     include=["display.celery_app.display_daemon"],
     task_soft_time_limit=36000,
     task_time_limit=48000,
+    task_default_queue="default",
+    task_queues=(Queue("default"), Queue("nodes", routing_key="nodes")),
+    result_expires=600,
 )
 
 socketio = SocketIO(message_queue=config.REDIS_URL)
@@ -219,6 +227,10 @@ def make_screenshots(display_sources):
 
     ss = AsyncScreenshots(display_sources)
 
+    if hasattr(ss, "selenium_workload"):
+        if len(ss.selenium_workload) != 0:
+            push_to_nodes.delay(ss.selenium_workload)
+
     ss.process_async()
 
     logger.info(f"Finished taking screenshots; processing updates!")
@@ -247,6 +259,159 @@ def make_screenshots(display_sources):
     retry_jitter=False,
     ignore_result=True,
 )
+def push_to_nodes(workload):
+    logger = get_task_logger(__name__)
+
+    logger.info("Pushing screenshots to nodes...")
+
+    task_ids = []
+
+    for each in workload:
+        res = execute_on_node.apply_async(
+            queue="nodes",
+            kwargs={"entry": each},
+        )
+        task_ids.append(res.id)
+
+    logger.info("Done pushing screenshots to nodes!!")
+
+    logger.info(f"Task ids: {task_ids}")
+
+    monitoring_nodes_results.delay(task_ids)
+
+
+@app.task(
+    autoretry_for=(ConnectionResetError,),
+    retry_kwargs={"max_retries": 3},
+    retry_backoff=60,
+    retry_jitter=False,
+)
+def monitoring_nodes_results(data):
+    logger = get_task_logger(__name__)
+
+    logger.info(f"Starting monitoring task ids: {data}")
+
+    tasks_ready = []
+    do_loop = True
+
+    while do_loop:
+        for each in data:
+            if each not in tasks_ready:
+                res = AsyncResult(each, app=app)
+                if res.ready():
+                    logger.info(
+                        f"Task {each} is ready, removing from list and processing data...."
+                    )
+                    tasks_ready.append(each)
+                    try:
+                        with allow_join_result():
+                            screenshot_data = res.get(timeout=1)
+
+                        try:
+                            for k, v in screenshot_data.items():
+                                url_hash = k
+                                screenshot_data[k] = base64.b64decode(
+                                    list(screenshot_data.values())[0]
+                                )
+                        except Exception:
+                            # Not a base64 string, so screenshot already errored out, passing!
+                            pass
+
+                        ss = AsyncScreenshots()
+                        ss.process_async(results=[screenshot_data])
+
+                        sh = ScreenShotHandler()
+
+                        source = sh.get_tab_by_hash(url_hash)
+                        try:
+                            tab_data = sh.get_changed_data_from_custom_screenshots(the_hash=url_hash)
+                            socketio.emit(
+                                "push_all_screenshots",
+                                {"data": tab_data},
+                                room=source,
+                                namespace="/display",
+                            )
+                            handle_changes_for_timeline.delay(data=tab_data)
+                        except Exception as err:
+                            logger.error(f"Error processing updates.... --> Produced error: {err}")
+
+                        resulting_tasks = len(data) - len(tasks_ready)
+
+                        if resulting_tasks == 0:
+                            do_loop = False
+
+                        logger.info(
+                            f"Processing task {each} ready; still {resulting_tasks} tasks to monitor"
+                        )
+                    except Exception as err:
+                        logger.error(f"Error fetching results: {err}")
+
+    logger.info(f"Done monitoring {len(data)} tasks!!")
+
+
+@app.task(
+    autoretry_for=(ConnectionResetError,),
+    retry_kwargs={"max_retries": 3},
+    retry_backoff=60,
+    retry_jitter=False,
+)
+def execute_on_node(entry, scroll_percent=0):
+    logger = get_task_logger(__name__)
+
+    logger.info("Starting repeating screenshot creation!")
+
+    url_hash = hashlib.md5(entry["url"].encode("utf-8")).hexdigest()[:6]
+
+    logger.info(f"Working on hash: {url_hash} ({entry['url']})...")
+
+    try:
+        logger.info(f"Setting up smartdisplay....")
+        with SmartDisplay(visible=False, size=(1440, 900)) as display:
+
+            logger.info(f"Setting up webdriver....")
+
+            with webdriver.Firefox() as driver:
+                driver.set_page_load_timeout(entry["timeout"])
+                driver.implicitly_wait(entry["wait"])
+
+                logger.info(
+                    f"Driver set to timeout: {entry['timeout']} and implicit wait: {entry['wait']}"
+                )
+
+                driver.get(entry["url"])
+
+                if scroll_percent > 0:
+                    driver.execute_script(
+                        "window.scrollTo(0, document.body.scrollHeight*{0:.2f});".format(
+                            scroll_percent
+                        )
+                    )
+
+                with BytesIO() as buffered:
+                    img = display.waitgrab(1)
+                    img.save(buffered, format="PNG")
+
+                    data = base64.b64encode(buffered.getvalue())
+
+                logger.info(f"Got image data (first 25 bytes): {data[:25]}")
+                data = {url_hash: data.decode("utf-8")}
+
+                logger.info("Done taking screenshot, returning data!")
+                return data
+
+    except Exception as err:
+        logger.error(f"Error encountered while taking screenshots: {err}")
+        data = {url_hash: "ERROR"}
+        return data
+
+
+@app.task(
+    autoretry_for=(ConnectionResetError,),
+    retry_kwargs={"max_retries": 3},
+    retry_backoff=60,
+    retry_jitter=False,
+    ignore_result=True,
+)
 def create_custom_screenshot(data):
     logger = get_task_logger(__name__)
 
@@ -262,24 +427,28 @@ def create_custom_screenshot(data):
 
     ss = AsyncScreenshots(display_sources)
 
-    ss.process_async()
+    if hasattr(ss, "selenium_workload"):
+        if len(ss.selenium_workload) != 0:
+            push_to_nodes.delay(ss.selenium_workload)
+    else:
+        ss.process_async()
 
-    logger.info(f"Finished taking screenshot; processing....")
+        logger.info(f"Finished taking screenshot; processing....")
 
-    try:
-        for source in display_sources:
-            tab_data = sh.get_changed_data_from_custom_screenshots(
-                the_hash=data["data"]
-            )
-            socketio.emit(
-                "push_all_screenshots",
-                {"data": tab_data},
-                room=source,
-                namespace="/display",
-            )
-            handle_changes_for_timeline.delay(data=tab_data, csc=True)
-    except Exception as err:
-        logger.error(f"Error processing screenshot.... --> Produced error: {err}")
+        try:
+            for source in display_sources:
+                tab_data = sh.get_changed_data_from_custom_screenshots(
+                    the_hash=data["data"]
+                )
+                socketio.emit(
+                    "push_all_screenshots",
+                    {"data": tab_data},
+                    room=source,
+                    namespace="/display",
+                )
+                handle_changes_for_timeline.delay(data=tab_data, csc=True)
+        except Exception as err:
+            logger.error(f"Error processing screenshot.... --> Produced error: {err}")
 
     logger.info(f"Finished processing screenshot...")
 
