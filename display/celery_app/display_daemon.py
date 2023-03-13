@@ -576,7 +576,8 @@ def create_custom_screenshot(data):
             for each in ss.selenium_workload:
                 for target, urls in each.items():
                     push_to_nodes.delay(urls)
-    else:
+
+    if hasattr(ss, "workload"):
         ss.process_async()
 
         logger.info(f"Finished taking screenshot; processing....")
