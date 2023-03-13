@@ -66,6 +66,7 @@ class ScreenShotHandler(object):
                     "url": item["url"],
                     "wait": item["wait"],
                     "timeout": item["timeout"],
+                    "wait_on_id": item["wait_on_id"],
                 }
 
         self.hash_to_data_mapping = dict(self.hash_to_data_mapping)

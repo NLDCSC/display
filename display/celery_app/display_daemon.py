@@ -1,4 +1,5 @@
 import base64
+import collections
 import hashlib
 import json
 import logging
@@ -12,6 +13,10 @@ from io import BytesIO
 import redis
 from celery.result import AsyncResult, allow_join_result
 from dotenv import load_dotenv
+from selenium.common import TimeoutException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.wait import WebDriverWait
 
 load_dotenv(".env")
 
@@ -29,6 +34,7 @@ from display.core.async_screenshots import AsyncScreenshots
 from display.webapp.helpers.utils.sources import (
     get_display_sources,
     get_display_source_chunk,
+    chunks,
 )
 from pyvirtualdisplay.smartdisplay import SmartDisplay
 from selenium import webdriver
@@ -229,7 +235,9 @@ def make_screenshots(display_sources):
 
     if hasattr(ss, "selenium_workload"):
         if len(ss.selenium_workload) != 0:
-            push_to_nodes.delay(ss.selenium_workload)
+            for each in ss.selenium_workload:
+                for target, urls in each.items():
+                    push_to_nodes.delay(urls)
 
     ss.process_async()
 
@@ -266,10 +274,12 @@ def push_to_nodes(workload):
 
     task_ids = []
 
-    for each in workload:
+    chunked_list = chunks(workload, config.SCREENSHOT_NODES)
+
+    for each in chunked_list:
         res = execute_on_node.apply_async(
             queue="nodes",
-            kwargs={"entry": each},
+            kwargs={"entries": each},
         )
         task_ids.append(res.id)
 
@@ -305,39 +315,67 @@ def monitoring_nodes_results(data):
                     tasks_ready.append(each)
                     try:
                         with allow_join_result():
-                            screenshot_data = res.get(timeout=1)
+                            screenshot_list = res.get(timeout=1)
 
-                        try:
+                        ret_screenshot_data = collections.defaultdict()
+
+                        for screenshot_data in screenshot_list:
+
                             for k, v in screenshot_data.items():
                                 url_hash = k
-                                screenshot_data[k] = base64.b64decode(
-                                    list(screenshot_data.values())[0]
-                                )
-                        except Exception:
-                            # Not a base64 string, so screenshot already errored out, passing!
-                            pass
+                                if v == "ERROR":
+                                    ret_screenshot_data[k] = v
+                                else:
+                                    ret_screenshot_data[k] = base64.b64decode(
+                                        list(screenshot_data.values())[0]
+                                    )
 
                         ss = AsyncScreenshots()
-                        ss.process_async(results=[screenshot_data])
+                        ss.process_async(results=[ret_screenshot_data])
 
                         sh = ScreenShotHandler()
 
-                        source = sh.get_tab_by_hash(url_hash)
-                        try:
-                            tab_data = sh.get_changed_data_from_custom_screenshots(
-                                the_hash=url_hash
-                            )
-                            socketio.emit(
-                                "push_all_screenshots",
-                                {"data": tab_data},
-                                room=source,
-                                namespace="/display",
-                            )
-                            handle_changes_for_timeline.delay(data=tab_data)
-                        except Exception as err:
-                            logger.error(
-                                f"Error processing updates.... --> Produced error: {err}"
-                            )
+                        if len(screenshot_list) == 1:
+
+                            source = sh.get_tab_by_hash(url_hash)
+                            try:
+                                tab_data = sh.get_changed_data_from_custom_screenshots(
+                                    the_hash=url_hash
+                                )
+                                socketio.emit(
+                                    "push_all_screenshots",
+                                    {"data": tab_data},
+                                    room=source,
+                                    namespace="/display",
+                                )
+                                handle_changes_for_timeline.delay(
+                                    data=tab_data, csc=True
+                                )
+                            except Exception as err:
+                                logger.error(
+                                    f"Error processing updates.... --> Produced error: {err}"
+                                )
+
+                        else:
+
+                            url_hash = list(ret_screenshot_data.keys())[0]
+                            source = sh.get_tab_by_hash(url_hash)
+
+                            try:
+                                tab_data = sh.get_changed_screenshots_per_tab(
+                                    tab_name=source
+                                )
+                                socketio.emit(
+                                    "push_all_screenshots",
+                                    {"data": tab_data},
+                                    room=source,
+                                    namespace="/display",
+                                )
+                                handle_changes_for_timeline.delay(data=tab_data)
+                            except Exception as err:
+                                logger.error(
+                                    f"Error processing updates.... --> Produced error: {err}"
+                                )
 
                         resulting_tasks = len(data) - len(tasks_ready)
 
@@ -359,54 +397,142 @@ def monitoring_nodes_results(data):
     retry_backoff=60,
     retry_jitter=False,
 )
-def execute_on_node(entry, scroll_percent=0):
+def execute_on_node(entries, scroll_percent=0, evidence=False):
     logger = get_task_logger(__name__)
+    ret_data = []
 
-    logger.info("Starting repeating screenshot creation!")
+    if evidence:
 
-    url_hash = hashlib.md5(entry["url"].encode("utf-8")).hexdigest()[:6]
+        logger.info("Starting evidence screenshot creation!")
 
-    logger.info(f"Working on hash: {url_hash} ({entry['url']})...")
+        try:
+            logger.info(f"Setting up smartdisplay....")
+            with SmartDisplay(visible=False, size=(1440, 900)) as display:
 
-    try:
-        logger.info(f"Setting up smartdisplay....")
-        with SmartDisplay(visible=False, size=(1440, 900)) as display:
+                logger.info(f"Setting up webdriver....")
 
-            logger.info(f"Setting up webdriver....")
+                with webdriver.Firefox() as driver:
 
-            with webdriver.Firefox() as driver:
-                driver.set_page_load_timeout(entry["timeout"])
-                driver.implicitly_wait(entry["wait"])
+                    for entry in entries:
+                        driver.set_page_load_timeout(int(entry["timeout"]))
 
-                logger.info(
-                    f"Driver set to timeout: {entry['timeout']} and implicit wait: {entry['wait']}"
-                )
-
-                driver.get(entry["url"])
-
-                if scroll_percent > 0:
-                    driver.execute_script(
-                        "window.scrollTo(0, document.body.scrollHeight*{0:.2f});".format(
-                            scroll_percent
+                        logger.info(
+                            f"Driver set to timeout: {entry['timeout']} and implicit wait: {entry['wait']}"
                         )
-                    )
 
-                with BytesIO() as buffered:
-                    img = display.waitgrab(1)
-                    img.save(buffered, format="PNG")
+                        url_hash = hashlib.md5(
+                            entry["url"].encode("utf-8")
+                        ).hexdigest()[:6]
 
-                    data = base64.b64encode(buffered.getvalue())
+                        logger.info(f"Working on hash: {url_hash} ({entry['url']})...")
 
-                logger.info(f"Got image data (first 25 bytes): {data[:25]}")
-                data = {url_hash: data.decode("utf-8")}
+                        try:
 
-                logger.info("Done taking screenshot, returning data!")
-                return data
+                            driver.get(entry["url"])
 
-    except Exception as err:
-        logger.error(f"Error encountered while taking screenshots: {err}")
-        data = {url_hash: "ERROR"}
-        return data
+                            if "wait_on_id" in entry and entry["wait_on_id"] != "":
+                                try:
+                                    WebDriverWait(driver, int(entry["wait"])).until(
+                                        expected_conditions.presence_of_element_located(
+                                            (By.ID, entry["wait_on_id"])
+                                        )
+                                    )
+                                    logger.info("Page is ready!")
+                                except TimeoutException:
+                                    logger.info(
+                                        "Loading took too much time....Taking screenshot anyway...."
+                                    )
+                                    pass
+
+                            time.sleep(1.5)
+
+                            if scroll_percent > 0:
+                                driver.execute_script(
+                                    "window.scrollTo(0, document.body.scrollHeight*{0:.2f});".format(
+                                        scroll_percent
+                                    )
+                                )
+
+                            with BytesIO() as buffered:
+                                img = display.waitgrab(1)
+                                img.save(buffered, format="PNG")
+
+                                data = base64.b64encode(buffered.getvalue())
+
+                            logger.info(f"Got image data (first 25 bytes): {data[:25]}")
+                            ret_data.append({url_hash: data.decode("utf-8")})
+
+                        except Exception:
+                            ret_data.append({url_hash: "ERROR"})
+
+                    logger.info("Done taking screenshots, returning data!")
+                    return ret_data
+
+        except Exception as err:
+            logger.error(f"Error encountered while taking screenshots: {err}")
+
+    else:
+
+        logger.info("Starting repeating screenshot creation!")
+
+        try:
+            logger.info(f"Setting up smartdisplay....")
+            with SmartDisplay(visible=False, size=(1440, 900)) as display:
+
+                logger.info(f"Setting up webdriver....")
+
+                with webdriver.Firefox() as driver:
+
+                    for entry in entries:
+                        driver.set_page_load_timeout(int(entry["timeout"]))
+
+                        logger.info(
+                            f"Driver set to timeout: {entry['timeout']} and implicit wait: {entry['wait']}"
+                        )
+
+                        url_hash = hashlib.md5(
+                            entry["url"].encode("utf-8")
+                        ).hexdigest()[:6]
+
+                        logger.info(f"Working on hash: {url_hash} ({entry['url']})...")
+
+                        try:
+
+                            driver.get(entry["url"])
+
+                            if "wait_on_id" in entry and entry["wait_on_id"] != "":
+                                try:
+                                    WebDriverWait(driver, int(entry["wait"])).until(
+                                        expected_conditions.presence_of_element_located(
+                                            (By.ID, entry["wait_on_id"])
+                                        )
+                                    )
+                                    logger.info("Page is ready!")
+                                except TimeoutException:
+                                    logger.info(
+                                        "Loading took too much time....Taking screenshot anyway...."
+                                    )
+                                    pass
+
+                            time.sleep(1.5)
+
+                            driver.execute_script("scroll(0, -500);")
+                            # driver.set_window_size(1024, 853)
+
+                            data = driver.get_screenshot_as_base64()
+
+                            logger.info(f"Got image data (first 25 bytes): {data[:25]}")
+                            ret_data.append({url_hash: data})
+
+                        except Exception as err:
+                            logger.error(f"Encountered error: {err}")
+                            ret_data.append({url_hash: "ERROR"})
+
+                    logger.info("Done taking screenshots, returning data!")
+                    return ret_data
+
+        except Exception as err:
+            logger.error(f"Error encountered while taking screenshots: {err}")
 
 
 @app.task(
@@ -433,7 +559,9 @@ def create_custom_screenshot(data):
 
     if hasattr(ss, "selenium_workload"):
         if len(ss.selenium_workload) != 0:
-            push_to_nodes.delay(ss.selenium_workload)
+            for each in ss.selenium_workload:
+                for target, urls in each.items():
+                    push_to_nodes.delay(urls)
     else:
         ss.process_async()
 

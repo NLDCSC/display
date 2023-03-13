@@ -64,7 +64,7 @@ class AsyncScreenshots(object):
                             self.map_screenshot_sources[
                                 self.tab_to_screenshotsource_mapping[key]
                             ],
-                        ).extend(urls)
+                        ).append({key: urls})
                     else:
                         raise TypeError(f"Expecting list; got: {type(urls)}")
                 else:
