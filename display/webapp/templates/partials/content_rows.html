@@ -5,7 +5,7 @@
                 <div class="img-wrap">
                     <div>{{ each['header'] }} <span id="mod_time_{{ each['url']|md5 }}" class="mod-time">never</span>
                     </div>
-                    <a href="{{ each['url'] }}" target="_blank">
+                    <a href="{{ each['url'] }}" target="_blank" class="display-contents">
                         <img
                                 id="img_content_{{ each['url']|md5 }}"
                                 data-id="{{ each['url']|md5 }}"

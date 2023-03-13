@@ -10,6 +10,8 @@ function SetAllEventListeners() {
         let action_elem = $("#actions_" + my_id);
         let target_elem = $("#" + elem.id);
 
+        target_elem.unbind()
+
         target_elem.hover(
             function () {
                 action_elem.show();
@@ -26,6 +28,8 @@ function SetAllEventListeners() {
         let my_id = elem.attributes["data-id"].nodeValue;
         let target_elem = $("#" + elem.id);
         let action_elem = $("#actions_" + my_id);
+
+        target_elem.unbind()
 
         target_elem.hover(
             function () {
@@ -46,6 +50,8 @@ function SetAllEventListeners() {
         let target_elem = $("#" + elem.id);
         let action_elem = $("#actions_" + my_id);
 
+        target_elem.unbind()
+
         target_elem.hover(
             function () {
                 action_elem.show();
@@ -65,6 +71,8 @@ function SetAllEventListeners() {
         let target_elem = $("#" + elem.id);
         let action_elem = $("#actions_" + my_id);
 
+        target_elem.unbind()
+
         target_elem.hover(
             function () {
                 action_elem.show();
@@ -83,6 +91,8 @@ function SetAllEventListeners() {
         let my_id = elem.attributes["data-id"].nodeValue;
         let target_elem = $("#" + elem.id);
         let action_elem = $("#actions_" + my_id);
+
+        target_elem.unbind()
 
         target_elem.hover(
             function () {
