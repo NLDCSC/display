@@ -219,3 +219,24 @@ div[id^="actions_"] {
 .action-menu {
   display: contents !important;
 }
+
+.download-a {
+  display: inline-block;
+  cursor: pointer;
+}
+
+.download-icon {
+  width: 40px;
+}
+
+.download-right {
+  position: absolute;
+  bottom: 11px;
+  left: 465px;
+}
+
+.download-left {
+  position: absolute;
+  bottom: 11px;
+  left: 18px;
+}

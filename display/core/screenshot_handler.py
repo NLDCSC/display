@@ -1,6 +1,7 @@
 import hashlib
 import os
 from collections import defaultdict
+from io import BytesIO
 
 from PIL import Image
 from PIL import ImageDraw
@@ -182,11 +183,24 @@ class ScreenShotHandler(object):
 
         return ret_data
 
-    def set_timestamp_to_picture(self, filename):
+    def set_timestamp_to_picture(self, filename, filename_is_full_path: bool = False, url_hash: str = None):
 
-        photo = Image.open(
-            os.path.join(self.config.SCREENSHOT_LOCATION, f"{filename}.png")
-        )
+        if not filename_is_full_path:
+            normal_path = os.path.join(self.config.SCREENSHOT_LOCATION, f"{filename}.png")
+
+            evidence_path = os.path.join(
+                self.config.SCREENSHOT_LOCATION, f"{filename}_eve.png"
+            )
+
+            if os.path.exists(evidence_path):
+                photo = Image.open(evidence_path)
+            else:
+                photo = Image.open(normal_path)
+
+            url_hash = filename
+        else:
+            photo = Image.open(filename)
+            url_hash = url_hash
 
         # Store image width and height
         w, h = photo.size
@@ -201,7 +215,7 @@ class ScreenShotHandler(object):
         )
 
         # get text width and height
-        text = f"    {self.get_url_by_hash(the_hash=filename)} @ {get_mod_time(filename, False)}    "
+        text = f"    {self.get_url_by_hash(the_hash=url_hash)} @ {get_mod_time(filename, False, filename_is_full_path)}    "
         text_w, text_h = drawing.textsize(text, font)
 
         pos = w - text_w, (h - text_h) - 50
@@ -213,7 +227,14 @@ class ScreenShotHandler(object):
         c_text.putalpha(1000)
 
         photo.paste(c_text, pos, c_text)
-        photo.save(os.path.join(self.config.SCREENSHOT_LOCATION, f"{filename}_ts.png"))
+        if not filename_is_full_path:
+            photo.save(os.path.join(self.config.SCREENSHOT_LOCATION, f"{filename}_ts.png"))
+        else:
+            # save to memory and return the buffer
+            buffered = BytesIO()
+            photo.save(buffered, format="PNG")
+
+            return buffered
 
     def __repr__(self):
         return f"<< ScreenShotHandler >>"

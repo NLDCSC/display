@@ -159,61 +159,68 @@ class AsyncScreenshots(object):
                                 )
                             ).touch()
 
-                        if v[:4] == b"\x89PNG":
-                            # picture taken; process
+                        if isinstance(v, bytes):
+                            if v[:4] == b"\x89PNG":
+                                # picture taken; process
+                                self.store_normal_picture(k, v)
+                        elif isinstance(v, str):
+                            if v == "ERROR":
+                                # set to error pic
+                                self.store_error_picture(k)
+                        elif isinstance(v, dict):
+                            # dict with normal and evidence keys
+                            self.store_normal_picture(k, v["normal"])
+                            self.store_evidence_picture(k, v["evidence"])
 
-                            # First create a copy of the current file and rename to _old
-                            shutil.copyfile(
-                                os.path.join(
-                                    self.config.SCREENSHOT_LOCATION, f"{k}.png"
-                                ),
-                                os.path.join(
-                                    self.config.SCREENSHOT_LOCATION, f"{k}_old.png"
-                                ),
-                            )
-
-                            self.logger.info(f"Setting screenshot picture for {k}")
-                            with open(
-                                os.path.join(
-                                    self.config.SCREENSHOT_LOCATION, f"{k}.png"
-                                ),
-                                "wb",
-                            ) as f:
-                                f.write(v)
-
-                        else:
-                            # set to error pic
-
-                            # First create a copy of the current file and rename to _old
-                            shutil.copyfile(
-                                os.path.join(
-                                    self.config.SCREENSHOT_LOCATION, f"{k}.png"
-                                ),
-                                os.path.join(
-                                    self.config.SCREENSHOT_LOCATION, f"{k}_old.png"
-                                ),
-                            )
-
-                            # retrieve bin data
-                            with open(
-                                os.path.join(
-                                    self.current_wd, "../webapp/static/img/error.png"
-                                ),
-                                "rb",
-                            ) as f:
-                                data = f.read()
-
-                            self.logger.warning(f"Setting error picture for {k}")
-                            with open(
-                                os.path.join(
-                                    self.config.SCREENSHOT_LOCATION, f"{k}.png"
-                                ),
-                                "wb",
-                            ) as f:
-                                f.write(data)
             except Exception as err:
                 self.logger.error(f"Error processing {each}, Error produced --> {err}")
                 continue
+
+    def store_normal_picture(self, hash, value):
+
+        # First create a copy of the current file and rename to _old
+        shutil.copyfile(
+            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}.png"),
+            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}_old.png"),
+        )
+
+        self.logger.info(f"Setting screenshot picture for {hash}")
+        with open(
+            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}.png"),
+            "wb",
+        ) as f:
+            f.write(value)
+
+    def store_evidence_picture(self, hash, value):
+
+        self.logger.info(f"Setting screenshot picture for {hash}")
+        with open(
+            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}_eve.png"),
+            "wb",
+        ) as f:
+            f.write(value)
+
+    def store_error_picture(self, hash):
+
+        # First create a copy of the current file and rename to _old
+        shutil.copyfile(
+            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}.png"),
+            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}_old.png"),
+        )
+
+        # retrieve bin data
+        with open(
+            os.path.join(self.current_wd, "../webapp/static/img/error.png"),
+            "rb",
+        ) as f:
+            data = f.read()
+
+        self.logger.warning(f"Setting error picture for {hash}")
+        with open(
+            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}.png"),
+            "wb",
+        ) as f:
+            f.write(data)
 
     async def fetch(self, session, entry):
         url_hash = hashlib.md5(entry["url"].encode("utf-8")).hexdigest()[:6]

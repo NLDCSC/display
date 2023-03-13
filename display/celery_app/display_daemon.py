@@ -317,7 +317,7 @@ def monitoring_nodes_results(data):
                         with allow_join_result():
                             screenshot_list = res.get(timeout=1)
 
-                        ret_screenshot_data = collections.defaultdict()
+                        ret_screenshot_data = collections.defaultdict(dict)
 
                         for screenshot_data in screenshot_list:
 
@@ -326,9 +326,14 @@ def monitoring_nodes_results(data):
                                 if v == "ERROR":
                                     ret_screenshot_data[k] = v
                                 else:
-                                    ret_screenshot_data[k] = base64.b64decode(
-                                        list(screenshot_data.values())[0]
-                                    )
+                                    if "evidence" in v:
+                                        ret_screenshot_data[k][
+                                            "evidence"
+                                        ] = base64.b64decode(v["evidence"])
+                                    if "normal" in v:
+                                        ret_screenshot_data[k][
+                                            "normal"
+                                        ] = base64.b64decode(v["normal"])
 
                         ss = AsyncScreenshots()
                         ss.process_async(results=[ret_screenshot_data])
@@ -397,7 +402,7 @@ def monitoring_nodes_results(data):
     retry_backoff=60,
     retry_jitter=False,
 )
-def execute_on_node(entries, scroll_percent=0, evidence=False):
+def execute_on_node(entries, scroll_percent=0, evidence=True):
     logger = get_task_logger(__name__)
     ret_data = []
 
@@ -407,7 +412,7 @@ def execute_on_node(entries, scroll_percent=0, evidence=False):
 
         try:
             logger.info(f"Setting up smartdisplay....")
-            with SmartDisplay(visible=False, size=(1440, 900)) as display:
+            with SmartDisplay(visible=False, size=(1137, 853)) as display:
 
                 logger.info(f"Setting up webdriver....")
 
@@ -455,12 +460,22 @@ def execute_on_node(entries, scroll_percent=0, evidence=False):
 
                             with BytesIO() as buffered:
                                 img = display.waitgrab(1)
+                                img.resize((1024, 768))
                                 img.save(buffered, format="PNG")
 
                                 data = base64.b64encode(buffered.getvalue())
 
+                            data_normal = driver.get_screenshot_as_base64()
+
                             logger.info(f"Got image data (first 25 bytes): {data[:25]}")
-                            ret_data.append({url_hash: data.decode("utf-8")})
+                            ret_data.append(
+                                {
+                                    url_hash: {
+                                        "evidence": data.decode("utf-8"),
+                                        "normal": data_normal,
+                                    }
+                                }
+                            )
 
                         except Exception:
                             ret_data.append({url_hash: "ERROR"})
@@ -477,7 +492,7 @@ def execute_on_node(entries, scroll_percent=0, evidence=False):
 
         try:
             logger.info(f"Setting up smartdisplay....")
-            with SmartDisplay(visible=False, size=(1440, 900)) as display:
+            with SmartDisplay(visible=False, size=(1137, 853)) as display:
 
                 logger.info(f"Setting up webdriver....")
 
@@ -517,12 +532,11 @@ def execute_on_node(entries, scroll_percent=0, evidence=False):
                             time.sleep(1.5)
 
                             driver.execute_script("scroll(0, -500);")
-                            # driver.set_window_size(1024, 853)
 
                             data = driver.get_screenshot_as_base64()
 
                             logger.info(f"Got image data (first 25 bytes): {data[:25]}")
-                            ret_data.append({url_hash: data})
+                            ret_data.append({url_hash: {"normal": data}})
 
                         except Exception as err:
                             logger.error(f"Encountered error: {err}")
@@ -618,6 +632,17 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
                 os.path.join(config.SCREENSHOT_LOCATION, f"{each['sc_id']}.png"),
                 os.path.join(config.TIMELINE_LOCATION, each["sc_id"], new_filename),
             )
+
+            evidence_path = os.path.join(
+                config.SCREENSHOT_LOCATION, f"{each['sc_id']}_eve.png"
+            )
+            new_filename = f"eve-{uuid.uuid4()}.png"
+
+            if os.path.exists(evidence_path):
+                shutil.copyfile(
+                    evidence_path,
+                    os.path.join(config.TIMELINE_LOCATION, each["sc_id"], new_filename),
+                )
 
 
 @app.task(
