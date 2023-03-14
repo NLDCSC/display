@@ -240,3 +240,7 @@ div[id^="actions_"] {
   bottom: 11px;
   left: 18px;
 }
+
+#checkbox_div {
+  height: auto;
+}

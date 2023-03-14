@@ -5,8 +5,24 @@
         <hr class="ruler">
         <button id="check_all" type="button" class="btn btn-outline-secondary">check all</button>
         <button id="uncheck_all" type="button" class="btn btn-outline-secondary">uncheck all</button>
+        <hr class="ruler">
+        <h4>Target filters:</h4>
         <div id="checkbox_div" class="content">
-            {% for row in all_display_sources|batch(3) %}
+            {% for row in normal_tabs|batch(3) %}
+                <div class="row">
+                    {% for key in row %}
+                        <div class="col-sm">
+                            <input type="checkbox" name="{{ key|md5 }}" value="{{ key|md5 }}" id="cb_{{ key|md5 }}"
+                                   checked>
+                            <label for="{{ key|md5 }}"> {{ key }} </label><br>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+        <h4>Team filters:</h4>
+        <div id="checkbox_div" class="content">
+            {% for row in header_tabs|batch(3) %}
                 <div class="row">
                     {% for key in row %}
                         <div class="col-sm">
