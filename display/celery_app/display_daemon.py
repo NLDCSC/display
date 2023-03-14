@@ -8,18 +8,19 @@ import os
 import shutil
 import time
 import uuid
-from io import BytesIO
 
+from dotenv import load_dotenv
+
+load_dotenv(".env")
+
+from io import BytesIO
 import redis
 from celery.result import AsyncResult, allow_join_result
-from dotenv import load_dotenv
+
 from selenium.common import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
-
-load_dotenv(".env")
-
 from kombu import Queue
 from celery import Celery
 from celery.app.log import TaskFormatter
@@ -249,7 +250,10 @@ def make_screenshots(display_sources):
             tab_data = sh.get_changed_screenshots_per_tab(tab_name=source)
             socketio.emit(
                 "push_all_screenshots",
-                {"data": tab_data},
+                {
+                    "data": tab_data,
+                    "tab_hash": sh.get_tabhash_by_tabname(source),
+                },
                 room=source,
                 namespace="/display",
             )
@@ -342,17 +346,23 @@ def monitoring_nodes_results(data):
 
                         if len(screenshot_list) == 1:
 
-                            source = sh.get_tab_by_hash(url_hash)
+                            sources = sh.get_tab_by_hash(url_hash)
                             try:
                                 tab_data = sh.get_changed_data_from_custom_screenshots(
                                     the_hash=url_hash
                                 )
-                                socketio.emit(
-                                    "push_all_screenshots",
-                                    {"data": tab_data},
-                                    room=source,
-                                    namespace="/display",
-                                )
+                                for source in sources:
+                                    socketio.emit(
+                                        "push_all_screenshots",
+                                        {
+                                            "data": tab_data,
+                                            "tab_hash": sh.get_tabhash_by_tabname(
+                                                source
+                                            ),
+                                        },
+                                        room=source,
+                                        namespace="/display",
+                                    )
                                 handle_changes_for_timeline.delay(
                                     data=tab_data, csc=True
                                 )
@@ -364,23 +374,29 @@ def monitoring_nodes_results(data):
                         else:
 
                             url_hash = list(ret_screenshot_data.keys())[0]
-                            source = sh.get_tab_by_hash(url_hash)
 
-                            try:
-                                tab_data = sh.get_changed_screenshots_per_tab(
-                                    tab_name=source
-                                )
-                                socketio.emit(
-                                    "push_all_screenshots",
-                                    {"data": tab_data},
-                                    room=source,
-                                    namespace="/display",
-                                )
-                                handle_changes_for_timeline.delay(data=tab_data)
-                            except Exception as err:
-                                logger.error(
-                                    f"Error processing updates.... --> Produced error: {err}"
-                                )
+                            sources = sh.get_tab_by_hash(url_hash)
+                            for source in sources:
+                                try:
+                                    tab_data = sh.get_changed_screenshots_per_tab(
+                                        tab_name=source
+                                    )
+                                    socketio.emit(
+                                        "push_all_screenshots",
+                                        {
+                                            "data": tab_data,
+                                            "tab_hash": sh.get_tabhash_by_tabname(
+                                                source
+                                            ),
+                                        },
+                                        room=source,
+                                        namespace="/display",
+                                    )
+                                    handle_changes_for_timeline.delay(data=tab_data)
+                                except Exception as err:
+                                    logger.error(
+                                        f"Error processing updates on source {source}.... --> Produced error: {err}"
+                                    )
 
                         resulting_tasks = len(data) - len(tasks_ready)
 
@@ -565,7 +581,7 @@ def create_custom_screenshot(data):
 
     url_data = sh.get_data_by_hash(data["data"])
 
-    display_sources = {sh.get_tab_by_hash(data["data"]): [url_data]}
+    display_sources = {sh.get_tabname_by_tabhash(data["tab-hash"]): [url_data]}
 
     logger.info(f"Hash mapped to url: {display_sources}!")
 
@@ -589,7 +605,10 @@ def create_custom_screenshot(data):
                 )
                 socketio.emit(
                     "push_all_screenshots",
-                    {"data": tab_data},
+                    {
+                        "data": tab_data,
+                        "tab_hash": sh.get_tabhash_by_tabname(source),
+                    },
                     room=source,
                     namespace="/display",
                 )

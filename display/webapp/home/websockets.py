@@ -12,6 +12,7 @@ from display.helpers.logger_class import HelperLogger
 from display.objects.client_connection import ClientConnection
 from display.webapp.helpers.utils.screenshots import getB64_screenshot
 from display.webapp.helpers.utils.sources import get_display_sources
+from display.webapp.home.views import config
 from display.webapp.run import socketio
 
 logging.setLoggerClass(HelperLogger)
@@ -146,7 +147,7 @@ def do_change_display_tab(tab_name):
 
     tab_data = sh.get_all_screenshots(tab_name=tab_name["data"])
 
-    display_sources = get_display_sources()
+    display_sources = get_display_sources(config.SCREENSHOT_HEADER_TABS)
 
     display_sources = {tab_name["data"]: display_sources[tab_name["data"]]}
 
@@ -197,7 +198,7 @@ def do_rebuild_request():
 
     req_client = clients.get(request.sid)
 
-    display_sources = get_display_sources()
+    display_sources = get_display_sources(config.SCREENSHOT_HEADER_TABS)
 
     all_display_sources = display_sources
 

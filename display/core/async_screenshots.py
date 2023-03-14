@@ -193,7 +193,7 @@ class AsyncScreenshots(object):
 
     def store_evidence_picture(self, hash, value):
 
-        self.logger.info(f"Setting screenshot picture for {hash}")
+        self.logger.info(f"Setting evidence picture for {hash}")
         with open(
             os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}_eve.png"),
             "wb",

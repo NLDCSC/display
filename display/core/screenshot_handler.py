@@ -20,7 +20,7 @@ class ScreenShotHandler(object):
     def __init__(self):
         self.config = Config()
 
-        self.display_sources = get_display_sources()
+        self.display_sources = get_display_sources(self.config.SCREENSHOT_HEADER_TABS)
 
         self.hash_to_tab_mapping = defaultdict()
 
@@ -30,12 +30,36 @@ class ScreenShotHandler(object):
 
         self.hash_to_data_mapping = defaultdict()
 
+        if self.config.SCREENSHOT_HEADER_TABS:
+            self.hash_to_header_mapping = defaultdict()
+            self.set_hash_to_header_mapping()
+
+        self.tabname_to_tabhash = defaultdict()
+        self.set_tabname_to_tabhash()
+
+        self.tabhash_to_tabname = defaultdict()
+        self.set_tabhash_to_tabname()
+
         self.set_hash_to_tab_mapping()
         self.set_tab_to_hash_list()
         self.set_hash_to_url_mapping()
         self.set_hash_to_data_mapping()
 
         self.current_wd = os.path.dirname(os.path.abspath(__file__))
+
+    def set_tabname_to_tabhash(self):
+
+        for each in self.display_sources:
+            self.tabname_to_tabhash[each] = hashlib.md5(each.encode("utf-8")).hexdigest()[:6]
+
+        self.tabname_to_tabhash = dict(self.tabname_to_tabhash)
+
+    def set_tabhash_to_tabname(self):
+
+        for each in self.display_sources:
+            self.tabhash_to_tabname[hashlib.md5(each.encode("utf-8")).hexdigest()[:6]] = each
+
+        self.tabhash_to_tabname = dict(self.tabhash_to_tabname)
 
     def set_hash_to_tab_mapping(self):
 
@@ -45,7 +69,23 @@ class ScreenShotHandler(object):
                     hashlib.md5(item["url"].encode("utf-8")).hexdigest()[:6]
                 ] = key
 
+        if self.config.SCREENSHOT_HEADER_TABS:
+            for key, value in self.hash_to_header_mapping.items():
+                entry = self.hash_to_tab_mapping[key]
+                self.hash_to_tab_mapping[key] = [entry, value]
+
         self.hash_to_tab_mapping = dict(self.hash_to_tab_mapping)
+
+    def set_hash_to_header_mapping(self):
+
+        for key, value in self.display_sources.items():
+            for item in value:
+                if item["header"] == key:
+                    self.hash_to_header_mapping[
+                        hashlib.md5(item["url"].encode("utf-8")).hexdigest()[:6]
+                    ] = key
+
+        self.hash_to_header_mapping = dict(self.hash_to_header_mapping)
 
     def set_hash_to_url_mapping(self):
 
@@ -75,7 +115,11 @@ class ScreenShotHandler(object):
     def set_tab_to_hash_list(self):
 
         for key, value in self.hash_to_tab_mapping.items():
-            self.tab_to_hash_list[value].append(key)
+            if isinstance(value, list):
+                for each in value:
+                    self.tab_to_hash_list[each].append(key)
+            elif isinstance(value, str):
+                self.tab_to_hash_list[value].append(key)
 
         self.tab_to_hash_list = dict(self.tab_to_hash_list)
 
@@ -104,6 +148,20 @@ class ScreenShotHandler(object):
 
         try:
             return self.tab_to_hash_list[tab_name]
+        except KeyError:
+            return False
+
+    def get_tabhash_by_tabname(self, tab_name):
+
+        try:
+            return self.tabname_to_tabhash[tab_name]
+        except KeyError:
+            return False
+
+    def get_tabname_by_tabhash(self, the_hash):
+
+        try:
+            return self.tabhash_to_tabname[the_hash]
         except KeyError:
             return False
 
@@ -183,10 +241,14 @@ class ScreenShotHandler(object):
 
         return ret_data
 
-    def set_timestamp_to_picture(self, filename, filename_is_full_path: bool = False, url_hash: str = None):
+    def set_timestamp_to_picture(
+        self, filename, filename_is_full_path: bool = False, url_hash: str = None
+    ):
 
         if not filename_is_full_path:
-            normal_path = os.path.join(self.config.SCREENSHOT_LOCATION, f"{filename}.png")
+            normal_path = os.path.join(
+                self.config.SCREENSHOT_LOCATION, f"{filename}.png"
+            )
 
             evidence_path = os.path.join(
                 self.config.SCREENSHOT_LOCATION, f"{filename}_eve.png"
@@ -228,7 +290,9 @@ class ScreenShotHandler(object):
 
         photo.paste(c_text, pos, c_text)
         if not filename_is_full_path:
-            photo.save(os.path.join(self.config.SCREENSHOT_LOCATION, f"{filename}_ts.png"))
+            photo.save(
+                os.path.join(self.config.SCREENSHOT_LOCATION, f"{filename}_ts.png")
+            )
         else:
             # save to memory and return the buffer
             buffered = BytesIO()

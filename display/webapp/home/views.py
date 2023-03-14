@@ -23,7 +23,7 @@ config = Config()
 
 @home.route("/")
 def index():
-    display_sources = get_display_sources()
+    display_sources = get_display_sources(config.SCREENSHOT_HEADER_TABS)
 
     all_display_sources = display_sources
 

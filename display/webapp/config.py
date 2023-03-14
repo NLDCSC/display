@@ -59,3 +59,5 @@ class Config(object):
     SCREENSHOT_REFRESH = int(os.getenv("SCREENSHOT_REFRESH", 30))
     SCREENSHOT_CHUNK_SIZE = int(os.getenv("SCREENSHOT_CHUNK_SIZE", 6))
     SCREENSHOT_NODES = int(os.getenv("SCREENSHOT_NODES", 5))
+
+    SCREENSHOT_HEADER_TABS = getenv_bool("SCREENSHOT_HEADER_TABS", "True")
