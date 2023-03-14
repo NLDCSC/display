@@ -7,8 +7,12 @@ function SetAllEventListeners() {
 
     elementsImgArray.forEach(function (elem) {
         let my_id = elem.attributes["data-id"].nodeValue;
-        let action_elem = $("#actions_" + my_id);
+        let tab_hash = elem.attributes["data-tab-hash"].nodeValue;
+
         let target_elem = $("#" + elem.id);
+        let action_elem = $("#actions_" + tab_hash + "_" + my_id);
+
+        target_elem.unbind()
 
         target_elem.hover(
             function () {
@@ -24,8 +28,12 @@ function SetAllEventListeners() {
 
     elementsCSArray.forEach(function (elem) {
         let my_id = elem.attributes["data-id"].nodeValue;
+        let tab_hash = elem.attributes["data-tab-hash"].nodeValue;
+
         let target_elem = $("#" + elem.id);
-        let action_elem = $("#actions_" + my_id);
+        let action_elem = $("#actions_" + tab_hash + "_" + my_id);
+
+        target_elem.unbind()
 
         target_elem.hover(
             function () {
@@ -43,8 +51,12 @@ function SetAllEventListeners() {
 
     elementsClipArray.forEach(function (elem) {
         let my_id = elem.attributes["data-id"].nodeValue;
+        let tab_hash = elem.attributes["data-tab-hash"].nodeValue;
+
         let target_elem = $("#" + elem.id);
-        let action_elem = $("#actions_" + my_id);
+        let action_elem = $("#actions_" + tab_hash + "_" + my_id);
+
+        target_elem.unbind()
 
         target_elem.hover(
             function () {
@@ -62,8 +74,12 @@ function SetAllEventListeners() {
 
     elementsDownloadArray.forEach(function (elem) {
         let my_id = elem.attributes["data-id"].nodeValue;
+        let tab_hash = elem.attributes["data-tab-hash"].nodeValue;
+
         let target_elem = $("#" + elem.id);
-        let action_elem = $("#actions_" + my_id);
+        let action_elem = $("#actions_" + tab_hash + "_" + my_id);
+
+        target_elem.unbind()
 
         target_elem.hover(
             function () {
@@ -81,8 +97,12 @@ function SetAllEventListeners() {
 
     elementsTimelineArray.forEach(function (elem) {
         let my_id = elem.attributes["data-id"].nodeValue;
+        let tab_hash = elem.attributes["data-tab-hash"].nodeValue;
+
         let target_elem = $("#" + elem.id);
-        let action_elem = $("#actions_" + my_id);
+        let action_elem = $("#actions_" + tab_hash + "_" + my_id);
+
+        target_elem.unbind()
 
         target_elem.hover(
             function () {
@@ -261,8 +281,9 @@ function CreateCustomScreenshot(evt) {
     let attrs = evt.target.attributes;
 
     let screenshot_id = attrs["data-id"].nodeValue;
+    let tab_hash = attrs["data-tab-hash"].nodeValue;
 
-    window.socket.emit("create_custom_screenshot", {"data": screenshot_id});
+    window.socket.emit("create_custom_screenshot", {"data": screenshot_id, "tab-hash": tab_hash});
 
     showMessage("success", "Create screenshot request send!");
 }

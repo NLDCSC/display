@@ -42,8 +42,11 @@ $(document).ready(function () {
 
             msg["data"].forEach(item => {
 
-                let img_content = $("#img_content_" + item.sc_id)
-                let mod_time = $("#mod_time_" + item.sc_id)
+                console.log(msg["data"])
+                console.log(msg["tab_hash"])
+
+                let img_content = $("#img_content_" + msg["tab_hash"] + '_' + item.sc_id)
+                let mod_time = $("#mod_time_" + msg["tab_hash"] + '_' + item.sc_id)
 
                 if (item.hasOwnProperty('sc_src')) {
                     img_content.attr("src", item.sc_src);

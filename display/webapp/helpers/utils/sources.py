@@ -1,3 +1,4 @@
+import collections
 import json
 import os
 
@@ -6,7 +7,7 @@ from display.webapp.config import Config
 config = Config()
 
 
-def get_display_sources():
+def get_display_sources(add_header_tabs: bool = False):
     try:
         with open(os.path.join(config.CONFIG_PATH, config.CONFIG_FILE), "r") as f:
             config_json = json.loads(f.read())
@@ -19,7 +20,32 @@ def get_display_sources():
 
         display_sources = {"none": [{}]}
 
+    if add_header_tabs:
+        header_display_sources = add_header_tabs_from_sources(display_sources)
+
+        display_sources = {**display_sources, **header_display_sources}
+
+    # let's order the entries....
+    ordered_dict = collections.OrderedDict()
+
+    for each in sorted(list(display_sources.keys())):
+        ordered_dict[each] = display_sources[each]
+
+    display_sources = dict(ordered_dict)
+
     return display_sources
+
+
+def add_header_tabs_from_sources(sources):
+
+    ret_dict = collections.defaultdict(list)
+
+    for target, urls in sources.items():
+        for url_entry in urls:
+            data = {**url_entry, **{"alt_header": target}}
+            ret_dict[url_entry["header"]].append(data)
+
+    return dict(ret_dict)
 
 
 def get_screenshot_sources():

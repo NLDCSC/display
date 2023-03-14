@@ -1,6 +1,7 @@
 import logging
+import os
 
-from flask import render_template, send_from_directory, current_app
+from flask import render_template, send_from_directory, current_app, make_response
 
 from display.helpers.app_logger import AppLogger
 from . import home
@@ -22,9 +23,21 @@ config = Config()
 
 @home.route("/")
 def index():
-    display_sources = get_display_sources()
+    display_sources = get_display_sources(config.SCREENSHOT_HEADER_TABS)
 
     all_display_sources = display_sources
+
+    header_tabs = [
+        header
+        for header in all_display_sources
+        if all_display_sources[header][0]["header"] == header
+    ]
+
+    normal_tabs = [
+        header
+        for header in all_display_sources
+        if all_display_sources[header][0]["header"] != header
+    ]
 
     display_sources = {}
 
@@ -93,3 +106,24 @@ def get_timeline_picture(url_hash, filename):
         current_app.config["TIMELINE_LOCATION"], f"{url_hash}/{filename}.png"
     )
     return data
+
+
+@home.route("/timeline/download_picture/<path:url_hash>/<path:filename>")
+def download_picture(url_hash, filename):
+
+    sh = ScreenShotHandler()
+
+    data = sh.set_timestamp_to_picture(
+        filename=os.path.join(
+            current_app.config["TIMELINE_LOCATION"], f"{url_hash}/{filename}.png"
+        ),
+        filename_is_full_path=True,
+        url_hash=url_hash,
+    )
+
+    # forming a Response object with Headers to return from flask
+    response = make_response(data.getvalue())
+    response.headers["Content-Disposition"] = f'attachment; filename="{filename}.png"'
+    response.mimetype = "image/png"
+    # return the Response object
+    return response
