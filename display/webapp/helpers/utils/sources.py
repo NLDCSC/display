@@ -42,7 +42,8 @@ def add_header_tabs_from_sources(sources):
 
     for target, urls in sources.items():
         for url_entry in urls:
-            ret_dict[url_entry['header']].append(url_entry)
+            data = {**url_entry, **{"alt_header": target}}
+            ret_dict[url_entry["header"]].append(data)
 
     return dict(ret_dict)
 

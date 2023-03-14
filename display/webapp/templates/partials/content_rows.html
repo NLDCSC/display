@@ -3,7 +3,7 @@
         {% for each in row %}
             <div class="col-md-2 img-col">
                 <div class="img-wrap">
-                    <div>{{ each['header'] }} <span id="mod_time_{{ key|md5 }}_{{ each['url']|md5 }}" class="mod-time">never</span>
+                    <div>{% if each["alt_header"] is defined %}{{ each['alt_header']|upper }}{% else %}{{ each['header'] }}{% endif %}<span id="mod_time_{{ key|md5 }}_{{ each['url']|md5 }}" class="mod-time">never</span>
                     </div>
                     <a href="{{ each['url'] }}" target="_blank" class="display-contents">
                         <img
