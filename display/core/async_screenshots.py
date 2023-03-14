@@ -12,6 +12,7 @@ from pathlib import Path
 
 import aiohttp
 
+from display.core.screenshot_handler import ScreenShotHandler
 from display.external_apis.splash.splash_api import SplashApi
 from display.helpers.logger_class import HelperLogger
 from display.webapp.config import Config
@@ -191,6 +192,8 @@ class AsyncScreenshots(object):
         ) as f:
             f.write(value)
 
+        self.minify_current_screenshot(hash=hash)
+
     def store_evidence_picture(self, hash, value):
 
         self.logger.info(f"Setting evidence picture for {hash}")
@@ -221,6 +224,12 @@ class AsyncScreenshots(object):
             "wb",
         ) as f:
             f.write(data)
+
+        self.minify_current_screenshot(hash=hash)
+
+    def minify_current_screenshot(self, hash):
+        sh = ScreenShotHandler()
+        sh.limit_img_size(hash)
 
     async def fetch(self, session, entry):
         url_hash = hashlib.md5(entry["url"].encode("utf-8")).hexdigest()[:6]

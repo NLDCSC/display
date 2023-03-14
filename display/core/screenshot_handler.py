@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import os
 from collections import defaultdict
 from io import BytesIO
@@ -19,6 +20,8 @@ from display.webapp.helpers.utils.sources import get_display_sources
 class ScreenShotHandler(object):
     def __init__(self):
         self.config = Config()
+
+        self.logger = logging.getLogger(__name__)
 
         self.display_sources = get_display_sources(self.config.SCREENSHOT_HEADER_TABS)
 
@@ -50,14 +53,18 @@ class ScreenShotHandler(object):
     def set_tabname_to_tabhash(self):
 
         for each in self.display_sources:
-            self.tabname_to_tabhash[each] = hashlib.md5(each.encode("utf-8")).hexdigest()[:6]
+            self.tabname_to_tabhash[each] = hashlib.md5(
+                each.encode("utf-8")
+            ).hexdigest()[:6]
 
         self.tabname_to_tabhash = dict(self.tabname_to_tabhash)
 
     def set_tabhash_to_tabname(self):
 
         for each in self.display_sources:
-            self.tabhash_to_tabname[hashlib.md5(each.encode("utf-8")).hexdigest()[:6]] = each
+            self.tabhash_to_tabname[
+                hashlib.md5(each.encode("utf-8")).hexdigest()[:6]
+            ] = each
 
         self.tabhash_to_tabname = dict(self.tabhash_to_tabname)
 
@@ -299,6 +306,48 @@ class ScreenShotHandler(object):
             photo.save(buffered, format="PNG")
 
             return buffered
+
+    def limit_img_size(
+        self, filename: str, target_filesize: int = 100000, tolerance: int = 5
+    ):
+        """
+        Limiting input file to a maximum of approximately (give or take the tolerance) of 100 kb
+        """
+        self.logger.info(f"Scaling down size for hash: {filename}")
+        img = img_orig = Image.open(
+            os.path.join(self.config.SCREENSHOT_LOCATION, f"{filename}.png")
+        )
+        aspect = img.size[0] / img.size[1]
+
+        while True:
+            with BytesIO() as buffer:
+                img.save(buffer, format="PNG")
+                data = buffer.getvalue()
+            filesize = len(data)
+            size_deviation = filesize / target_filesize
+            self.logger.info(
+                "size: {}; factor: {:.3f}".format(filesize, size_deviation)
+            )
+
+            if size_deviation <= (100 + tolerance) / 100:
+                self.logger.info(f"Scaling fits; saving minified picture...")
+                # filesize fits
+                with open(
+                    os.path.join(
+                        self.config.SCREENSHOT_LOCATION, f"{filename}_min.png"
+                    ),
+                    "wb",
+                ) as f:
+                    f.write(data)
+                self.logger.info("Scaling done!")
+                break
+            else:
+                # filesize not good enough => adapt width and height
+                # use sqrt of deviation since applied both in width and height
+                new_width = img.size[0] / size_deviation**0.5
+                new_height = new_width / aspect
+                # resize from img_orig to not lose quality
+                img = img_orig.resize((int(new_width), int(new_height)))
 
     def __repr__(self):
         return f"<< ScreenShotHandler >>"

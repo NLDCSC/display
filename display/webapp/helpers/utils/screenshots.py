@@ -19,7 +19,9 @@ def getB64_screenshot(filename, with_timestamp=False):
                 config.SCREENSHOT_LOCATION, f"{filename}_ts.png"
             )
         else:
-            the_filename = os.path.join(config.SCREENSHOT_LOCATION, f"{filename}.png")
+            the_filename = os.path.join(
+                config.SCREENSHOT_LOCATION, f"{filename}_min.png"
+            )
 
         with open(the_filename, "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read())
@@ -32,13 +34,13 @@ def getB64_screenshot(filename, with_timestamp=False):
         return f"data:image/png;base64, {encoded_string.decode('utf-8')}"
 
 
-def get_mod_time(filename, no_timezone: bool = True, filename_is_full_path: bool = False):
+def get_mod_time(
+    filename, no_timezone: bool = True, filename_is_full_path: bool = False
+):
     try:
         if filename_is_full_path:
             time = timestampTOdatetimestring(
-                int(
-                    os.path.getmtime(filename)
-                ),
+                int(os.path.getmtime(filename)),
                 no_timezone,
             )
         else:

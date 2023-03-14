@@ -27,9 +27,17 @@ def index():
 
     all_display_sources = display_sources
 
-    header_tabs = [header for header in all_display_sources if all_display_sources[header][0]['header'] == header]
+    header_tabs = [
+        header
+        for header in all_display_sources
+        if all_display_sources[header][0]["header"] == header
+    ]
 
-    normal_tabs = [header for header in all_display_sources if all_display_sources[header][0]['header'] != header]
+    normal_tabs = [
+        header
+        for header in all_display_sources
+        if all_display_sources[header][0]["header"] != header
+    ]
 
     display_sources = {}
 

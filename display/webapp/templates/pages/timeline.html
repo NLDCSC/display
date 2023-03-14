@@ -68,7 +68,7 @@
                                                 <a class="download-a {% if loop.index is divisibleby 2 %}download-right{% else %}download-left{% endif %}"
                                                    href="{{ url_for('home.download_picture',
                                                    url_hash=picture_data['url_hash'],
-                                                   filename=picture_data['filename']) }}">
+                                                   filename=picture_data['filename']) }}" title="Download screenshot">
                                                     <img class="download-icon" src="{{ url_for('static', filename="img/download_icon.png") }}">
                                                 </a>
                                                 {{ picture_data['modtime'] }}
