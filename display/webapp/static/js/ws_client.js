@@ -149,8 +149,10 @@ function SetDisplayFilter() {
 
         if (tab_element.is(":visible")) {
             $("#cb_" + this.value).prop('checked', true)
+            $("#tabselect_span_" + this.value).show();
         } else {
             $("#cb_" + this.value).prop('checked', false)
+            $("#tabselect_span_" + this.value).hide();
         }
     });
 
@@ -189,6 +191,7 @@ function SetTabVisibility(el) {
     tab_element.toggle()
 
     if (tab_element.is(":visible")) {
+        $("#tabselect_span_" + tab_value).show();
         display_cookie.remove(tab_value)
         // check if this the only visible tab; if so, click it...
         if ($('button[id^="tab_"]:visible').length === 1) {
@@ -196,6 +199,7 @@ function SetTabVisibility(el) {
         }
     } else {
         display_cookie.add(tab_value)
+        $("#tabselect_span_" + tab_value).hide();
     }
 
 }
