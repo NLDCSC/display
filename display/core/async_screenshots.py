@@ -164,6 +164,9 @@ class AsyncScreenshots(object):
                             if v[:4] == b"\x89PNG":
                                 # picture taken; process
                                 self.store_normal_picture(k, v)
+                            else:
+                                # no picture assume uncatched error for now!
+                                self.store_error_picture(k)
                         elif isinstance(v, str):
                             if v == "ERROR":
                                 # set to error pic
@@ -172,6 +175,9 @@ class AsyncScreenshots(object):
                             # dict with normal and evidence keys
                             self.store_normal_picture(k, v["normal"])
                             self.store_evidence_picture(k, v["evidence"])
+                        else:
+                            # assume it's an error for now
+                            self.store_error_picture(k)
 
             except Exception as err:
                 self.logger.error(f"Error processing {each}, Error produced --> {err}")
@@ -213,7 +219,7 @@ class AsyncScreenshots(object):
 
         # retrieve bin data
         with open(
-            os.path.join(self.current_wd, "../webapp/static/img/error.png"),
+            os.path.join(self.current_wd, "../webapp/static/img/noScreenShot.png"),
             "rb",
         ) as f:
             data = f.read()
