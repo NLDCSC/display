@@ -244,3 +244,60 @@ div[id^="actions_"] {
 #checkbox_div {
   height: auto;
 }
+
+#tab-selector{
+  position: absolute;
+  left: 300px;
+}
+
+div.dropdown-multicol2{
+  width: 20em;
+}
+
+div.dropdown-multicol2>div.dropdown-col{
+  display:inline-block;
+  width: 32%;
+}
+
+div.dropdown-row>a.dropdown-item{
+  display:inline-block;
+  width: 32%;
+}
+
+div.dropdown-col-left {
+  float: left;
+  margin-left: 1rem;
+}
+
+div.dropdown-col-right {
+  float: right;
+  margin-right: 3rem;
+}
+
+.tabselect-item {
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.tabselect-item:hover {
+  font-weight: bold;
+  color: white;
+  border-radius: 10px;
+  background-color: transparent;
+}
+
+.dropdown-multicol2 {
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.center-text {
+  margin: auto;
+  text-align: center;
+}
+
+.tab-select-ruler {
+  width: 80%;
+  margin-top: 0;
+  margin-bottom: 0;
+}

@@ -218,12 +218,14 @@ def do_rebuild_request():
 
     html_data = render_template("partials/content.html", **locals())
 
+    selector_data = render_template("partials/tab_selector.html", **locals())
+
     logger.info(f"Client: {req_client.sid} is rebuilding page...")
 
     emit(
         "rebuild_page",
         {
-            "data": html_data,
+            "data": {"content": html_data, "tab_selector": selector_data},
             "tab": hashlib.md5(req_client.current_tab.encode("utf-8")).hexdigest()[:6],
         },
         room=request.sid,

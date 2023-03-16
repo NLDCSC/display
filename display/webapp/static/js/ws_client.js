@@ -134,6 +134,12 @@ function SetAllEventListeners() {
         elem.addEventListener("click", SetTabVisibility)
     })
 
+    let selectTabArray = DOMRegex(/^tabselect\_span\_/);
+
+    selectTabArray.forEach(function (elem) {
+        elem.addEventListener("click", SelectTabClick);
+    });
+
 }
 
 function SetDisplayFilter() {
@@ -262,6 +268,7 @@ function InitScrollingTabs() {
 }
 
 function SetTabClick(evt) {
+
     let attrs = evt.target.attributes;
 
     let selected_tab = attrs["data-name"].nodeValue;
@@ -316,5 +323,17 @@ function Timeline(evt) {
     let url = BasePath + "timeline/" + screenshot_id
 
     window.open(url, '_blank');
+
+}
+
+function SelectTabClick(evt){
+
+    let attrs = evt.target.attributes;
+
+    let data_hash = attrs["data-hash"].nodeValue;
+
+    $("#tab_" + data_hash).click()
+
+    $('.nav-tabs').scrollingTabs('scrollToActiveTab');
 
 }

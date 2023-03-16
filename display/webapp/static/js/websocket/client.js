@@ -42,9 +42,6 @@ $(document).ready(function () {
 
             msg["data"].forEach(item => {
 
-                console.log(msg["data"])
-                console.log(msg["tab_hash"])
-
                 let img_content = $("#img_content_" + msg["tab_hash"] + '_' + item.sc_id)
                 let mod_time = $("#mod_time_" + msg["tab_hash"] + '_' + item.sc_id)
 
@@ -106,9 +103,11 @@ $(document).ready(function () {
 
         let flashcontainer = $("#flash-container")
         let contentdiv = $("#display-content")
+        let tabselectordiv = $("#tab-selector")
 
         if (msg["data"] !== null) {
-            contentdiv.html(msg["data"])
+            contentdiv.html(msg["data"]["content"])
+            tabselectordiv.html(msg["data"]["tab_selector"])
         }
 
         SetTabEvents();
