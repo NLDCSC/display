@@ -2,7 +2,7 @@ import hashlib
 import logging
 
 from flask import copy_current_request_context, request, render_template
-from flask_socketio import emit, disconnect, join_room, leave_room
+from flask_socketio import emit, disconnect, join_room, leave_room, call
 from socketio.exceptions import TimeoutError as SocketIOTimeOutError
 
 from display.celery_app.display_daemon import create_custom_screenshot
@@ -164,18 +164,18 @@ def do_change_display_tab(tab_name):
     # using call here to wait for the callback of the client; timeout error is raised is callback is not received in
     # time; retrying the second time with the emit event
     try:
-        emit(
+        call(
             "push_all_screenshots",
             {
                 "data": tab_data,
                 "html_data": html_data,
                 "tab_hash": hashlib.md5(tab_name["data"].encode("utf-8")).hexdigest()[:6],
             },
-            # to=req_client.sid,
-            callback=cfm_received(client_id=req_client.sid, data=tab_name["data"]),
-            # timeout=10,
+            to=req_client.sid,
+            # callback=cfm_received(client_id=req_client.sid, data=tab_name["data"]),
+            timeout=10,
         )
-        # logger.info(f"Client {req_client.sid} received data on tab: {tab_name['data']}")
+        logger.info(f"Client {req_client.sid} received data on tab: {tab_name['data']}")
     except SocketIOTimeOutError:
         logger.warning(f"Timeout error on client: {req_client}; retrying!")
         emit(
