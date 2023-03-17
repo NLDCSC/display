@@ -42,7 +42,7 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link {% if loop.first %} active {% endif %}" id="tab_{{ key|md5 }}" data-name="{{ key }}"
                     data-hash="{{ key|md5 }}" data-bs-toggle="tab" data-bs-target="#content_{{ key|md5 }}"
-                    type="button" role="tab" aria-controls="home" aria-selected="true">
+                    type="button" role="tab" aria-controls="home" aria-selected="true" title="Right click for display filter options">
                 {{ key }}</button>
         </li>
     {% endfor %}
