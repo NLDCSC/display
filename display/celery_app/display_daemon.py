@@ -245,6 +245,9 @@ def make_screenshots(display_sources):
     logger.info(f"Finished taking screenshots; processing updates!")
 
     sh = ScreenShotHandler()
+
+    # sources = sh.get_tab_by_hash(url_hash)
+
     try:
         for source in display_sources:
             tab_data = sh.get_changed_screenshots_per_tab(tab_name=source)
@@ -257,6 +260,21 @@ def make_screenshots(display_sources):
                 room=source,
                 namespace="/display",
             )
+
+            for changed_pic in tab_data:
+                changed_sources = sh.get_tab_by_hash(changed_pic["sc_id"])
+                for changed_source in changed_sources:
+                    if changed_source != source:
+                        socketio.emit(
+                            "push_all_screenshots",
+                            {
+                                "data": tab_data,
+                                "tab_hash": sh.get_tabhash_by_tabname(changed_source),
+                            },
+                            room=changed_source,
+                            namespace="/display",
+                        )
+
             handle_changes_for_timeline.delay(data=tab_data)
     except Exception as err:
         logger.error(f"Error processing updates.... --> Produced error: {err}")
