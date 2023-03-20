@@ -271,9 +271,6 @@ class ScreenShotHandler(object):
             photo = Image.open(filename)
             url_hash = url_hash
 
-        # Store image width and height
-        w, h = photo.size
-
         # make the image editable
         drawing = ImageDraw.Draw(photo)
         font = ImageFont.truetype(
@@ -284,7 +281,7 @@ class ScreenShotHandler(object):
         )
 
         if os.path.exists(evidence_path):
-            text = f"    {get_mod_time(filename, False, filename_is_full_path)}  -  {self.get_tab_by_hash(the_hash=url_hash)[1]}    "
+            text = f"    {get_mod_time(filename, False, filename_is_full_path)}  -  {self.get_tab_by_hash(the_hash=url_hash)[-1]}    "
         else:
             text = f"    {self.get_url_by_hash(the_hash=url_hash)} @ {get_mod_time(filename, False, filename_is_full_path)}    "
 
