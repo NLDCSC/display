@@ -612,29 +612,30 @@ def create_custom_screenshot(data):
                     push_to_nodes.delay(urls)
 
     if hasattr(ss, "workload"):
-        ss.process_async()
+        if len(ss.workload) != 0:
+            ss.process_async()
 
-        logger.info(f"Finished taking screenshot; processing....")
+            logger.info(f"Finished taking screenshot; processing....")
 
-        try:
-            for source in display_sources:
-                tab_data = sh.get_changed_data_from_custom_screenshots(
-                    the_hash=data["data"]
-                )
-                socketio.emit(
-                    "push_all_screenshots",
-                    {
-                        "data": tab_data,
-                        "tab_hash": sh.get_tabhash_by_tabname(source),
-                    },
-                    room=source,
-                    namespace="/display",
-                )
-                handle_changes_for_timeline.delay(data=tab_data, csc=True)
-        except Exception as err:
-            logger.error(f"Error processing screenshot.... --> Produced error: {err}")
+            try:
+                for source in display_sources:
+                    tab_data = sh.get_changed_data_from_custom_screenshots(
+                        the_hash=data["data"]
+                    )
+                    socketio.emit(
+                        "push_all_screenshots",
+                        {
+                            "data": tab_data,
+                            "tab_hash": sh.get_tabhash_by_tabname(source),
+                        },
+                        room=source,
+                        namespace="/display",
+                    )
+                    handle_changes_for_timeline.delay(data=tab_data, csc=True)
+            except Exception as err:
+                logger.error(f"Error processing screenshot.... --> Produced error: {err}")
 
-    logger.info(f"Finished processing screenshot...")
+    logger.info(f"Finished processing custom screenshot...")
 
 
 @app.task(
