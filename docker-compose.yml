@@ -118,6 +118,27 @@ services:
       dockerfile: .docker/images/celery_daemon/dockerfile-celery_daemon
     depends_on:
       - redis
+    deploy:
+      replicas: 2
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=TRUE
+    volumes:
+      - "./docker_data/flask:/app/data"
+    expose:
+      - 5671
+    networks:
+      - backend
+
+  celery_beat:
+    image: display-celery_beat
+    build:
+      context: .
+      dockerfile: .docker/images/celery_beat/dockerfile-celery_beat
+    depends_on:
+      - redis
     restart: always
     env_file:
       - .env

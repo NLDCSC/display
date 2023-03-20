@@ -25,5 +25,5 @@ RUN ./install.sh
 
 RUN rm ./install.sh
 
-# run the command to start the celery daemon
-CMD ["/usr/local/bin/celery", "-A", "display.celery_app.display_daemon", "worker", "--loglevel=INFO", "-Q", "default", "-O", "fair" , "--without-heartbeat", "--without-gossip", "--without-mingle"]
+# run the command to start the celery beat
+CMD ["/usr/local/bin/celery", "-A", "display.celery_app.display_daemon", "beat", "--loglevel=INFO"]
