@@ -54,7 +54,7 @@ app = Celery(
     task_time_limit=48000,
     task_default_queue="default",
     task_queues=(Queue("default"), Queue("nodes", routing_key="nodes")),
-    result_expires=600,
+    result_expires=300,
 )
 
 socketio = SocketIO(message_queue=config.REDIS_URL)
