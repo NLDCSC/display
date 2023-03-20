@@ -169,7 +169,9 @@ def do_change_display_tab(tab_name):
             {
                 "data": tab_data,
                 "html_data": html_data,
-                "tab_hash": hashlib.md5(tab_name["data"].encode("utf-8")).hexdigest()[:6],
+                "tab_hash": hashlib.md5(tab_name["data"].encode("utf-8")).hexdigest()[
+                    :6
+                ],
             },
             to=req_client.sid,
             timeout=10,
@@ -182,7 +184,9 @@ def do_change_display_tab(tab_name):
             {
                 "data": tab_data,
                 "html_data": html_data,
-                "tab_hash": hashlib.md5(tab_name["data"].encode("utf-8")).hexdigest()[:6],
+                "tab_hash": hashlib.md5(tab_name["data"].encode("utf-8")).hexdigest()[
+                    :6
+                ],
             },
         )
 

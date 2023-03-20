@@ -246,8 +246,6 @@ def make_screenshots(display_sources):
 
     sh = ScreenShotHandler()
 
-    # sources = sh.get_tab_by_hash(url_hash)
-
     try:
         for source in display_sources:
             tab_data = sh.get_changed_screenshots_per_tab(tab_name=source)
@@ -289,7 +287,7 @@ def make_screenshots(display_sources):
     retry_jitter=False,
     ignore_result=True,
 )
-def push_to_nodes(workload):
+def push_to_nodes(workload, evidence_shot=False):
     logger = get_task_logger(__name__)
 
     logger.info("Pushing screenshots to nodes...")
@@ -309,7 +307,7 @@ def push_to_nodes(workload):
 
     logger.info(f"Task ids: {task_ids}")
 
-    monitoring_nodes_results.delay(task_ids)
+    monitoring_nodes_results.delay(task_ids, evidence_shot)
 
 
 @app.task(
@@ -318,7 +316,7 @@ def push_to_nodes(workload):
     retry_backoff=60,
     retry_jitter=False,
 )
-def monitoring_nodes_results(data):
+def monitoring_nodes_results(data, evidence_shot=False):
     logger = get_task_logger(__name__)
 
     logger.info(f"Starting monitoring task ids: {data}")
@@ -358,36 +356,41 @@ def monitoring_nodes_results(data):
                                         ] = base64.b64decode(v["normal"])
 
                         ss = AsyncScreenshots()
-                        ss.process_async(results=[ret_screenshot_data])
+                        ss.process_async(
+                            results=[ret_screenshot_data], evidence_shot=evidence_shot
+                        )
 
                         sh = ScreenShotHandler()
 
                         if len(screenshot_list) == 1:
 
-                            sources = sh.get_tab_by_hash(url_hash)
-                            try:
-                                tab_data = sh.get_changed_data_from_custom_screenshots(
-                                    the_hash=url_hash
-                                )
-                                for source in sources:
-                                    socketio.emit(
-                                        "push_all_screenshots",
-                                        {
-                                            "data": tab_data,
-                                            "tab_hash": sh.get_tabhash_by_tabname(
-                                                source
-                                            ),
-                                        },
-                                        room=source,
-                                        namespace="/display",
+                            if not evidence_shot:
+                                sources = sh.get_tab_by_hash(url_hash)
+                                try:
+                                    tab_data = (
+                                        sh.get_changed_data_from_custom_screenshots(
+                                            the_hash=url_hash
+                                        )
                                     )
-                                handle_changes_for_timeline.delay(
-                                    data=tab_data, csc=True
-                                )
-                            except Exception as err:
-                                logger.error(
-                                    f"Error processing updates.... --> Produced error: {err}"
-                                )
+                                    for source in sources:
+                                        socketio.emit(
+                                            "push_all_screenshots",
+                                            {
+                                                "data": tab_data,
+                                                "tab_hash": sh.get_tabhash_by_tabname(
+                                                    source
+                                                ),
+                                            },
+                                            room=source,
+                                            namespace="/display",
+                                        )
+                                    handle_changes_for_timeline.delay(
+                                        data=tab_data, csc=True
+                                    )
+                                except Exception as err:
+                                    logger.error(
+                                        f"Error processing updates.... --> Produced error: {err}"
+                                    )
 
                         else:
 
@@ -633,7 +636,9 @@ def create_custom_screenshot(data):
                     )
                     handle_changes_for_timeline.delay(data=tab_data, csc=True)
             except Exception as err:
-                logger.error(f"Error processing screenshot.... --> Produced error: {err}")
+                logger.error(
+                    f"Error processing screenshot.... --> Produced error: {err}"
+                )
 
     logger.info(f"Finished processing custom screenshot...")
 
@@ -650,6 +655,8 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
 
     logger.info(f"Starting saving changed screenshots on: {len(data)} data items!")
 
+    sh = ScreenShotHandler()
+
     for each in data:
         if int(each["changed"]) == 0:
             # changed content; save a copy of the current screenshot
@@ -661,13 +668,28 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
                 )
                 os.mkdir(os.path.join(config.TIMELINE_LOCATION, each["sc_id"]))
 
+            # Create evidence of changed screenshot, if not already taken by display nodes....
+            target = sh.get_tab_by_hash(the_hash=each["sc_id"])[0]
+
+            url_data = sh.get_data_by_hash(the_hash=each["sc_id"])
+
+            display_sources = {target: [url_data]}
+
+            ss = AsyncScreenshots(display_sources)
+
+            if hasattr(ss, "selenium_workload"):
+                # check if this url is part of the selenium workload, if 0 it isn't so take the evidence shot!
+                if len(ss.selenium_workload) == 0:
+                    evidence_url = [url_data]
+                    push_to_nodes.delay(evidence_url, evidence_shot=True)
+
             if csc:
                 new_filename = f"csc-{uuid.uuid4()}.png"
             else:
                 new_filename = f"{uuid.uuid4()}.png"
 
             # create a copy of the changed screenshot and copy it to the timeline directory
-            shutil.copyfile(
+            shutil.copy2(
                 os.path.join(config.SCREENSHOT_LOCATION, f"{each['sc_id']}.png"),
                 os.path.join(config.TIMELINE_LOCATION, each["sc_id"], new_filename),
             )
@@ -678,7 +700,7 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
             new_filename = f"eve-{uuid.uuid4()}.png"
 
             if os.path.exists(evidence_path):
-                shutil.copyfile(
+                shutil.copy2(
                     evidence_path,
                     os.path.join(config.TIMELINE_LOCATION, each["sc_id"], new_filename),
                 )

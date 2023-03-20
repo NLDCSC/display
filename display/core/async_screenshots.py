@@ -114,7 +114,7 @@ class AsyncScreenshots(object):
             self.tab_to_screenshotsource_mapping
         )
 
-    def process_async(self, results: list = None):
+    def process_async(self, results: list = None, evidence_shot: bool = False):
         """
         Method for processing the workload of sites to be screenshotted into files for displaying in the display gui
         """
@@ -173,7 +173,8 @@ class AsyncScreenshots(object):
                                 self.store_error_picture(k)
                         elif isinstance(v, dict):
                             # dict with normal and evidence keys
-                            self.store_normal_picture(k, v["normal"])
+                            if not evidence_shot:
+                                self.store_normal_picture(k, v["normal"])
                             self.store_evidence_picture(k, v["evidence"])
                         else:
                             # assume it's an error for now
@@ -186,7 +187,7 @@ class AsyncScreenshots(object):
     def store_normal_picture(self, hash, value):
 
         # First create a copy of the current file and rename to _old
-        shutil.copyfile(
+        shutil.copy2(
             os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}.png"),
             os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}_old.png"),
         )
@@ -212,7 +213,7 @@ class AsyncScreenshots(object):
     def store_error_picture(self, hash):
 
         # First create a copy of the current file and rename to _old
-        shutil.copyfile(
+        shutil.copy2(
             os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}.png"),
             os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}_old.png"),
         )

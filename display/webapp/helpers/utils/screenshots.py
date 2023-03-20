@@ -35,7 +35,10 @@ def getB64_screenshot(filename, with_timestamp=False):
 
 
 def get_mod_time(
-    filename, no_timezone: bool = True, filename_is_full_path: bool = False
+    filename,
+    no_timezone: bool = True,
+    filename_is_full_path: bool = False,
+    evidence_shot: bool = False,
 ):
     try:
         if filename_is_full_path:
@@ -44,14 +47,26 @@ def get_mod_time(
                 no_timezone,
             )
         else:
-            time = timestampTOdatetimestring(
-                int(
-                    os.path.getmtime(
-                        os.path.join(config.SCREENSHOT_LOCATION, f"{filename}.png")
-                    )
-                ),
-                no_timezone,
-            )
+            if evidence_shot:
+                time = timestampTOdatetimestring(
+                    int(
+                        os.path.getmtime(
+                            os.path.join(
+                                config.SCREENSHOT_LOCATION, f"{filename}_eve.png"
+                            )
+                        )
+                    ),
+                    no_timezone,
+                )
+            else:
+                time = timestampTOdatetimestring(
+                    int(
+                        os.path.getmtime(
+                            os.path.join(config.SCREENSHOT_LOCATION, f"{filename}.png")
+                        )
+                    ),
+                    no_timezone,
+                )
         return time
     except FileNotFoundError:
         return "never"

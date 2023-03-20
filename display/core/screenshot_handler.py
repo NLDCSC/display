@@ -280,10 +280,18 @@ class ScreenShotHandler(object):
             20,
         )
 
-        if os.path.exists(evidence_path):
-            text = f"    {get_mod_time(filename, False, filename_is_full_path)}  -  {self.get_tab_by_hash(the_hash=url_hash)[-1]}    "
+        if not filename_is_full_path:
+            if os.path.exists(evidence_path):
+                text = f"    {get_mod_time(filename, False, filename_is_full_path, True)}  -  {self.get_tab_by_hash(the_hash=url_hash)[-1]}    "
+            else:
+                text = f"    {self.get_url_by_hash(the_hash=url_hash)} @ {get_mod_time(filename, False, filename_is_full_path, False)}    "
+        elif filename_is_full_path:
+            if os.path.basename(filename)[:4] == "eve-":
+                text = f"    {get_mod_time(filename, False, filename_is_full_path, True)}  -  {self.get_tab_by_hash(the_hash=url_hash)[-1]}    "
+            else:
+                text = f"    {self.get_url_by_hash(the_hash=url_hash)} @ {get_mod_time(filename, False, filename_is_full_path, False)}    "
         else:
-            text = f"    {self.get_url_by_hash(the_hash=url_hash)} @ {get_mod_time(filename, False, filename_is_full_path)}    "
+            text = f"    {self.get_url_by_hash(the_hash=url_hash)} @ {get_mod_time(filename, False, filename_is_full_path, False)}    "
 
         # get text width and height
         text_w, text_h = drawing.textsize(text, font)
