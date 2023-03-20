@@ -446,7 +446,7 @@ def execute_on_node(entries, scroll_percent=0, evidence=True):
 
         try:
             logger.info(f"Setting up smartdisplay....")
-            with SmartDisplay(visible=False, size=(1137, 853)) as display:
+            with SmartDisplay(visible=False, size=(1138, 854)) as display:
 
                 logger.info(f"Setting up webdriver....")
 

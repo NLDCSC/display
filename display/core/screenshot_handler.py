@@ -280,19 +280,23 @@ class ScreenShotHandler(object):
             os.path.join(
                 self.current_wd, "../webapp/static/fonts/Roboto/Roboto-Black.ttf"
             ),
-            30,
+            20,
         )
 
+        if os.path.exists(evidence_path):
+            text = f"    {get_mod_time(filename, False, filename_is_full_path)}  -  {self.get_tab_by_hash(the_hash=url_hash)[1]}    "
+        else:
+            text = f"    {self.get_url_by_hash(the_hash=url_hash)} @ {get_mod_time(filename, False, filename_is_full_path)}    "
+
         # get text width and height
-        text = f"    {self.get_url_by_hash(the_hash=url_hash)} @ {get_mod_time(filename, False, filename_is_full_path)}    "
         text_w, text_h = drawing.textsize(text, font)
 
-        pos = w - text_w, (h - text_h) - 50
+        pos = 0, 0
 
         c_text = Image.new("RGB", (text_w, text_h + 10), color="#000")
         drawing = ImageDraw.Draw(c_text)
 
-        drawing.text((0, 0), text, fill="#FFFF00FF", font=font)
+        drawing.text((0, 0), text, fill="#00CC00", font=font)
         c_text.putalpha(1000)
 
         photo.paste(c_text, pos, c_text)

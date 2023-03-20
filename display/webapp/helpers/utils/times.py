@@ -89,6 +89,6 @@ def timestampTOdatetimestring(timestamp, vis=False):
     value = datetime.utcfromtimestamp(timestamp)
 
     if not vis:
-        return value.strftime("%d-%m-%YT%H:%M:%SZ")
+        return value.strftime("%Y-%m-%dT%H:%M:%SZ")
     else:
         return value.strftime("%Y-%m-%d %H:%M:%S")
