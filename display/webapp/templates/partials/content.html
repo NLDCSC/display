@@ -3,37 +3,84 @@
         <h2>Display filter settings:</h2>
         <button class="popup-close" id="btn_close">&times;</button>
         <hr class="ruler">
-        <button id="check_all" type="button" class="btn btn-outline-secondary">check all</button>
-        <button id="uncheck_all" type="button" class="btn btn-outline-secondary">uncheck all</button>
-        <hr class="ruler">
-        <h4>Target filters:</h4>
-        <div id="checkbox_div" class="content">
-            {% for row in normal_tabs|batch(3) %}
-                <div class="row">
-                    {% for key in row %}
-                        <div class="col-sm">
-                            <input type="checkbox" name="{{ key|md5 }}" value="{{ key|md5 }}" id="cb_{{ key|md5 }}"
-                                   checked>
-                            <label for="cb_{{ key|md5 }}"> {{ key }} </label><br>
+        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link btn btn-outline-light btn-sm active" id="pills-toplevel-tab" data-bs-toggle="pill" data-bs-target="#pills-toplevel" type="button" role="tab" aria-controls="pills-toplevel" aria-selected="true">Top-Level</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link btn btn-outline-light btn-sm" id="pills-tablevel-tab" data-bs-toggle="pill" data-bs-target="#pills-tablevel" type="button" role="tab" aria-controls="pills-tablevel" aria-selected="false">Tab-Level</button>
+            </li>
+        </ul>
+        <div class="tab-content" id="pills-tabContent">
+            <div class="tab-pane fade show active" id="pills-toplevel" role="tabpanel" aria-labelledby="pills-toplevel-tab">
+                <button id="check_all" type="button" class="btn btn-outline-secondary">check all</button>
+                <button id="uncheck_all" type="button" class="btn btn-outline-secondary">uncheck all</button>
+                <hr class="ruler">
+                <h4>Target filters:</h4>
+                <div id="checkbox_normal_div" class="content">
+                    {% for row in normal_tabs|batch(3) %}
+                        <div class="row">
+                            {% for key in row %}
+                                <div class="col-sm">
+                                    <input type="checkbox" name="{{ key|md5 }}" value="{{ key|md5 }}" id="cb_{{ key|md5 }}"
+                                           checked>
+                                    <label for="cb_{{ key|md5 }}"> {{ key }} </label><br>
+                                </div>
+                            {% endfor %}
                         </div>
                     {% endfor %}
                 </div>
-            {% endfor %}
-        </div>
-        <h4>Team filters:</h4>
-        <div id="checkbox_div" class="content">
-            {% for row in header_tabs|batch(3) %}
-                <div class="row">
-                    {% for key in row %}
-                        <div class="col-sm">
-                            <input type="checkbox" name="{{ key|md5 }}" value="{{ key|md5 }}" id="cb_{{ key|md5 }}"
-                                   checked>
-                            <label for="cb_{{ key|md5 }}"> {{ key }} </label><br>
+                <h4>Team filters:</h4>
+                <div id="checkbox_header_div" class="content">
+                    {% for row in header_tabs|batch(3) %}
+                        <div class="row">
+                            {% for key in row %}
+                                <div class="col-sm">
+                                    <input type="checkbox" name="{{ key|md5 }}" value="{{ key|md5 }}" id="cb_{{ key|md5 }}"
+                                           checked>
+                                    <label for="cb_{{ key|md5 }}"> {{ key }} </label><br>
+                                </div>
+                            {% endfor %}
                         </div>
                     {% endfor %}
                 </div>
-            {% endfor %}
+            </div>
+            <div class="tab-pane fade" id="pills-tablevel" role="tabpanel" aria-labelledby="pills-tablevel-tab">
+                <button id="check_all_tab" type="button" class="btn btn-outline-secondary">check all</button>
+                <button id="uncheck_all_tab" type="button" class="btn btn-outline-secondary">uncheck all</button>
+                <hr class="ruler">
+                <h4>Target filters:</h4>
+                <div id="checkbox_normal_div_tab" class="content">
+                    {% for row in normal_tabs|batch(3) %}
+                        <div class="row">
+                            {% for key in row %}
+                                <div class="col-sm">
+                                    <input type="checkbox" name="{{ key|md5 }}" value="{{ key|md5 }}" id="cbtab_{{ key|md5 }}"
+                                           checked>
+                                    <label for="cbtab_{{ key|md5 }}"> {{ key }} </label><br>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <h4>Team filters:</h4>
+                <div id="checkbox_header_div_tab" class="content">
+                    {% for row in header_tabs|batch(3) %}
+                        <div class="row">
+                            {% for key in row %}
+                                <div class="col-sm">
+                                    <input type="checkbox" name="{{ key|md5 }}" value="{{ key|md5 }}" id="cbtab_{{ key|md5 }}"
+                                           checked>
+                                    <label for="cbtab_{{ key|md5 }}"> {{ key }} </label><br>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
+
+
     </div>
 </div>
 
@@ -42,7 +89,7 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link {% if loop.first %} active {% endif %}" id="tab_{{ key|md5 }}" data-name="{{ key }}"
                     data-hash="{{ key|md5 }}" data-bs-toggle="tab" data-bs-target="#content_{{ key|md5 }}"
-                    type="button" role="tab" aria-controls="home" aria-selected="true" title="Right click for display filter options">
+                    type="button" role="tab" aria-controls="home" aria-selected="true">
                 {{ key }}</button>
         </li>
     {% endfor %}

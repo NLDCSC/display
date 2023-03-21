@@ -241,7 +241,10 @@ div[id^="actions_"] {
   left: 18px;
 }
 
-#checkbox_div {
+#checkbox_normal_div,
+#checkbox_header_div,
+#checkbox_normal_div_tab,
+#checkbox_header_div_tab {
   height: auto;
 }
 
@@ -287,8 +290,8 @@ div.dropdown-col-right {
 }
 
 .dropdown-multicol2 {
-    max-height: 280px;
-    overflow-y: auto;
+  max-height: 280px;
+  overflow-y: auto;
 }
 
 .center-text {
@@ -300,4 +303,12 @@ div.dropdown-col-right {
   width: 80%;
   margin-top: 0;
   margin-bottom: 0;
+}
+
+div#pills-tabContent.tab-content {
+  border: none;
+}
+
+#pills-tab {
+  margin: 0 !important;
 }

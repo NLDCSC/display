@@ -1,5 +1,3 @@
-const display_cookie = CookieList("display_filter");
-
 function SetAllEventListeners() {
     SetTabEvents();
 
@@ -134,6 +132,12 @@ function SetAllEventListeners() {
         elem.addEventListener("click", SetTabVisibility)
     })
 
+    let TabCheckBoxes = DOMRegex(/^cbtab\_/)
+
+    TabCheckBoxes.forEach(function (elem) {
+        elem.addEventListener("click", SetTabContentVisibility)
+    })
+
     let selectTabArray = DOMRegex(/^tabselect\_span\_/);
 
     selectTabArray.forEach(function (elem) {
@@ -144,7 +148,7 @@ function SetAllEventListeners() {
 
 function SetDisplayFilter() {
 
-    $('#checkbox_div > .row > .col-sm').children('input').each(function () {
+    $('#checkbox_normal_div > .row > .col-sm').children('input').each(function () {
         let tab_element = $("#tab_" + this.value)
 
         if (tab_element.is(":visible")) {
@@ -156,9 +160,32 @@ function SetDisplayFilter() {
         }
     });
 
+    $('#checkbox_header_div > .row > .col-sm').children('input').each(function () {
+        let tab_element = $("#tab_" + this.value)
+
+        if (tab_element.is(":visible")) {
+            $("#cb_" + this.value).prop('checked', true)
+            $("#tabselect_span_" + this.value).show();
+        } else {
+            $("#cb_" + this.value).prop('checked', false)
+            $("#tabselect_span_" + this.value).hide();
+        }
+    });
+
+    get_list_cookie("display-tab-filter").forEach(function (value) {
+        $("#cbtab_" + value).prop('checked', false)
+    })
+
     $("#check_all").click(function () {
-        $('input:checkbox').not(this).prop('checked', true);
-        $('#checkbox_div > .row > .col-sm').children('input').each(function () {
+        $('#checkbox_normal_div input:checkbox').not(this).prop('checked', true);
+        $('#checkbox_normal_div > .row > .col-sm').children('input').each(function () {
+            let vis_tab = $("#tab_" + this.value)
+            if (vis_tab.is(":hidden")) {
+                SetTabVisibility(this.value)
+            }
+        })
+        $('#checkbox_header_div input:checkbox').not(this).prop('checked', true);
+        $('#checkbox_header_div > .row > .col-sm').children('input').each(function () {
             let vis_tab = $("#tab_" + this.value)
             if (vis_tab.is(":hidden")) {
                 SetTabVisibility(this.value)
@@ -167,12 +194,41 @@ function SetDisplayFilter() {
     });
 
     $("#uncheck_all").click(function () {
-        $('input:checkbox').prop('checked', false);
-        $('#checkbox_div > .row > .col-sm').children('input').each(function () {
+        $('#checkbox_normal_div input:checkbox').prop('checked', false);
+        $('#checkbox_normal_div > .row > .col-sm').children('input').each(function () {
             let vis_tab = $("#tab_" + this.value)
             if (vis_tab.is(":visible")) {
                 SetTabVisibility(this.value)
             }
+        })
+        $('#checkbox_header_div input:checkbox').prop('checked', false);
+        $('#checkbox_header_div > .row > .col-sm').children('input').each(function () {
+            let vis_tab = $("#tab_" + this.value)
+            if (vis_tab.is(":visible")) {
+                SetTabVisibility(this.value)
+            }
+        })
+    });
+
+    $("#check_all_tab").click(function () {
+        $('#checkbox_normal_div_tab input:checkbox').not(this).prop('checked', true);
+        $('#checkbox_normal_div_tab > .row > .col-sm').children('input').each(function () {
+            SetTabContentVisibility(this.value)
+        })
+        $('#checkbox_header_div_tab input:checkbox').not(this).prop('checked', true);
+        $('#checkbox_header_div_tab > .row > .col-sm').children('input').each(function () {
+            SetTabContentVisibility(this.value)
+        })
+    });
+
+    $("#uncheck_all_tab").click(function () {
+        $('#checkbox_normal_div_tab input:checkbox').prop('checked', false);
+        $('#checkbox_normal_div_tab > .row > .col-sm').children('input').each(function () {
+            SetTabContentVisibility(this.value)
+        })
+        $('#checkbox_header_div_tab input:checkbox').prop('checked', false);
+        $('#checkbox_header_div_tab > .row > .col-sm').children('input').each(function () {
+            SetTabContentVisibility(this.value)
         })
     });
 
@@ -192,16 +248,33 @@ function SetTabVisibility(el) {
 
     if (tab_element.is(":visible")) {
         $("#tabselect_span_" + tab_value).show();
-        display_cookie.remove(tab_value)
+        remove_from_list_cookie("display-top-filter", tab_value)
         // check if this the only visible tab; if so, click it...
         if ($('button[id^="tab_"]:visible').length === 1) {
             tab_element.click()
         }
     } else {
-        display_cookie.add(tab_value)
+        add_list_cookie("display-top-filter", tab_value)
         $("#tabselect_span_" + tab_value).hide();
     }
 
+}
+
+function SetTabContentVisibility(el) {
+
+    if (typeof el === 'string' || el instanceof String) {
+        var tab_value = el
+    } else {
+        var tab_value = el.target.value
+    }
+
+    let cbtab_element = $("#cbtab_" + tab_value)
+
+    if (cbtab_element.is(":checked")) {
+        remove_from_list_cookie("display-tab-filter", tab_value)
+    } else {
+        add_list_cookie("display-tab-filter", tab_value)
+    }
 }
 
 function CloseDisplayFilter() {
@@ -218,7 +291,7 @@ function CloseDisplayFilter() {
 }
 
 function ReEnableDisplayFilter() {
-    display_cookie.items().forEach(function (value) {
+    get_list_cookie("display-top-filter").forEach(function (value) {
         SetTabVisibility(tab_val = value)
     })
 
