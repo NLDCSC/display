@@ -2,6 +2,7 @@ import base64
 from urllib.parse import urlparse
 
 from flask import request
+from werkzeug.exceptions import BadRequestKeyError
 
 from display.celery_app.display_daemon import create_custom_screenshot
 from display.core.screenshot_handler import ScreenShotHandler
@@ -14,9 +15,9 @@ def get_screenshot():
     req = request
 
     try:
-        requested_url = req.headers["display-url"]
-    except KeyError:
-        return {"ERROR": "Missing mandatory header: 'display_url'"}
+        requested_url = req.values["display-url"]
+    except BadRequestKeyError:
+        return {"ERROR": "Missing mandatory header: 'display-url'"}
     except Exception as err:
         return {"ERROR": f"Unknown error requesting screenshot: {err}"}
 
@@ -42,9 +43,9 @@ def put_screenshot():
     req = request
 
     try:
-        requested_url = req.headers["display-url"]
-    except KeyError:
-        return {"ERROR": "Missing mandatory header: 'display_url'"}
+        requested_url = req.form["display-url"]
+    except BadRequestKeyError:
+        return {"ERROR": "Missing mandatory header: 'display-url'"}
     except Exception as err:
         return {"ERROR": f"Unknown error submitting screenshot: {err}"}
 
