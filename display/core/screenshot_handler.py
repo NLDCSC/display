@@ -172,6 +172,10 @@ class ScreenShotHandler(object):
         except KeyError:
             return False
 
+    def get_hash_by_url(self, the_url):
+
+        return hashlib.md5(the_url.encode("utf-8")).hexdigest()[:6]
+
     def get_all_screenshots(self, tab_name):
 
         ret_data = []
@@ -249,7 +253,7 @@ class ScreenShotHandler(object):
         return ret_data
 
     def set_timestamp_to_picture(
-        self, filename, filename_is_full_path: bool = False, url_hash: str = None
+        self, filename, filename_is_full_path: bool = False, url_hash: str = None, send_buffer: bool = False
     ):
 
         if not filename_is_full_path:
@@ -305,7 +309,7 @@ class ScreenShotHandler(object):
         c_text.putalpha(1000)
 
         photo.paste(c_text, pos, c_text)
-        if not filename_is_full_path:
+        if not filename_is_full_path and not send_buffer:
             photo.save(
                 os.path.join(self.config.SCREENSHOT_LOCATION, f"{filename}_ts.png")
             )

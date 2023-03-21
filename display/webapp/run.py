@@ -35,7 +35,7 @@ def create_app(version):
     app.config["version"] = "{}".format(version)
 
     if not config.DEBUG:
-        app.config["SESSION_COOKIE_NAME"] = "trigram.session"
+        app.config["SESSION_COOKIE_NAME"] = "display.session"
         app.config["SESSION_COOKIE_SECURE"] = True
         app.config["SESSION_COOKIE_HTTPONLY"] = True
         app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
@@ -60,6 +60,10 @@ def create_app(version):
     from display.webapp.home import home as home_blueprint
 
     app.register_blueprint(home_blueprint, url_prefix=app.config["WEB_ROOT"])
+
+    from display.webapp.api import api as api_blueprint
+
+    app.register_blueprint(api_blueprint, url_prefix=f"{app.config['WEB_ROOT']}/api")
 
     from display.webapp.errors import errors as error_blueprint
 
