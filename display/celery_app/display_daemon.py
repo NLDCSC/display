@@ -599,7 +599,7 @@ def create_custom_screenshot(data):
 
     url_data = sh.get_data_by_hash(data["data"])
 
-    display_sources = {sh.get_tabname_by_tabhash(data["tab-hash"]): [url_data]}
+    display_sources = {sh.get_tab_by_hash(data["data"])[0]: [url_data]}
 
     logger.info(f"Hash mapped to url: {display_sources}!")
 
