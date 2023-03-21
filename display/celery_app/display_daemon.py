@@ -310,12 +310,7 @@ def push_to_nodes(workload, evidence_shot=False):
     monitoring_nodes_results.delay(task_ids, evidence_shot)
 
 
-@app.task(
-    autoretry_for=(ConnectionResetError,),
-    retry_kwargs={"max_retries": 3},
-    retry_backoff=60,
-    retry_jitter=False,
-)
+@app.task()
 def monitoring_nodes_results(data, evidence_shot=False):
     logger = get_task_logger(__name__)
 
@@ -339,26 +334,26 @@ def monitoring_nodes_results(data, evidence_shot=False):
 
                         ret_screenshot_data = collections.defaultdict(dict)
 
-                        for screenshot_data in screenshot_list:
+                        if screenshot_list is not None:
+                            for screenshot_data in screenshot_list:
+                                for k, v in screenshot_data.items():
+                                    url_hash = k
+                                    if v == "ERROR":
+                                        ret_screenshot_data[k] = v
+                                    else:
+                                        if "evidence" in v:
+                                            ret_screenshot_data[k][
+                                                "evidence"
+                                            ] = base64.b64decode(v["evidence"])
+                                        if "normal" in v:
+                                            ret_screenshot_data[k][
+                                                "normal"
+                                            ] = base64.b64decode(v["normal"])
 
-                            for k, v in screenshot_data.items():
-                                url_hash = k
-                                if v == "ERROR":
-                                    ret_screenshot_data[k] = v
-                                else:
-                                    if "evidence" in v:
-                                        ret_screenshot_data[k][
-                                            "evidence"
-                                        ] = base64.b64decode(v["evidence"])
-                                    if "normal" in v:
-                                        ret_screenshot_data[k][
-                                            "normal"
-                                        ] = base64.b64decode(v["normal"])
-
-                        ss = AsyncScreenshots()
-                        ss.process_async(
-                            results=[ret_screenshot_data], evidence_shot=evidence_shot
-                        )
+                            ss = AsyncScreenshots()
+                            ss.process_async(
+                                results=[ret_screenshot_data], evidence_shot=evidence_shot
+                            )
 
                         sh = ScreenShotHandler()
 
@@ -394,30 +389,31 @@ def monitoring_nodes_results(data, evidence_shot=False):
 
                         else:
 
-                            url_hash = list(ret_screenshot_data.keys())[0]
+                            if not evidence_shot:
+                                url_hash = list(ret_screenshot_data.keys())[0]
 
-                            sources = sh.get_tab_by_hash(url_hash)
-                            for source in sources:
-                                try:
-                                    tab_data = sh.get_changed_screenshots_per_tab(
-                                        tab_name=source
-                                    )
-                                    socketio.emit(
-                                        "push_all_screenshots",
-                                        {
-                                            "data": tab_data,
-                                            "tab_hash": sh.get_tabhash_by_tabname(
-                                                source
-                                            ),
-                                        },
-                                        room=source,
-                                        namespace="/display",
-                                    )
-                                    handle_changes_for_timeline.delay(data=tab_data)
-                                except Exception as err:
-                                    logger.error(
-                                        f"Error processing updates on source {source}.... --> Produced error: {err}"
-                                    )
+                                sources = sh.get_tab_by_hash(url_hash)
+                                for source in sources:
+                                    try:
+                                        tab_data = sh.get_changed_screenshots_per_tab(
+                                            tab_name=source
+                                        )
+                                        socketio.emit(
+                                            "push_all_screenshots",
+                                            {
+                                                "data": tab_data,
+                                                "tab_hash": sh.get_tabhash_by_tabname(
+                                                    source
+                                                ),
+                                            },
+                                            room=source,
+                                            namespace="/display",
+                                        )
+                                        handle_changes_for_timeline.delay(data=tab_data)
+                                    except Exception as err:
+                                        logger.error(
+                                            f"Error processing updates on source {source}.... --> Produced error: {err}"
+                                        )
 
                         resulting_tasks = len(data) - len(tasks_ready)
 
@@ -429,6 +425,7 @@ def monitoring_nodes_results(data, evidence_shot=False):
                         )
                     except Exception as err:
                         logger.error(f"Error fetching results: {err}")
+                        continue
 
     logger.info(f"Done monitoring {len(data)} tasks!!")
 
@@ -657,6 +654,8 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
 
     sh = ScreenShotHandler()
 
+    evidence_workload = []
+
     for each in data:
         if int(each["changed"]) == 0:
             # changed content; save a copy of the current screenshot
@@ -673,15 +672,11 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
 
             url_data = sh.get_data_by_hash(the_hash=each["sc_id"])
 
-            display_sources = {target: [url_data]}
+            ss = AsyncScreenshots()
 
-            ss = AsyncScreenshots(display_sources)
-
-            if hasattr(ss, "selenium_workload"):
-                # check if this url is part of the selenium workload, if 0 it isn't so take the evidence shot!
-                if len(ss.selenium_workload) == 0:
-                    evidence_url = [url_data]
-                    push_to_nodes.delay(evidence_url, evidence_shot=True)
+            # check if this url is part of the selenium workload, if 0 it isn't so take the evidence shot!
+            if target not in ss.screen_shot_sources['selenium']:
+                evidence_workload.append(url_data)
 
             if csc:
                 new_filename = f"csc-{uuid.uuid4()}.png"
@@ -704,6 +699,10 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
                     evidence_path,
                     os.path.join(config.TIMELINE_LOCATION, each["sc_id"], new_filename),
                 )
+
+    if len(evidence_workload) != 0:
+        logger.info(f"Received evidence workload; count {len(evidence_workload)}, pushing load to nodes...")
+        push_to_nodes.delay(evidence_workload, evidence_shot=True)
 
 
 @app.task(
