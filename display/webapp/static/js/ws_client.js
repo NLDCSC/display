@@ -272,8 +272,48 @@ function SetTabContentVisibility(el) {
 
     if (cbtab_element.is(":checked")) {
         remove_from_list_cookie("display-tab-filter", tab_value)
+        SetTabContentFilter(tab_value)
     } else {
         add_list_cookie("display-tab-filter", tab_value)
+        SetTabContentFilter()
+    }
+}
+
+function SetTabContentFilter(tab_value = null) {
+
+    let get_items = $('div[id^="item_"]')
+
+    console.log(get_items)
+
+    filter_data = get_list_cookie("display-tab-filter")
+
+    console.log(filter_data.length)
+
+    if (tab_value === null) {
+        if (filter_data.length > 1){
+            filter_data.forEach(function (value) {
+                if (value){
+                    let filtered_contents = get_items.filter('div[id*=' + value +']')
+
+                    if (filtered_contents.length !== 0){
+                        filtered_contents.each(function (item_id){
+                            $("#" + filtered_contents[item_id].id).hide()
+                        })
+                    }
+                }
+            })
+        } else {
+            get_items.each(function (value) {
+                $("#" + get_items[value].id).show()
+            })
+        }
+    } else {
+        let filtered_contents = get_items.filter('div[id*=' + tab_value +']:hidden')
+        if (filtered_contents.length !== 0){
+            filtered_contents.each(function (item_id){
+                $("#" + filtered_contents[item_id].id).show()
+            })
+        }
     }
 }
 

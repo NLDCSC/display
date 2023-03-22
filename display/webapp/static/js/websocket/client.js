@@ -70,6 +70,8 @@ $(document).ready(function () {
 
             })
 
+            SetTabContentFilter()
+
             $("#tab_change_loading").hide()
             tab_content.removeClass("grey_out")
 

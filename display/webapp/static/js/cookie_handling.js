@@ -34,9 +34,13 @@ function remove_from_list_cookie(key, val) {
 function get_list_cookie(key) {
     let a = Cookies.get(key)
 
-    let items = a.split(',')
+    if(typeof a === 'undefined') {
+        return []
+    } else {
+        let items = a.split(',')
+        return items
+    }
 
-    return items
 }
 
 function delete_cookie(key){
