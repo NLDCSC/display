@@ -1,7 +1,8 @@
 {% for row in display_sources[key]|batch(6) %}
-    <div class="row content-row">
+    {% set top_loop = loop.index %}
+    <div id="row_{{ key|md5 }}_{{ top_loop }}" class="row content-row" data-tab-hash="{{ key|md5 }}" data-row-number="{{ top_loop }}">
         {% for each in row %}
-            <div id="item_{{ key|md5 }}_{% if each["alt_header"] is defined %}{{ each['alt_header']|md5 }}{% else %}{{ each['header']|md5 }}{% endif %}" class="col-md-2 img-col">
+            <div id="item_{{ key|md5 }}_{% if each["alt_header"] is defined %}{{ each['alt_header']|md5 }}{% else %}{{ each['header']|md5 }}{% endif %}" class="col-md-2 img-col" data-pos="{{ loop.index }}" data-row="{{ top_loop }}">
                 <div class="img-wrap">
                     <div>{% if each["alt_header"] is defined %}{{ each['alt_header']|upper }}{% else %}{{ each['header'] }}{% endif %}<span id="mod_time_{{ key|md5 }}_{{ each['url']|md5 }}" class="mod-time">never</span>
                     </div>

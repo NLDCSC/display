@@ -283,11 +283,7 @@ function SetTabContentFilter(tab_value = null) {
 
     let get_items = $('div[id^="item_"]')
 
-    console.log(get_items)
-
     filter_data = get_list_cookie("display-tab-filter")
-
-    console.log(filter_data.length)
 
     if (tab_value === null) {
         if (filter_data.length > 1){
@@ -297,21 +293,71 @@ function SetTabContentFilter(tab_value = null) {
 
                     if (filtered_contents.length !== 0){
                         filtered_contents.each(function (item_id){
-                            $("#" + filtered_contents[item_id].id).hide()
+                            let el = $("#" + filtered_contents[item_id].id)
+                            el.hide()
+                            let el_parent = $("#" + el.parent()[0].id)
+                            if(el_parent.children(':visible').length === 0) {
+                                el_parent.hide()
+                            }
+                        })
+                        // distribute the remaining visible items evenly over the rows (6 per row)
+                        // get current active tab
+                        let check_visible = $('button[id^="tab_"]:visible')
+
+                        check_visible.each(function (elem) {
+                            let el = $("#" + check_visible[elem].id)
+                            if (el.hasClass('active')){
+
+                                let tab_hash = el[0].attributes['data-hash'].nodeValue
+
+                                let active_rows = $('div[id^=row_' + tab_hash +']')
+
+                                active_rows.each(function (val) {
+                                    let el = $("#" + active_rows[val].id)
+                                    let row_number = el[0].attributes['data-row-number'].nodeValue
+                                    if(el.children(':visible').length === 6) {
+                                        return true;
+                                    } else {
+                                        // console.log("NOT FULL ROW!")
+                                        // fetch next row
+                                        let next_row = $("#row_" + tab_hash + "_" + (parseInt(row_number) + 1))
+
+                                        while (el.children(':visible').length !== 6){
+
+                                            if (next_row.length !== 0) {
+                                                $("#" + next_row[0].firstElementChild.id).appendTo(el);
+                                            } else {
+                                                // this row is empty, so hide the row...
+                                                el.hide()
+                                                break;
+                                            }
+
+                                        }
+                                    }
+
+                                })
+
+                            }
                         })
                     }
                 }
             })
         } else {
             get_items.each(function (value) {
-                $("#" + get_items[value].id).show()
+                let el = $("#" + get_items[value].id)
+                el.show()
             })
         }
     } else {
         let filtered_contents = get_items.filter('div[id*=' + tab_value +']:hidden')
         if (filtered_contents.length !== 0){
             filtered_contents.each(function (item_id){
-                $("#" + filtered_contents[item_id].id).show()
+                let el = $("#" + filtered_contents[item_id].id)
+                el.show()
+                let el_parent = $("#" + el.parent()[0].id)
+                if(el_parent.children(':visible').length === 0) {
+                    el_parent.show()
+                }
             })
         }
     }

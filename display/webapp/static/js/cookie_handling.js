@@ -6,8 +6,7 @@ function add_list_cookie(key, val) {
 
     let a = Cookies.get(key)
     if(typeof a === 'undefined') {
-        let items = val.split(',')
-        Cookies.set(key, items.join(','), { sameSite: 'lax' })
+        Cookies.set(key, "," + val, { sameSite: 'lax' })
         return true
     } else {
         let items = a.split(',')
