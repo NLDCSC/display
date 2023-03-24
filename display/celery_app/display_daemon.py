@@ -240,42 +240,44 @@ def make_screenshots(display_sources):
                 for target, urls in each.items():
                     push_to_nodes.delay(urls)
 
-    ss.process_async()
+    if hasattr(ss, "workload"):
+        if len(ss.workload) != 0:
+            ss.process_async()
 
-    logger.info(f"Finished taking screenshots; processing updates!")
+            logger.info(f"Finished taking screenshots; processing updates!")
 
-    sh = ScreenShotHandler()
+            sh = ScreenShotHandler()
 
-    try:
-        for source in display_sources:
-            tab_data = sh.get_changed_screenshots_per_tab(tab_name=source)
-            socketio.emit(
-                "push_all_screenshots",
-                {
-                    "data": tab_data,
-                    "tab_hash": sh.get_tabhash_by_tabname(source),
-                },
-                room=source,
-                namespace="/display",
-            )
+            try:
+                for source in display_sources:
+                    tab_data = sh.get_changed_screenshots_per_tab(tab_name=source)
+                    socketio.emit(
+                        "push_all_screenshots",
+                        {
+                            "data": tab_data,
+                            "tab_hash": sh.get_tabhash_by_tabname(source),
+                        },
+                        room=source,
+                        namespace="/display",
+                    )
 
-            for changed_pic in tab_data:
-                changed_sources = sh.get_tab_by_hash(changed_pic["sc_id"])
-                for changed_source in changed_sources:
-                    if changed_source != source:
-                        socketio.emit(
-                            "push_all_screenshots",
-                            {
-                                "data": tab_data,
-                                "tab_hash": sh.get_tabhash_by_tabname(changed_source),
-                            },
-                            room=changed_source,
-                            namespace="/display",
-                        )
+                    for changed_pic in tab_data:
+                        changed_sources = sh.get_tab_by_hash(changed_pic["sc_id"])
+                        for changed_source in changed_sources:
+                            if changed_source != source:
+                                socketio.emit(
+                                    "push_all_screenshots",
+                                    {
+                                        "data": tab_data,
+                                        "tab_hash": sh.get_tabhash_by_tabname(changed_source),
+                                    },
+                                    room=changed_source,
+                                    namespace="/display",
+                                )
 
-            handle_changes_for_timeline.delay(data=tab_data)
-    except Exception as err:
-        logger.error(f"Error processing updates.... --> Produced error: {err}")
+                    handle_changes_for_timeline.delay(data=tab_data)
+            except Exception as err:
+                logger.error(f"Error processing updates.... --> Produced error: {err}")
 
     logger.info(f"Finished processing updates...")
 
@@ -674,7 +676,7 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
 
             ss = AsyncScreenshots()
 
-            # check if this url is part of the selenium workload, if 0 it isn't so take the evidence shot!
+            # check if this url is part of the selenium workload, if it isn't append to the evidence workload!
             if target not in ss.screen_shot_sources['selenium']:
                 evidence_workload.append(url_data)
 

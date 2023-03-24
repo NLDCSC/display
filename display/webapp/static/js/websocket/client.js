@@ -70,12 +70,12 @@ $(document).ready(function () {
 
             })
 
-            SetTabContentFilter()
+            SetTabContentFilter();
 
             $("#tab_change_loading").hide()
             tab_content.removeClass("grey_out")
 
-            SetAllEventListeners()
+            SetAllEventListeners();
 
             if (cb) {
                 cb(client_id = socket.sid, data = msg["tab_hash"]);
@@ -119,6 +119,8 @@ $(document).ready(function () {
         DestroyScrollingTabs()
         ReEnableDisplayFilter();
         SetKeyDownEvents();
+        
+        SetTabContentFilter();
 
         if (tab_select.length) {
             tab_select.click();
