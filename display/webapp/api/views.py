@@ -56,7 +56,7 @@ def put_screenshot():
 
     url_hash = sh.get_hash_by_url(requested_url)
 
-    data = {'data': url_hash}
+    data = {"data": url_hash}
 
     create_custom_screenshot.delay(data=data)
 

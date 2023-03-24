@@ -253,7 +253,11 @@ class ScreenShotHandler(object):
         return ret_data
 
     def set_timestamp_to_picture(
-        self, filename, filename_is_full_path: bool = False, url_hash: str = None, send_buffer: bool = False
+        self,
+        filename,
+        filename_is_full_path: bool = False,
+        url_hash: str = None,
+        send_buffer: bool = False,
     ):
 
         if not filename_is_full_path:

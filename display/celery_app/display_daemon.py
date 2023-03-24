@@ -269,7 +269,9 @@ def make_screenshots(display_sources):
                                     "push_all_screenshots",
                                     {
                                         "data": tab_data,
-                                        "tab_hash": sh.get_tabhash_by_tabname(changed_source),
+                                        "tab_hash": sh.get_tabhash_by_tabname(
+                                            changed_source
+                                        ),
                                     },
                                     room=changed_source,
                                     namespace="/display",
@@ -354,7 +356,8 @@ def monitoring_nodes_results(data, evidence_shot=False):
 
                             ss = AsyncScreenshots()
                             ss.process_async(
-                                results=[ret_screenshot_data], evidence_shot=evidence_shot
+                                results=[ret_screenshot_data],
+                                evidence_shot=evidence_shot,
                             )
 
                         sh = ScreenShotHandler()
@@ -677,7 +680,7 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
             ss = AsyncScreenshots()
 
             # check if this url is part of the selenium workload, if it isn't append to the evidence workload!
-            if target not in ss.screen_shot_sources['selenium']:
+            if target not in ss.screen_shot_sources["selenium"]:
                 evidence_workload.append(url_data)
 
             if csc:
@@ -694,16 +697,20 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
             evidence_path = os.path.join(
                 config.SCREENSHOT_LOCATION, f"{each['sc_id']}_eve.png"
             )
-            new_filename = f"eve-{uuid.uuid4()}.png"
+            evidence_filename = f"eve-{uuid.uuid4()}.png"
 
             if os.path.exists(evidence_path):
                 shutil.copy2(
                     evidence_path,
-                    os.path.join(config.TIMELINE_LOCATION, each["sc_id"], new_filename),
+                    os.path.join(
+                        config.TIMELINE_LOCATION, each["sc_id"], evidence_filename
+                    ),
                 )
 
     if len(evidence_workload) != 0:
-        logger.info(f"Received evidence workload; count {len(evidence_workload)}, pushing load to nodes...")
+        logger.info(
+            f"Received evidence workload; count {len(evidence_workload)}, pushing load to nodes..."
+        )
         push_to_nodes.delay(evidence_workload, evidence_shot=True)
 
 

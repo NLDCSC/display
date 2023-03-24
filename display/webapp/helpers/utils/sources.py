@@ -23,13 +23,13 @@ def get_display_sources(add_header_tabs: bool = False):
 
     # sort entries in display source
     for key, values in display_sources.items():
-        display_sources[key] = sorted(values, key=itemgetter('header'))
+        display_sources[key] = sorted(values, key=itemgetter("header"))
 
     if add_header_tabs:
         header_display_sources = add_header_tabs_from_sources(display_sources)
 
         for key, values in header_display_sources.items():
-            header_display_sources[key] = sorted(values, key=itemgetter('alt_header'))
+            header_display_sources[key] = sorted(values, key=itemgetter("alt_header"))
 
         display_sources = {**display_sources, **header_display_sources}
 
