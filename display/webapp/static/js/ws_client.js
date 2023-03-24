@@ -517,6 +517,8 @@ function OpenScreenshot(evt) {
 
     let screenshot_id = attrs["data-id"].nodeValue;
 
+    $("body").css("cursor", "progress");
+
     window.socket.emit("see_custom_screenshot", {"data": screenshot_id});
 
 }
@@ -526,10 +528,14 @@ function Download(evt) {
 
     let screenshot_id = attrs["data-id"].nodeValue;
 
+    $("body").css("cursor", "progress");
+
     var link = document.createElement("a");
     link.download = "Download_" + screenshot_id;
     link.href = BasePath + "screenshot/" + screenshot_id;
     link.click();
+
+    $("body").css("cursor", "default");
 }
 
 function Timeline(evt) {
