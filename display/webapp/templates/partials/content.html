@@ -13,32 +13,47 @@
         </ul>
         <div class="tab-content" id="pills-tabContent">
             <div class="tab-pane fade show active" id="pills-toplevel" role="tabpanel" aria-labelledby="pills-toplevel-tab">
-                <button id="check_all" type="button" class="btn btn-outline-secondary">check all</button>
-                <button id="uncheck_all" type="button" class="btn btn-outline-secondary">uncheck all</button>
+                <div class="row">
+                    <div class="col-6">
+                        <h4>Target filters:</h4>
+                    </div>
+                    <div class="col-6">
+                        <button id="check_all_tar" type="button" class="btn btn-outline-secondary">check all</button>
+                        <button id="uncheck_all_tar" type="button" class="btn btn-outline-secondary">uncheck all</button>
+                    </div>
+                </div>
                 <hr class="ruler">
-                <h4>Target filters:</h4>
                 <div id="checkbox_normal_div" class="content">
                     {% for row in normal_tabs|batch(3) %}
                         <div class="row">
                             {% for key in row %}
                                 <div class="col-sm">
-                                    <input type="checkbox" name="{{ key|md5 }}" value="{{ key|md5 }}" id="cb_{{ key|md5 }}"
+                                    <input type="checkbox" name="{{ key|md5 }}" value="{{ key|md5 }}" id="cb_tar_{{ key|md5 }}"
                                            checked>
-                                    <label for="cb_{{ key|md5 }}"> {{ key }} </label><br>
+                                    <label for="cb_tar_{{ key|md5 }}"> {{ key }} </label><br>
                                 </div>
                             {% endfor %}
                         </div>
                     {% endfor %}
                 </div>
-                <h4>Team filters:</h4>
+                <div class="row teamrow">
+                    <div class="col-6">
+                        <h4>Team filters:</h4>
+                    </div>
+                    <div class="col-6">
+                        <button id="check_all_head" type="button" class="btn btn-outline-secondary">check all</button>
+                        <button id="uncheck_all_head" type="button" class="btn btn-outline-secondary">uncheck all</button>
+                    </div>
+                </div>
+                <hr class="ruler">
                 <div id="checkbox_header_div" class="content">
                     {% for row in header_tabs|batch(3) %}
                         <div class="row">
                             {% for key in row %}
                                 <div class="col-sm">
-                                    <input type="checkbox" name="{{ key|md5 }}" value="{{ key|md5 }}" id="cb_{{ key|md5 }}"
+                                    <input type="checkbox" name="{{ key|md5 }}" value="{{ key|md5 }}" id="cb_head_{{ key|md5 }}"
                                            checked>
-                                    <label for="cb_{{ key|md5 }}"> {{ key }} </label><br>
+                                    <label for="cb_head_{{ key|md5 }}"> {{ key }} </label><br>
                                 </div>
                             {% endfor %}
                         </div>
@@ -46,32 +61,47 @@
                 </div>
             </div>
             <div class="tab-pane fade" id="pills-tablevel" role="tabpanel" aria-labelledby="pills-tablevel-tab">
-                <button id="check_all_tab" type="button" class="btn btn-outline-secondary">check all</button>
-                <button id="uncheck_all_tab" type="button" class="btn btn-outline-secondary">uncheck all</button>
+                <div class="row">
+                    <div class="col-6">
+                        <h4>Target filters:</h4>
+                    </div>
+                    <div class="col-6">
+                        <button id="check_all_tab_tar" type="button" class="btn btn-outline-secondary">check all</button>
+                        <button id="uncheck_all_tab_tar" type="button" class="btn btn-outline-secondary">uncheck all</button>
+                    </div>
+                </div>
                 <hr class="ruler">
-                <h4>Target filters:</h4>
                 <div id="checkbox_normal_div_tab" class="content">
                     {% for row in normal_tabs|batch(3) %}
                         <div class="row">
                             {% for key in row %}
                                 <div class="col-sm">
-                                    <input type="checkbox" name="{{ key|md5 }}" value="{{ key|md5 }}" id="cbtab_{{ key|md5 }}"
+                                    <input type="checkbox" name="{{ key|md5 }}" value="{{ key|md5 }}" id="cbtab_tar_{{ key|md5 }}"
                                            checked>
-                                    <label for="cbtab_{{ key|md5 }}"> {{ key }} </label><br>
+                                    <label for="cbtab_tar_{{ key|md5 }}"> {{ key }} </label><br>
                                 </div>
                             {% endfor %}
                         </div>
                     {% endfor %}
                 </div>
-                <h4>Team filters:</h4>
+                <div class="row teamrow">
+                    <div class="col-6">
+                        <h4>Team filters:</h4>
+                    </div>
+                    <div class="col-6">
+                        <button id="check_all_tab_head" type="button" class="btn btn-outline-secondary">check all</button>
+                        <button id="uncheck_all_tab_head" type="button" class="btn btn-outline-secondary">uncheck all</button>
+                    </div>
+                </div>
+                <hr class="ruler">
                 <div id="checkbox_header_div_tab" class="content">
                     {% for row in header_tabs|batch(3) %}
                         <div class="row">
                             {% for key in row %}
                                 <div class="col-sm">
-                                    <input type="checkbox" name="{{ key|md5 }}" value="{{ key|md5 }}" id="cbtab_{{ key|md5 }}"
+                                    <input type="checkbox" name="{{ key|md5 }}" value="{{ key|md5 }}" id="cbtab_head_{{ key|md5 }}"
                                            checked>
-                                    <label for="cbtab_{{ key|md5 }}"> {{ key }} </label><br>
+                                    <label for="cbtab_head_{{ key|md5 }}"> {{ key }} </label><br>
                                 </div>
                             {% endfor %}
                         </div>

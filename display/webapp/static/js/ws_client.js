@@ -176,15 +176,18 @@ function SetDisplayFilter() {
         $("#cbtab_" + value).prop('checked', false)
     })
 
-    $("#check_all").click(function () {
-        $('#checkbox_normal_div input:checkbox').not(this).prop('checked', true);
+    $("#check_all_tar").click(function () {
+        $('#checkbox_normal_div input:checkbox[id^="cb_tar_"]').not(this).prop('checked', true);
         $('#checkbox_normal_div > .row > .col-sm').children('input').each(function () {
             let vis_tab = $("#tab_" + this.value)
             if (vis_tab.is(":hidden")) {
                 SetTabVisibility(this.value)
             }
         })
-        $('#checkbox_header_div input:checkbox').not(this).prop('checked', true);
+    });
+
+    $("#check_all_head").click(function () {
+        $('#checkbox_header_div input:checkbox[id^="cb_head_"]').not(this).prop('checked', true);
         $('#checkbox_header_div > .row > .col-sm').children('input').each(function () {
             let vis_tab = $("#tab_" + this.value)
             if (vis_tab.is(":hidden")) {
@@ -193,15 +196,18 @@ function SetDisplayFilter() {
         })
     });
 
-    $("#uncheck_all").click(function () {
-        $('#checkbox_normal_div input:checkbox').prop('checked', false);
+    $("#uncheck_all_tar").click(function () {
+        $('#checkbox_normal_div input:checkbox[id^="cb_tar_"]').prop('checked', false);
         $('#checkbox_normal_div > .row > .col-sm').children('input').each(function () {
             let vis_tab = $("#tab_" + this.value)
             if (vis_tab.is(":visible")) {
                 SetTabVisibility(this.value)
             }
         })
-        $('#checkbox_header_div input:checkbox').prop('checked', false);
+    });
+
+    $("#uncheck_all_head").click(function () {
+        $('#checkbox_header_div input:checkbox[id^="cb_head_"]').prop('checked', false);
         $('#checkbox_header_div > .row > .col-sm').children('input').each(function () {
             let vis_tab = $("#tab_" + this.value)
             if (vis_tab.is(":visible")) {
@@ -210,23 +216,29 @@ function SetDisplayFilter() {
         })
     });
 
-    $("#check_all_tab").click(function () {
-        $('#checkbox_normal_div_tab input:checkbox').not(this).prop('checked', true);
+    $("#check_all_tab_tar").click(function () {
+        $('#checkbox_normal_div_tab input:checkbox[id^="cbtab_tar_"]').not(this).prop('checked', true);
         $('#checkbox_normal_div_tab > .row > .col-sm').children('input').each(function () {
             SetTabContentVisibility(this.value)
         })
-        $('#checkbox_header_div_tab input:checkbox').not(this).prop('checked', true);
+    });
+
+    $("#check_all_tab_head").click(function () {
+        $('#checkbox_header_div_tab input:checkbox[id^="cbtab_head_"]').not(this).prop('checked', true);
         $('#checkbox_header_div_tab > .row > .col-sm').children('input').each(function () {
             SetTabContentVisibility(this.value)
         })
     });
 
-    $("#uncheck_all_tab").click(function () {
-        $('#checkbox_normal_div_tab input:checkbox').prop('checked', false);
+    $("#uncheck_all_tab_tar").click(function () {
+        $('#checkbox_normal_div_tab input:checkbox[id^="cbtab_tar_"]').prop('checked', false);
         $('#checkbox_normal_div_tab > .row > .col-sm').children('input').each(function () {
             SetTabContentVisibility(this.value)
         })
-        $('#checkbox_header_div_tab input:checkbox').prop('checked', false);
+    });
+
+    $("#uncheck_all_tab_head").click(function () {
+        $('#checkbox_header_div_tab input:checkbox[id^="cbtab_head_"]').prop('checked', false);
         $('#checkbox_header_div_tab > .row > .col-sm').children('input').each(function () {
             SetTabContentVisibility(this.value)
         })
@@ -268,7 +280,7 @@ function SetTabContentVisibility(el) {
         var tab_value = el.target.value
     }
 
-    let cbtab_element = $("#cbtab_" + tab_value)
+    let cbtab_element = $('input[id*=' + tab_value +']').not('input[id^="cb_"]')
 
     if (cbtab_element.is(":checked")) {
         remove_from_list_cookie("display-tab-filter", tab_value)
