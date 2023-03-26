@@ -307,6 +307,8 @@ div.dropdown-col-right {
 
 div#pills-tabContent.tab-content {
   border: none;
+  max-height: 600px;
+  overflow: scroll;
 }
 
 #pills-tab {
