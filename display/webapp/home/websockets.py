@@ -257,6 +257,8 @@ def do_change_display_tab(reqdata):
         {
             "data": data,
             "url": sh.get_url_by_hash(reqdata["data"]),
+            "tab-hash": reqdata["tab-hash"],
+            "url-hash": reqdata["data"],
         },
         room=request.sid,
     )

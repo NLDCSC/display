@@ -528,10 +528,11 @@ function OpenScreenshot(evt) {
     let attrs = evt.target.attributes;
 
     let screenshot_id = attrs["data-id"].nodeValue;
+    let tab_hash = attrs["data-tab-hash"].nodeValue;
 
-    $("body").css("cursor", "progress");
+    $("#do_open-sc_" + tab_hash + "_" + screenshot_id).css("cursor", "wait");
 
-    window.socket.emit("see_custom_screenshot", {"data": screenshot_id});
+    window.socket.emit("see_custom_screenshot", {"data": screenshot_id, "tab-hash": tab_hash});
 
 }
 
@@ -539,15 +540,18 @@ function Download(evt) {
     let attrs = evt.target.attributes;
 
     let screenshot_id = attrs["data-id"].nodeValue;
+    let tab_hash = attrs["data-tab-hash"].nodeValue;
 
-    $("body").css("cursor", "progress");
+    let target_elem = $("#do_open-sc_" + tab_hash + "_" + screenshot_id);
+
+    target_elem.css("cursor", "wait");
 
     var link = document.createElement("a");
     link.download = "Download_" + screenshot_id;
     link.href = BasePath + "screenshot/" + screenshot_id;
     link.click();
 
-    $("body").css("cursor", "default");
+    target_elem.css("cursor", "default");
 }
 
 function Timeline(evt) {
