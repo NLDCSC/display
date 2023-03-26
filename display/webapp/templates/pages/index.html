@@ -19,6 +19,9 @@
     <script type="text/javascript"
             src="{{ url_for('static', filename='js/scroll_tabs/jquery.scrolling-tabs.min.js') }}"></script>
 
+    <script> const TIME_LIMIT = {{ tab_rotate_timer }}; </script>
+
+    <script type="text/javascript" src="{{ url_for('static', filename='js/timer.min.js') }}"></script>
 {% endblock %}
 
 {% block body %}
@@ -29,11 +32,14 @@
                     <div class="row margin_bottom">
                         <div class="col-12">
                             <h4 class="card-title pos-abs">DISPLAY WALL
-                                <button id="display-filter" type="button" class="btn btn-outline">
+                                <button id="display-filter" type="button" class="btn btn-outline" title="Filter settings">
                                     <span class="mdi mdi-filter-outline"></span>
                                 </button>
+                                <button id="tab-rotate" type="button" class="btn btn-outline btn-outline-success btn-outline-danger" title="Enable/disable tab rotation on visible tabs">
+                                    <img src="{{ url_for('static', filename='img/tab_rotate.png') }}" alt="tab_rotate">
+                                </button>
                             </h4>
-                            <div id="tab-selector" class="btn-group dropright">
+                            <div id="tab-selector" class="btn-group dropright" title="Jump to tab">
                                 {% include "partials/tab_selector.html" %}
                             </div>
                             <div class="float-right">
@@ -43,6 +49,7 @@
                                     <a>Async mode: <b><span id="async_mode">{{ async_mode }}</span></b></a><br/>
                                     <a>Average latency: <b><span id="ping_pong"></span>ms</b></a>
                                 </div>
+                                <div id="app" class="float-right"></div>
                             </div>
                         </div>
                     </div>
@@ -59,7 +66,7 @@
         <!-- The Close Button -->
         <span class="close">&times;</span>
         <!-- Modal Content (The Image) -->
-        <img class="modal-content" id="img-placeholder">
+        <img class="modal-content" id="img-placeholder" alt="placeholder-img">
         <!-- Modal Caption (Image Text) -->
         <div id="caption"></div>
     </div>
@@ -75,6 +82,17 @@
             InitScrollingTabs();
 
             SetKeyDownEvents();
+
+            $( "#tab-rotate" ).click(function() {
+                $( this ).toggleClass( "btn-outline-danger" );
+                if ($(this).hasClass("btn-outline-danger")) {
+                    DisableTabRotation();
+                } else {
+                    EnableTabRotation();
+                }
+
+            });
+
         });
     </script>
 {% endblock %}

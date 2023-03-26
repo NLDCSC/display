@@ -250,7 +250,7 @@ div[id^="actions_"] {
 
 #tab-selector{
   position: absolute;
-  left: 300px;
+  left: 290px;
 }
 
 div.dropdown-multicol2{
@@ -311,4 +311,74 @@ div#pills-tabContent.tab-content {
 
 #pills-tab {
   margin: 0 !important;
+}
+
+#tab-rotate {
+  position: absolute;
+  left: 220px;
+  top: -2px;
+}
+
+#tab-rotate img {
+  width: 15px;
+}
+
+/* counter */
+
+#app {
+  margin-right: 15px;
+}
+
+.base-timer {
+  position: relative;
+  width: 2rem;
+  height: 2rem;
+  float: right;
+}
+
+.base-timer__svg {
+  transform: scaleX(-1);
+}
+
+.base-timer__circle {
+  fill: none;
+  stroke: none;
+}
+
+.base-timer__path-elapsed {
+  stroke-width: 7px;
+  stroke: grey;
+}
+
+.base-timer__path-remaining {
+  stroke-width: 7px;
+  stroke-linecap: round;
+  transform: rotate(90deg);
+  transform-origin: center;
+  transition: 1s linear all;
+  fill-rule: nonzero;
+  stroke: currentcolor;
+}
+
+.base-timer__path-remaining.green {
+  color: rgb(65 184 131);
+}
+
+.base-timer__path-remaining.orange {
+  color: orange;
+}
+
+.base-timer__path-remaining.red {
+  color: red;
+}
+
+.base-timer__label {
+  position: absolute;
+  width: 2rem;
+  height: 2rem;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.5rem;
 }

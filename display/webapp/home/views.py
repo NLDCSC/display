@@ -41,6 +41,8 @@ def index():
 
     display_sources = {}
 
+    tab_rotate_timer = config.TAB_ROTATE_TIMER
+
     return render_template("pages/index.html", header="Display", **locals())
 
 

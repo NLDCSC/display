@@ -398,11 +398,15 @@ def monitoring_nodes_results(data, evidence_shot=False):
                                 url_hash = list(ret_screenshot_data.keys())[0]
 
                                 sources = sh.get_tab_by_hash(url_hash)
+
+                                all_tab_data = []
+
                                 for source in sources:
                                     try:
                                         tab_data = sh.get_changed_screenshots_per_tab(
                                             tab_name=source
                                         )
+                                        all_tab_data.extend(tab_data)
                                         socketio.emit(
                                             "push_all_screenshots",
                                             {
@@ -414,11 +418,13 @@ def monitoring_nodes_results(data, evidence_shot=False):
                                             room=source,
                                             namespace="/display",
                                         )
-                                        handle_changes_for_timeline.delay(data=tab_data)
                                     except Exception as err:
                                         logger.error(
                                             f"Error processing updates on source {source}.... --> Produced error: {err}"
                                         )
+                                # make changes unique to prevent multiple screenshot copies of the same picture
+                                unique_all_tab_data = list({x['sc_id']: x for x in all_tab_data}.values())
+                                handle_changes_for_timeline.delay(data=unique_all_tab_data)
 
                         resulting_tasks = len(data) - len(tasks_ready)
 

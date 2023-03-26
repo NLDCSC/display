@@ -560,3 +560,31 @@ function SelectTabClick(evt){
     $('.nav-tabs').scrollingTabs('scrollToActiveTab');
 
 }
+
+function DisableTabRotation(){
+    clearInterval(timerInterval);
+    $("#app").hide();
+}
+
+function EnableTabRotation() {
+    $("#app").show();
+    startTimer();
+}
+
+function SwitchToNextTab(){
+    let check_visible = $('button[id^="tab_"]:visible')
+
+    check_visible.each(function (val){
+        if ($("#" + check_visible[val].id).hasClass('active')){
+            try {
+                $("#" + check_visible[val + 1].id).click()
+                return false;
+            } catch (e) {
+                $("#" + check_visible[0].id).click();
+                return false;
+            }
+        }
+    })
+
+    startTimer();
+}

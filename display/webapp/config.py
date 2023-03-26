@@ -61,3 +61,5 @@ class Config(object):
     SCREENSHOT_NODES = int(os.getenv("SCREENSHOT_NODES", 5))
 
     SCREENSHOT_HEADER_TABS = getenv_bool("SCREENSHOT_HEADER_TABS", "True")
+
+    TAB_ROTATE_TIMER = int(os.getenv("TAB_ROTATE_TIMER", 90))
