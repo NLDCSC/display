@@ -251,7 +251,7 @@ div[id^="actions_"] {
 
 #tab-selector{
   position: absolute;
-  left: 290px;
+  left: 360px;
 }
 
 div.dropdown-multicol2{
@@ -318,7 +318,7 @@ div#pills-tabContent.tab-content {
 
 #tab-rotate {
   position: absolute;
-  left: 220px;
+  left: 285px;
   top: -2px;
 }
 
@@ -390,4 +390,12 @@ div#pills-tabContent.tab-content {
   margin-top: 10px;
   padding-top: 15px;
   border-top: 1px solid #2c2e33;
+}
+
+#gitlab-link a {
+  color: white;
+}
+
+#wiki-link a {
+  color: white;
 }
