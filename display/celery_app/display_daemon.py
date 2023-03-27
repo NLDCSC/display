@@ -423,8 +423,12 @@ def monitoring_nodes_results(data, evidence_shot=False):
                                             f"Error processing updates on source {source}.... --> Produced error: {err}"
                                         )
                                 # make changes unique to prevent multiple screenshot copies of the same picture
-                                unique_all_tab_data = list({x['sc_id']: x for x in all_tab_data}.values())
-                                handle_changes_for_timeline.delay(data=unique_all_tab_data)
+                                unique_all_tab_data = list(
+                                    {x["sc_id"]: x for x in all_tab_data}.values()
+                                )
+                                handle_changes_for_timeline.delay(
+                                    data=unique_all_tab_data
+                                )
 
                         resulting_tasks = len(data) - len(tasks_ready)
 
