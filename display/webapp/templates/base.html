@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{{ header }}</title>
+    <base id="base_path" href="{{ url_for('home.index') }}">
+
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/display.png') }}" />
+
+    <link href="{{ url_for('static', filename='css/corona/mdi/css/materialdesignicons.min.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static', filename='css/corona/vendor.bundle.base.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static', filename='css/corona/style.css') }}" rel="stylesheet" />
+
+    {% block head_css %}
+    {% endblock %}
+    <link href="{{ url_for('static', filename='css/style.min.css') }}" rel="stylesheet" />
+
+    <script type="text/javascript" src="{{ url_for('static', filename='js/jquery/jquery-3.6.0.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap/bootstrap.bundle.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/corona/vendor.bundle.base.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/js-cookie.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/cookie_handling.min.js') }}"></script>
+
+    <script> const BasePath = $("#base_path")[0].baseURI </script>
+
+    {% block head_scripts %}
+    {% endblock %}
+</head>
+<body>
+<div class="container-scroller">
+    <div class="container-fluid page-body-wrapper">
+        <div class="main-panel">
+            <div id="flash-container" class="flash-container">
+                <div class="flash"><span id="flash">test</span></div>
+            </div>
+            <div class="content-wrapper">
+                {% block body %}
+                {% endblock %}
+            </div>
+            <!-- content-wrapper ends -->
+        </div>
+        <!-- main-panel ends -->
+    </div>
+    <!-- page-body-wrapper ends -->
+</div>
+<!-- container-scroller -->
+{% block body_scripts %}
+{% endblock %}
+</body>
+</html>

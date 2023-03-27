@@ -1,0 +1,28 @@
+<button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Select tab
+</button>
+<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+    <div>
+        <div class="row">
+            <div class="col-md-6 center-text">
+                <h6>Targets:</h6>
+            </div>
+            <div class="col-md-6 center-text">
+                <h6>Teams:</h6>
+            </div>
+        </div>
+        <hr class="ruler tab-select-ruler">
+    </div>
+    <div class="dropdown-multicol2">
+        <div class="dropdown-col dropdown-col-left">
+            {% for key in normal_tabs %}
+                <span id="tabselect_span_{{ key|md5 }}" class="dropdown-item tabselect-item" data-hash="{{ key|md5 }}">{{ key }}</span>
+            {% endfor %}
+        </div>
+        <div class="dropdown-col dropdown-col-right">
+            {% for key in header_tabs %}
+                <span id="tabselect_span_{{ key|md5 }}" class="dropdown-item tabselect-item" data-hash="{{ key|md5 }}">{{ key }}</span>
+            {% endfor %}
+        </div>
+    </div>
+</div>

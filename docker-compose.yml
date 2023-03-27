@@ -1,0 +1,156 @@
+version: '3.5'
+
+services:
+
+  flask_lb:
+    image: display-flask_lb
+    build:
+      context: .
+      dockerfile: .docker/images/flask_lb/nginx
+    hostname: flask_lb
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:8000:80"
+    networks:
+      - frontend
+      - backend
+
+  flask_web:
+    image: display-flask_web
+    build:
+      context: .
+      dockerfile: .docker/images/flask/dockerfile-flask
+    deploy:
+      replicas: 2
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=TRUE
+    volumes:
+      - "./docker_data/flask:/app/data"
+    networks:
+      - backend
+
+  flask_ws:
+    image: display-flask_ws
+    build:
+      context: .
+      dockerfile: .docker/images/flask/dockerfile-flask
+    deploy:
+      replicas: 3
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=TRUE
+    volumes:
+      - "./docker_data/flask:/app/data"
+    networks:
+      - backend
+
+  ha_proxy:
+    image: display-splash-ha_proxy
+    build:
+      context: .
+      dockerfile: .docker/images/haproxy/ha_proxy
+    hostname: haproxy
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:8050:8050"
+    networks:
+      - frontend
+      - backend
+
+  splash:
+    image: display-splash
+    command: --maxrss 4096 --disable-browser-caches
+    build:
+      context: .
+      dockerfile: .docker/images/splash/splash_screen
+    deploy:
+      replicas: 15
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - backend
+    healthcheck:
+      test: curl --fail http://localhost:8050 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 1
+      start_period: 20s
+
+  autoheal:
+    image: willfarrell/autoheal:latest
+    hostname: autoheal
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    env_file:
+      - .env
+    networks:
+      - backend
+
+  redis:
+    image: display-redis
+    hostname: redis
+    restart: always
+    build:
+      context: .
+      dockerfile: .docker/images/redis/dockerfile-redis
+    volumes:
+      - "./docker_data/redis:/data"
+    expose:
+      - 6379
+    networks:
+      - backend
+
+  celery_daemon:
+    image: display-celery_daemon
+    build:
+      context: .
+      dockerfile: .docker/images/celery_daemon/dockerfile-celery_daemon
+    depends_on:
+      - redis
+    deploy:
+      replicas: 2
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=TRUE
+    volumes:
+      - "./docker_data/flask:/app/data"
+    expose:
+      - 5671
+    networks:
+      - backend
+
+  celery_beat:
+    image: display-celery_beat
+    build:
+      context: .
+      dockerfile: .docker/images/celery_beat/dockerfile-celery_beat
+    depends_on:
+      - redis
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=TRUE
+    volumes:
+      - "./docker_data/flask:/app/data"
+    expose:
+      - 5671
+    networks:
+      - backend
+
+networks:
+  frontend:
+  backend:

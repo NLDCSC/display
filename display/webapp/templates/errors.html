@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{{ header }}</title>
+    <base id="base_path" href="{{ url_for('home.index') }}">
+
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/display.png') }}" />
+    <!-- Layout styles -->
+    <link href="{{ url_for('static', filename='css/corona/style.css') }}" rel="stylesheet" />
+    <!-- End layout styles -->
+    <script> const BasePath = $("#base_path")[0].baseURI </script>
+
+  </head>
+  <body>
+    <div class="container-scroller">
+      <div class="container-fluid page-body-wrapper full-page-wrapper">
+          {% block body %}
+          {% endblock %}
+        <!-- content-wrapper ends -->
+      </div>
+      <!-- page-body-wrapper ends -->
+    </div>
+  </body>
+</html>

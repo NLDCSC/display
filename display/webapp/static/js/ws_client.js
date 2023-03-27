@@ -1,0 +1,639 @@
+function SetAllEventListeners() {
+    SetTabEvents();
+
+    let elementsImgArray = DOMRegex(/^img\_content\_/);
+
+    elementsImgArray.forEach(function (elem) {
+        let my_id = elem.attributes["data-id"].nodeValue;
+        let tab_hash = elem.attributes["data-tab-hash"].nodeValue;
+
+        let target_elem = $("#" + elem.id);
+        let action_elem = $("#actions_" + tab_hash + "_" + my_id);
+
+        target_elem.unbind()
+
+        target_elem.hover(
+            function () {
+                action_elem.show();
+            },
+            function () {
+                action_elem.hide();
+            }
+        );
+    });
+
+    let elementsCSArray = DOMRegex(/^create\_screenshot\_/);
+
+    elementsCSArray.forEach(function (elem) {
+        let my_id = elem.attributes["data-id"].nodeValue;
+        let tab_hash = elem.attributes["data-tab-hash"].nodeValue;
+
+        let target_elem = $("#" + elem.id);
+        let action_elem = $("#actions_" + tab_hash + "_" + my_id);
+
+        target_elem.unbind()
+
+        target_elem.hover(
+            function () {
+                action_elem.show();
+            },
+            function () {
+                action_elem.hide();
+            }
+        );
+
+        elem.addEventListener("click", CreateCustomScreenshot);
+    });
+
+    let elementsClipArray = DOMRegex(/^do\_open-sc\_/);
+
+    elementsClipArray.forEach(function (elem) {
+        let my_id = elem.attributes["data-id"].nodeValue;
+        let tab_hash = elem.attributes["data-tab-hash"].nodeValue;
+
+        let target_elem = $("#" + elem.id);
+        let action_elem = $("#actions_" + tab_hash + "_" + my_id);
+
+        target_elem.unbind()
+
+        target_elem.hover(
+            function () {
+                action_elem.show();
+            },
+            function () {
+                action_elem.hide();
+            }
+        );
+
+        elem.addEventListener("click", OpenScreenshot);
+    });
+
+    let elementsDownloadArray = DOMRegex(/^do\_download\_/);
+
+    elementsDownloadArray.forEach(function (elem) {
+        let my_id = elem.attributes["data-id"].nodeValue;
+        let tab_hash = elem.attributes["data-tab-hash"].nodeValue;
+
+        let target_elem = $("#" + elem.id);
+        let action_elem = $("#actions_" + tab_hash + "_" + my_id);
+
+        target_elem.unbind()
+
+        target_elem.hover(
+            function () {
+                action_elem.show();
+            },
+            function () {
+                action_elem.hide();
+            }
+        );
+
+        elem.addEventListener("click", Download);
+    });
+
+    let elementsTimelineArray = DOMRegex(/^show\_timeline\_/);
+
+    elementsTimelineArray.forEach(function (elem) {
+        let my_id = elem.attributes["data-id"].nodeValue;
+        let tab_hash = elem.attributes["data-tab-hash"].nodeValue;
+
+        let target_elem = $("#" + elem.id);
+        let action_elem = $("#actions_" + tab_hash + "_" + my_id);
+
+        target_elem.unbind()
+
+        target_elem.hover(
+            function () {
+                action_elem.show();
+            },
+            function () {
+                action_elem.hide();
+            }
+        );
+
+        elem.addEventListener("click", Timeline);
+    });
+
+     let elementsUrlArray = DOMRegex(/^do\_open-url\_/);
+
+    elementsUrlArray.forEach(function (elem) {
+        let my_id = elem.attributes["data-id"].nodeValue;
+        let tab_hash = elem.attributes["data-tab-hash"].nodeValue;
+
+        let target_elem = $("#" + elem.id);
+        let action_elem = $("#actions_" + tab_hash + "_" + my_id);
+
+        target_elem.unbind()
+
+        target_elem.hover(
+            function () {
+                action_elem.show();
+            },
+            function () {
+                action_elem.hide();
+            }
+        );
+
+        elem.addEventListener("click", GoToUrl);
+    });
+
+    let DisplayFilter = DOMRegex(/^display-filter/);
+
+    DisplayFilter.forEach(function (elem) {
+        elem.addEventListener("click", SetDisplayFilter)
+    })
+
+    let BtnClose = DOMRegex(/^btn_close/)
+
+    BtnClose.forEach(function (elem) {
+        elem.addEventListener("click", CloseDisplayFilter)
+    })
+
+    let CheckBoxes = DOMRegex(/^cb\_/)
+
+    CheckBoxes.forEach(function (elem) {
+        elem.addEventListener("click", SetTabVisibility)
+    })
+
+    let TabCheckBoxes = DOMRegex(/^cbtab\_/)
+
+    TabCheckBoxes.forEach(function (elem) {
+        elem.addEventListener("click", SetTabContentVisibility)
+    })
+
+    let selectTabArray = DOMRegex(/^tabselect\_span\_/);
+
+    selectTabArray.forEach(function (elem) {
+        elem.addEventListener("click", SelectTabClick);
+    });
+
+}
+
+function SetDisplayFilter() {
+
+    $('#checkbox_normal_div > .row > .col-sm').children('input').each(function () {
+        let tab_element = $("#tab_" + this.value)
+
+        if (tab_element.is(":visible")) {
+            $("#cb_" + this.value).prop('checked', true)
+            $("#tabselect_span_" + this.value).show();
+        } else {
+            $("#cb_" + this.value).prop('checked', false)
+            $("#tabselect_span_" + this.value).hide();
+        }
+    });
+
+    $('#checkbox_header_div > .row > .col-sm').children('input').each(function () {
+        let tab_element = $("#tab_" + this.value)
+
+        if (tab_element.is(":visible")) {
+            $("#cb_" + this.value).prop('checked', true)
+            $("#tabselect_span_" + this.value).show();
+        } else {
+            $("#cb_" + this.value).prop('checked', false)
+            $("#tabselect_span_" + this.value).hide();
+        }
+    });
+
+    get_list_cookie("display-tab-filter").forEach(function (value) {
+        $("#cbtab_" + value).prop('checked', false)
+    })
+
+    $("#check_all_tar").click(function () {
+        $('#checkbox_normal_div input:checkbox[id^="cb_tar_"]').not(this).prop('checked', true);
+        $('#checkbox_normal_div > .row > .col-sm').children('input').each(function () {
+            let vis_tab = $("#tab_" + this.value)
+            if (vis_tab.is(":hidden")) {
+                SetTabVisibility(this.value)
+            }
+        })
+    });
+
+    $("#check_all_head").click(function () {
+        $('#checkbox_header_div input:checkbox[id^="cb_head_"]').not(this).prop('checked', true);
+        $('#checkbox_header_div > .row > .col-sm').children('input').each(function () {
+            let vis_tab = $("#tab_" + this.value)
+            if (vis_tab.is(":hidden")) {
+                SetTabVisibility(this.value)
+            }
+        })
+    });
+
+    $("#uncheck_all_tar").click(function () {
+        $('#checkbox_normal_div input:checkbox[id^="cb_tar_"]').prop('checked', false);
+        $('#checkbox_normal_div > .row > .col-sm').children('input').each(function () {
+            let vis_tab = $("#tab_" + this.value)
+            if (vis_tab.is(":visible")) {
+                SetTabVisibility(this.value)
+            }
+        })
+    });
+
+    $("#uncheck_all_head").click(function () {
+        $('#checkbox_header_div input:checkbox[id^="cb_head_"]').prop('checked', false);
+        $('#checkbox_header_div > .row > .col-sm').children('input').each(function () {
+            let vis_tab = $("#tab_" + this.value)
+            if (vis_tab.is(":visible")) {
+                SetTabVisibility(this.value)
+            }
+        })
+    });
+
+    $("#check_all_tab_tar").click(function () {
+        $('#checkbox_normal_div_tab input:checkbox[id^="cbtab_tar_"]').not(this).prop('checked', true);
+        $('#checkbox_normal_div_tab > .row > .col-sm').children('input').each(function () {
+            SetTabContentVisibility(this.value)
+        })
+    });
+
+    $("#check_all_tab_head").click(function () {
+        $('#checkbox_header_div_tab input:checkbox[id^="cbtab_head_"]').not(this).prop('checked', true);
+        $('#checkbox_header_div_tab > .row > .col-sm').children('input').each(function () {
+            SetTabContentVisibility(this.value)
+        })
+    });
+
+    $("#uncheck_all_tab_tar").click(function () {
+        $('#checkbox_normal_div_tab input:checkbox[id^="cbtab_tar_"]').prop('checked', false);
+        $('#checkbox_normal_div_tab > .row > .col-sm').children('input').each(function () {
+            SetTabContentVisibility(this.value)
+        })
+    });
+
+    $("#uncheck_all_tab_head").click(function () {
+        $('#checkbox_header_div_tab input:checkbox[id^="cbtab_head_"]').prop('checked', false);
+        $('#checkbox_header_div_tab > .row > .col-sm').children('input').each(function () {
+            SetTabContentVisibility(this.value)
+        })
+    });
+
+    $("#popup1").show()
+}
+
+function SetTabVisibility(el) {
+
+    if (typeof el === 'string' || el instanceof String) {
+        var tab_value = el
+    } else {
+        var tab_value = el.target.value
+    }
+
+    let tab_element = $("#tab_" + tab_value)
+    tab_element.toggle()
+
+    if (tab_element.is(":visible")) {
+        $("#tabselect_span_" + tab_value).show();
+        remove_from_list_cookie("display-top-filter", tab_value)
+        // check if this the only visible tab; if so, click it...
+        if ($('button[id^="tab_"]:visible').length === 1) {
+            tab_element.click()
+        }
+    } else {
+        add_list_cookie("display-top-filter", tab_value)
+        $("#tabselect_span_" + tab_value).hide();
+    }
+
+}
+
+function SetTabContentVisibility(el) {
+
+    if (typeof el === 'string' || el instanceof String) {
+        var tab_value = el
+    } else {
+        var tab_value = el.target.value
+    }
+
+    let cbtab_element = $('input[id*=' + tab_value +']').not('input[id^="cb_"]')
+
+    if (cbtab_element.is(":checked")) {
+        remove_from_list_cookie("display-tab-filter", tab_value)
+        SetTabContentFilter(tab_value)
+    } else {
+        add_list_cookie("display-tab-filter", tab_value)
+        SetTabContentFilter()
+    }
+}
+
+function SetTabContentFilter(tab_value = null) {
+
+    let get_items = $('div[id^="item_"]')
+
+    filter_data = get_list_cookie("display-tab-filter")
+
+    if (tab_value === null) {
+        if (filter_data.length > 1){
+            filter_data.forEach(function (value) {
+                if (value){
+                    let filtered_contents = get_items.filter('div[id*=' + value +']')
+
+                    if (filtered_contents.length !== 0){
+                        filtered_contents.each(function (item_id){
+                            let el = $("#" + filtered_contents[item_id].id)
+                            el.hide()
+                            let el_parent = $("#" + el.parent()[0].id)
+                            if(el_parent.children(':visible').length === 0) {
+                                el_parent.hide()
+                            }
+                        })
+                        // distribute the remaining visible items evenly over the rows (6 per row)
+                        // get current active tab
+                        let check_visible = $('button[id^="tab_"]:visible')
+
+                        check_visible.each(function (elem) {
+                            let el = $("#" + check_visible[elem].id)
+                            if (el.hasClass('active')){
+
+                                let tab_hash = el[0].attributes['data-hash'].nodeValue
+
+                                let active_rows = $('div[id^=row_' + tab_hash +']')
+
+                                active_rows.each(function (val) {
+                                    let el = $("#" + active_rows[val].id)
+                                    let row_number = el[0].attributes['data-row-number'].nodeValue
+                                    if(el.children(':visible').length === 6) {
+                                        return true;
+                                    } else {
+                                        // fetch next row
+                                        let next_row = $("#row_" + tab_hash + "_" + (parseInt(row_number) + 1))
+
+                                        while (el.children(':visible').length !== 6){
+
+                                            if (next_row.length !== 0) {
+
+                                                // console.log("next_row: " + next_row.children(':visible').length)
+                                                // console.log("next_row_id: " + next_row.attr('id'))
+
+                                                try {
+                                                    $("#" + next_row[0].firstElementChild.id).appendTo(el);
+                                                    if (next_row.children(':visible').length === 0) {
+                                                        next_row.hide()
+                                                    }
+                                                } catch (error) {
+                                                    break;
+                                                }
+                                            } else if (next_row.length === 0) {
+                                                break;
+                                            } else {
+                                                // this row is empty, so hide the row...
+                                                el.hide()
+                                                break;
+                                            }
+                                        }
+                                    }
+                                })
+                            }
+                        })
+                    }
+                }
+            })
+        } else {
+            get_items.each(function (value) {
+                let el = $("#" + get_items[value].id)
+                el.show()
+            })
+        }
+    } else {
+        let filtered_contents = get_items.filter('div[id*=' + tab_value +']:hidden')
+        if (filtered_contents.length !== 0){
+            filtered_contents.each(function (item_id){
+                let el = $("#" + filtered_contents[item_id].id)
+                el.show()
+                let el_parent = $("#" + el.parent()[0].id)
+                if(el_parent.children(':visible').length === 0) {
+                    el_parent.show()
+                }
+                // distribute the remaining visible items evenly over the rows (6 per row)
+                let check_visible = $('button[id^="tab_"]:visible')
+
+                check_visible.each(function (elem) {
+                    let el = $("#" + check_visible[elem].id)
+                    if (el.hasClass('active')){
+
+                        let tab_hash = el[0].attributes['data-hash'].nodeValue
+
+                        let active_rows = $('div[id^=row_' + tab_hash +']')
+
+                        active_rows.each(function (val) {
+                            let el = $("#" + active_rows[val].id)
+                            let row_number = el[0].attributes['data-row-number'].nodeValue
+                            if(el.children(':visible').length === 6) {
+                                return true;
+                            } else if(el.children(':visible').length > 6) {
+                                // fetch next row
+                                let next_row = $("#row_" + tab_hash + "_" + (parseInt(row_number) + 1))
+
+                                while (el.children(':visible').length > 6){
+
+                                    if (next_row.length === 0) {
+                                        next_row.show()
+                                        try{
+                                            $("#" + el[0].lastElementChild.id).appendTo(next_row);
+                                        } catch (error) {
+                                            break;
+                                        }
+                                    } else if (next_row.length > 0) {
+                                        next_row.show()
+                                        try{
+                                            $("#" + el[0].lastElementChild.id).prependTo(next_row);
+                                        } catch (error) {
+                                            break;
+                                        }
+                                    }
+
+                                }
+                            }
+
+                        })
+
+                    }
+                })
+            })
+        }
+    }
+}
+
+function CloseDisplayFilter() {
+    DestroyScrollingTabs()
+    InitScrollingTabs()
+
+    let check_visible = $('button[id^="tab_"]:visible')
+
+    if (!check_visible.hasClass('active')){
+        check_visible[0].click()
+    }
+
+    $("#popup1").hide()
+}
+
+function ReEnableDisplayFilter() {
+    get_list_cookie("display-top-filter").forEach(function (value) {
+        SetTabVisibility(tab_val = value)
+    })
+
+    let check_visible = $('button[id^="tab_"]:visible')
+
+    if (!check_visible.hasClass('active')){
+        check_visible[0].click()
+    }
+}
+
+function SetKeyDownEvents() {
+    $(document).keydown(function (event) {
+        if (event.keyCode === 27) {
+            let modal_sel = $('#the-modal')
+            let popup_sel = $('#popup1')
+            if (modal_sel.is(":visible")) {
+                modal_sel.hide();
+            }
+            if (popup_sel.is(":visible")) {
+                CloseDisplayFilter();
+            }
+        }
+    });
+}
+
+function SetTabEvents() {
+    let elementsTabArray = DOMRegex(/^tab\_/);
+
+    elementsTabArray.forEach(function (elem) {
+        elem.addEventListener("click", SetTabClick);
+    });
+
+}
+
+function DestroyScrollingTabs() {
+    $('.nav-tabs').scrollingTabs('destroy');
+}
+
+function InitScrollingTabs() {
+    $(".nav-tabs")
+        .scrollingTabs({
+            cssClassLeftArrow: "mdi mdi-arrow-left-bold",
+            cssClassRightArrow: "mdi mdi-arrow-right-bold",
+            disableScrollArrowsOnFullyScrolled: true,
+            bootstrapVersion: 4
+        })
+        .on("ready.scrtabs", function () {
+            $(".tab-content").show();
+            SetAllEventListeners();
+        });
+}
+
+function SetTabClick(evt) {
+
+    let attrs = evt.target.attributes;
+
+    let selected_tab = attrs["data-name"].nodeValue;
+
+    let tab_hash = attrs["data-hash"].nodeValue;
+
+    if($('#content_' + tab_hash).find('div.loading-container').length === 0){
+        $("#tab_change_loading").show()
+        $("#content_" + tab_hash).addClass("grey_out")
+    }
+
+    window.socket.emit("change_display_tab", {"data": selected_tab});
+
+}
+
+function CreateCustomScreenshot(evt) {
+    let attrs = evt.target.attributes;
+
+    let screenshot_id = attrs["data-id"].nodeValue;
+    let tab_hash = attrs["data-tab-hash"].nodeValue;
+
+    window.socket.emit("create_custom_screenshot", {"data": screenshot_id, "tab-hash": tab_hash});
+
+    showMessage("success", "Create screenshot request send!");
+}
+
+function OpenScreenshot(evt) {
+    let attrs = evt.target.attributes;
+
+    let screenshot_id = attrs["data-id"].nodeValue;
+    let tab_hash = attrs["data-tab-hash"].nodeValue;
+
+    $("#do_open-sc_" + tab_hash + "_" + screenshot_id).css("cursor", "wait");
+
+    window.socket.emit("see_custom_screenshot", {"data": screenshot_id, "tab-hash": tab_hash});
+
+}
+
+function Download(evt) {
+    let attrs = evt.target.attributes;
+
+    let screenshot_id = attrs["data-id"].nodeValue;
+    let tab_hash = attrs["data-tab-hash"].nodeValue;
+
+    let target_elem = $("#do_download_" + tab_hash + "_" + screenshot_id);
+
+    target_elem.css("cursor", "wait");
+
+    var link = document.createElement("a");
+    link.download = "Download_" + screenshot_id;
+    link.href = BasePath + "screenshot/" + screenshot_id;
+    link.click();
+
+    target_elem.css("cursor", "default");
+}
+
+function Timeline(evt) {
+    let attrs = evt.target.attributes;
+
+    let screenshot_id = attrs["data-id"].nodeValue;
+
+    let url = BasePath + "timeline/" + screenshot_id
+
+    window.open(url, '_blank');
+
+}
+
+function SelectTabClick(evt){
+
+    let attrs = evt.target.attributes;
+
+    let data_hash = attrs["data-hash"].nodeValue;
+
+    $("#tab_" + data_hash).click()
+
+    $('.nav-tabs').scrollingTabs('scrollToActiveTab');
+
+}
+
+function DisableTabRotation(){
+    clearInterval(timerInterval);
+    $("#app").hide();
+}
+
+function EnableTabRotation() {
+    $("#app").show();
+    startTimer();
+}
+
+function SwitchToNextTab(){
+    let check_visible = $('button[id^="tab_"]:visible')
+
+    check_visible.each(function (val){
+        if ($("#" + check_visible[val].id).hasClass('active')){
+            try {
+                $("#" + check_visible[val + 1].id).click()
+                return false;
+            } catch (e) {
+                $("#" + check_visible[0].id).click();
+                return false;
+            }
+        }
+    })
+
+    startTimer();
+}
+
+function GoToUrl(evt){
+
+    let attrs = evt.target.attributes;
+
+    let data_url = attrs["data-url"].nodeValue;
+
+    window.open(data_url, '_blank');
+
+}

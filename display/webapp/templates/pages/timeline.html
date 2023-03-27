@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block head_css %}
+    <link href="{{ url_for('static', filename='css/sweetalert2/bootstrap-4.min.css') }}" rel="stylesheet"/>
+    <link href="{{ url_for('static', filename='css/timeline.min.css') }}" rel="stylesheet"/>
+
+{% endblock %}
+
+{% block head_scripts %}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/sweetalert2/sweetalert2.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/display.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/timeline.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/lozad/lozad.min.js') }}"></script>
+{% endblock %}
+
+
+{% block body %}
+    <div class="ag-timeline-block">
+        <div class="ag-timeline_title-box">
+            <div class="ag-timeline_tagline">DISPLAY TIMELINE</div>
+            <div class="ag-timeline_title">{{ timeline_url }}</div>
+        </div>
+        <section class="ag-section">
+            <div class="ag-format-container">
+                <div class="js-timeline ag-timeline">
+                    <div class="js-timeline_line ag-timeline_line">
+                        <div class="js-timeline_line-progress ag-timeline_line-progress"></div>
+                    </div>
+                    <div class="ag-timeline_list">
+                        <div class="js-timeline_item ag-timeline_item">
+                            <div class="ag-timeline-card_box">
+                                <div class="js-timeline-card_point-box ag-timeline-card_point-box">
+                                    <div class="ag-timeline-card_point"><span class="mdi mdi-hexagram-outline"></span></div>
+                                </div>
+                            </div>
+                            <div class="ag-timeline-card_item">
+                                <div class="ag-timeline-card_inner">
+                                    <div class="ag-timeline-card_img-box">
+                                        <img src="{{ url_for('home.get_last_screenshot', filename=url_hash) }}"
+                                             class="ag-timeline-card_img" width="640" height="360"/>
+                                    </div>
+                                    <div class="ag-timeline-card_info">
+                                        <div class="ag-timeline-card_desc">
+                                            {{ last_screenshot_time }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ag-timeline-card_arrow"></div>
+                            </div>
+                        </div>
+                        {% for picture_data in timeline_data %}
+                            <div class="js-timeline_item ag-timeline_item">
+                                <div class="ag-timeline-card_box">
+                                    <div class="js-timeline-card_point-box ag-timeline-card_point-box">
+                                        <div class="ag-timeline-card_point">{% if picture_data['filename'].startswith('csc-') %}<span class="mdi mdi-camera"></span>{%  elif picture_data['filename'].startswith('eve-')%}<span class="mdi mdi-target"></span>{% else %}<span class="mdi mdi-sync"></span>{% endif %}</div>
+                                    </div>
+                                </div>
+                                <div class="ag-timeline-card_item">
+                                    <div class="ag-timeline-card_inner">
+                                        <div class="ag-timeline-card_img-box">
+                                            <img data-src="{{ url_for('home.get_timeline_picture',
+                                            url_hash=picture_data['url_hash'],
+                                            filename=picture_data['filename']) }}"
+                                                 class="ag-timeline-card_img lozad" width="640" height="360"/>
+                                        </div>
+                                        <div class="ag-timeline-card_info">
+                                            <div class="ag-timeline-card_desc">
+                                                <a class="download-a {% if loop.index is divisibleby 2 %}download-right{% else %}download-left{% endif %}"
+                                                   href="{{ url_for('home.download_picture',
+                                                   url_hash=picture_data['url_hash'],
+                                                   filename=picture_data['filename']) }}" title="Download screenshot">
+                                                    <img class="download-icon" src="{{ url_for('static', filename="img/download_icon.png") }}">
+                                                </a>
+                                                {{ picture_data['modtime'] }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="ag-timeline-card_arrow"></div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+{% endblock %}
+
+{% block body_scripts %}
+    <script>
+        const observer = lozad();
+        observer.observe();
+    </script>
+{% endblock %}
