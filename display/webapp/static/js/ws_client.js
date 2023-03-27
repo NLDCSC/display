@@ -114,6 +114,29 @@ function SetAllEventListeners() {
         elem.addEventListener("click", Timeline);
     });
 
+     let elementsUrlArray = DOMRegex(/^do\_open-url\_/);
+
+    elementsUrlArray.forEach(function (elem) {
+        let my_id = elem.attributes["data-id"].nodeValue;
+        let tab_hash = elem.attributes["data-tab-hash"].nodeValue;
+
+        let target_elem = $("#" + elem.id);
+        let action_elem = $("#actions_" + tab_hash + "_" + my_id);
+
+        target_elem.unbind()
+
+        target_elem.hover(
+            function () {
+                action_elem.show();
+            },
+            function () {
+                action_elem.hide();
+            }
+        );
+
+        elem.addEventListener("click", GoToUrl);
+    });
+
     let DisplayFilter = DOMRegex(/^display-filter/);
 
     DisplayFilter.forEach(function (elem) {
@@ -542,7 +565,7 @@ function Download(evt) {
     let screenshot_id = attrs["data-id"].nodeValue;
     let tab_hash = attrs["data-tab-hash"].nodeValue;
 
-    let target_elem = $("#do_open-sc_" + tab_hash + "_" + screenshot_id);
+    let target_elem = $("#do_download_" + tab_hash + "_" + screenshot_id);
 
     target_elem.css("cursor", "wait");
 
@@ -603,4 +626,14 @@ function SwitchToNextTab(){
     })
 
     startTimer();
+}
+
+function GoToUrl(evt){
+
+    let attrs = evt.target.attributes;
+
+    let data_url = attrs["data-url"].nodeValue;
+
+    window.open(data_url, '_blank');
+
 }

@@ -178,7 +178,7 @@ div[id^="actions_"] {
 }
 
 .create-screenshot,
-.open-sc,
+.open-url,
 .download,
 .timeline {
   position: absolute;
@@ -192,7 +192,7 @@ div[id^="actions_"] {
   right: 20px;
 }
 
-.open-sc {
+.open-url {
   right: 52px;
 }
 
@@ -205,7 +205,7 @@ div[id^="actions_"] {
 }
 
 .create-screenshot:hover,
-.open-sc:hover,
+.open-url:hover,
 .download:hover,
 .timeline:hover {
   border: 2px solid yellow;
@@ -214,6 +214,7 @@ div[id^="actions_"] {
 
 .display-contents {
   display: contents;
+  cursor: pointer;
 }
 
 .action-menu {
