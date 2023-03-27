@@ -236,14 +236,14 @@ def do_rebuild_request():
 
 
 @socketio.on("create_custom_screenshot", namespace="/display")
-def do_change_display_tab(data):
+def do_create_custom_screenshot(data):
     logger.info(f"Client: {request.sid} is creating custom screenshot...")
 
     create_custom_screenshot.delay(data=data)
 
 
 @socketio.on("see_custom_screenshot", namespace="/display")
-def do_change_display_tab(reqdata):
+def do_see_custom_screenshot(reqdata):
     logger.info(f"Client: {request.sid} is requesting to see custom screenshot...")
 
     sh = ScreenShotHandler()
