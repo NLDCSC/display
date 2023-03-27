@@ -574,7 +574,7 @@ function Download(evt) {
     link.href = BasePath + "screenshot/" + screenshot_id;
     link.click();
 
-    target_elem.css("cursor", "default");
+    target_elem.css("cursor", "pointer");
 }
 
 function Timeline(evt) {

@@ -169,7 +169,7 @@ $(document).ready(function () {
         modalImg.src = msg["data"];
         captionText.innerHTML = msg["url"];
 
-        $("#do_open-sc_" + msg["tab-hash"] + "_" + msg["url-hash"]).css("cursor", "default");
+        $("#do_open-sc_" + msg["tab-hash"] + "_" + msg["url-hash"]).css("cursor", "pointer");
 
         // Get the <span> element that closes the modal
         var span = document.getElementsByClassName("close")[0];
