@@ -692,9 +692,13 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
             ss = AsyncScreenshots()
 
             # check if this url is part of the selenium workload, if it isn't append to the evidence workload!
-            if target not in ss.screen_shot_sources["selenium"]:
+            try:
+                if target not in ss.screen_shot_sources["selenium"]:
+                    evidence_workload.append(url_data)
+            except KeyError:
+                # selenium key is not there; so it's safe to add to the evidence workload
                 evidence_workload.append(url_data)
-
+            
             if csc:
                 new_filename = f"csc-{uuid.uuid4()}.png"
             else:
