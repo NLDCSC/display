@@ -1,6 +1,9 @@
+import collections
+import json
 import logging
 import os
 
+import redis
 from flask import render_template, send_from_directory, current_app, make_response
 
 from display.helpers.app_logger import AppLogger
@@ -44,6 +47,25 @@ def index():
     tab_rotate_timer = config.TAB_ROTATE_TIMER
 
     return render_template("pages/index.html", header="Display", **locals())
+
+
+@home.get("/status/nodes")
+def get_status_nodes():
+
+    host, port = config.REDIS_URL.split("//")[1][:-1].split(":")
+
+    with redis.Redis(host=host, port=port, db=7) as conn:
+        node_status = conn.get("node_status")
+
+    if node_status is not None:
+        node_status = json.loads(node_status)
+        # sort the data before returning
+        od = collections.OrderedDict(sorted(node_status["data"].items()))
+        node_status["data"] = od
+    else:
+        node_status = {}
+
+    return render_template("partials/node_status.html", node_status=node_status)
 
 
 @home.route("/screenshot/<path:filename>")

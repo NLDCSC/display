@@ -27,6 +27,12 @@ def get_last_bt_number():
 
 @pass_eval_context
 @home.app_template_filter()
+def timestamptodatetime(eval_ctx, value):
+    return timestampTOdatetimestring(value)
+
+
+@pass_eval_context
+@home.app_template_filter()
 def mod_time(eval_ctx, path_to_file):
     try:
         time = timestampTOdatetimestring(

@@ -51,8 +51,7 @@ app = Celery(
     backend=f"{config.REDIS_URL}{config.REDIS_BACKEND_DB}",
     result_extended=True,
     include=["display.celery_app.display_daemon"],
-    task_soft_time_limit=36000,
-    task_time_limit=48000,
+    task_time_limit=900,
     task_default_queue="default",
     task_queues=(Queue("default"), Queue("nodes", routing_key="nodes")),
     result_expires=300,
@@ -117,6 +116,7 @@ def setup_periodic_tasks(sender, **kwargs):
     )
     sender.add_periodic_task(30.0, guard_config.s())
     sender.add_periodic_task(60.0, delete_duplicate_timeline_entries.s())
+    sender.add_periodic_task(60.0, store_node_status.s())
     sender.add_periodic_task(1800.0, delete_old_timeline_screenshots.s())
 
 
@@ -765,3 +765,45 @@ def delete_duplicate_timeline_entries():
     ddf.execute()
 
     logger.info("Done with deduplication of timeline folders")
+
+
+@app.task(
+    ignore_result=True,
+)
+def store_node_status():
+    logger = get_task_logger(__name__)
+
+    logger.info("Storing node status...")
+
+    status_dict = collections.defaultdict(dict)
+
+    inspect_handle = app.control.inspect()
+
+    pinged = inspect_handle.ping()
+
+    for each in pinged:
+        if pinged[each] == {'ok': 'pong'}:
+            status_dict[each]['status'] = "OK"
+        else:
+            status_dict[each]['status'] = "NOK"
+
+    active = inspect_handle.active()
+
+    for each in active:
+        status_dict[each]['active'] = len(active[each])
+
+    stats = inspect_handle.stats()
+
+    for each in stats:
+        status_dict[each]['task_count'] = sum(list(stats[each]['total'].values()))
+        status_dict[each]['uptime'] = stats[each]['uptime']
+        status_dict[each]['nswap'] = stats[each]['rusage']['nswap']
+
+    store_dict = {"timestamp": int(time.time()), "data": dict(status_dict)}
+
+    host, port = config.REDIS_URL.split("//")[1][:-1].split(":")
+
+    with redis.Redis(host=host, port=port, db=7) as conn:
+        conn.set("node_status", json.dumps(store_dict))
+
+    logger.info("Done storing node status")

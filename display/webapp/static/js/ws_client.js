@@ -114,7 +114,7 @@ function SetAllEventListeners() {
         elem.addEventListener("click", Timeline);
     });
 
-     let elementsUrlArray = DOMRegex(/^do\_open-url\_/);
+    let elementsUrlArray = DOMRegex(/^do\_open-url\_/);
 
     elementsUrlArray.forEach(function (elem) {
         let my_id = elem.attributes["data-id"].nodeValue;
@@ -137,17 +137,11 @@ function SetAllEventListeners() {
         elem.addEventListener("click", GoToUrl);
     });
 
-    let DisplayFilter = DOMRegex(/^display-filter/);
+    $("#display-filter")[0].addEventListener("click", SetDisplayFilter)
 
-    DisplayFilter.forEach(function (elem) {
-        elem.addEventListener("click", SetDisplayFilter)
-    })
+    $("#node-status")[0].addEventListener("click", OpenNodeStatus)
 
-    let BtnClose = DOMRegex(/^btn_close/)
-
-    BtnClose.forEach(function (elem) {
-        elem.addEventListener("click", CloseDisplayFilter)
-    })
+    $("#btn_close")[0].addEventListener("click", CloseDisplayFilter)
 
     let CheckBoxes = DOMRegex(/^cb\_/)
 
@@ -268,6 +262,19 @@ function SetDisplayFilter() {
     });
 
     $("#popup1").show()
+}
+
+function OpenNodeStatus(){
+
+    $.ajax({
+        url: BasePath + "status/nodes",
+    })
+        .done(function( data ) {
+            $("#popup2").html(data)
+            $("#btn_close2")[0].addEventListener("click", CloseNodeStatus)
+            $("#popup2").show()
+        });
+
 }
 
 function SetTabVisibility(el) {
@@ -452,6 +459,10 @@ function SetTabContentFilter(tab_value = null) {
     }
 }
 
+function CloseNodeStatus() {
+    $("#popup2").hide()
+}
+
 function CloseDisplayFilter() {
     DestroyScrollingTabs()
     InitScrollingTabs()
@@ -482,11 +493,15 @@ function SetKeyDownEvents() {
         if (event.keyCode === 27) {
             let modal_sel = $('#the-modal')
             let popup_sel = $('#popup1')
+            let popup_stat = $('#popup2')
             if (modal_sel.is(":visible")) {
                 modal_sel.hide();
             }
             if (popup_sel.is(":visible")) {
                 CloseDisplayFilter();
+            }
+            if (popup_stat.is(":visible")) {
+                CloseNodeStatus();
             }
         }
     });
@@ -624,6 +639,8 @@ function SwitchToNextTab(){
             }
         }
     })
+
+    $('.nav-tabs').scrollingTabs('scrollToActiveTab');
 
     startTimer();
 }
