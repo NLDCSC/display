@@ -251,7 +251,7 @@ div[id^="actions_"] {
 
 #tab-selector{
   position: absolute;
-  left: 360px;
+  left: 415px;
 }
 
 div.dropdown-multicol2{
@@ -308,7 +308,7 @@ div.dropdown-col-right {
 
 div#pills-tabContent.tab-content {
   border: none;
-  max-height: 600px;
+  max-height: 65vh;
   overflow: scroll;
 }
 
@@ -318,7 +318,7 @@ div#pills-tabContent.tab-content {
 
 #tab-rotate {
   position: absolute;
-  left: 285px;
+  left: 335px;
   top: -2px;
 }
 

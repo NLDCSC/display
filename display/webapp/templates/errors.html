@@ -4,7 +4,7 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>{{ header }}</title>
+    <title>{{ header }} | {{ get_version() }}</title>
     <base id="base_path" href="{{ url_for('home.index') }}">
 
     <link rel="shortcut icon" href="{{ url_for('static', filename='img/display.png') }}" />

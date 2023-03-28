@@ -18,7 +18,7 @@
   opacity: 1;
 }
 
-#popup1 {
+#popup1, #popup2 {
   z-index: 1;
 }
 
@@ -32,17 +32,29 @@
   background-color: #1e1e1e;
 }
 
+.popup_status {
+  margin: 70px auto;
+  padding: 20px;
+  border-radius: 5px;
+  width: 60%;
+  position: relative;
+  transition: all 5s ease-in-out;
+  background-color: #1e1e1e;
+}
+
 hr.ruler {
   border: 2px solid #484747;
 }
 
-.popup h2 {
+.popup h2,
+.popup_status h2{
   margin-top: 0;
   color: white;
   font-family: Tahoma, Arial, sans-serif;
 }
 
-.popup .popup-close {
+.popup .popup-close,
+.popup_status .popup-close {
   position: absolute;
   top: 20px;
   right: 30px;
@@ -62,7 +74,8 @@ hr.ruler {
   cursor: pointer;
 }
 
-.popup .content {
+.popup .content,
+.popup_status .content {
   height: 50vh;
   overflow-y: auto;
   overflow-x: hidden;
@@ -70,4 +83,17 @@ hr.ruler {
 
 #checkbox_div {
   margin-top: 5px;
+}
+
+#status_body {
+  max-height: 65vh;
+  overflow: scroll;
+  display: block;
+}
+
+#node_status_table thead,
+#node_status_table tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
 }
