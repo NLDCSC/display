@@ -29,6 +29,7 @@ from celery.utils.log import get_task_logger
 from flask_socketio import SocketIO
 
 from display.core.screenshot_handler import ScreenShotHandler
+from display.core.dedub_files import DeduplicateFilesInFolder
 from display.helpers.app_logger import AppLogger
 from display.webapp.config import Config
 from display.core.async_screenshots import AsyncScreenshots
@@ -115,6 +116,7 @@ def setup_periodic_tasks(sender, **kwargs):
         float(config.SCREENSHOT_REFRESH), balance_screenshot_workload.s()
     )
     sender.add_periodic_task(30.0, guard_config.s())
+    sender.add_periodic_task(60.0, delete_duplicate_timeline_entries.s())
     sender.add_periodic_task(1800.0, delete_old_timeline_screenshots.s())
 
 
@@ -423,8 +425,12 @@ def monitoring_nodes_results(data, evidence_shot=False):
                                             f"Error processing updates on source {source}.... --> Produced error: {err}"
                                         )
                                 # make changes unique to prevent multiple screenshot copies of the same picture
-                                unique_all_tab_data = list({x['sc_id']: x for x in all_tab_data}.values())
-                                handle_changes_for_timeline.delay(data=unique_all_tab_data)
+                                unique_all_tab_data = list(
+                                    {x["sc_id"]: x for x in all_tab_data}.values()
+                                )
+                                handle_changes_for_timeline.delay(
+                                    data=unique_all_tab_data
+                                )
 
                         resulting_tasks = len(data) - len(tasks_ready)
 
@@ -740,3 +746,18 @@ def delete_old_timeline_screenshots():
                 logger.info("{} removed".format(file_path))
             else:
                 logger.debug("{} not removed".format(file_path))
+
+
+@app.task(
+    ignore_result=True,
+)
+def delete_duplicate_timeline_entries():
+    logger = get_task_logger(__name__)
+
+    logger.info("Starting timeline folders deduplication...")
+
+    ddf = DeduplicateFilesInFolder()
+
+    ddf.execute()
+
+    logger.info("Done with deduplication of timeline folders")

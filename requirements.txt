@@ -1,6 +1,5 @@
 Flask==2.2.3
-# Flask-SocketIO==5.3.2
-git+https://github.com/miguelgrinberg/flask-socketio
+Flask-SocketIO==5.3.3
 click==8.1.3
 gevent==22.10.2
 gevent-websocket==0.10.1
@@ -17,9 +16,9 @@ numpy==1.24.2
 scikit-image==0.20.0
 opencv-python==4.7.0.72
 rfc3339==6.2
-redis==4.5.1
+redis==4.5.3
 Pillow==9.4.0
 setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
-selenium==4.8.2
+selenium==4.8.3
 kombu==5.2.4
 PyVirtualDisplay==3.0
