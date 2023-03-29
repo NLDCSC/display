@@ -3,7 +3,20 @@
     <button class="popup-close" id="btn_close2">&times;</button>
     <hr class="ruler">
     {% if node_status is defined %}
-        <h6>Update timestamp: {{ node_status.timestamp|timestamptodatetime }}</h6>
+        {% set count = namespace(value=0) %}
+        {% for entry in node_status.data %}
+            {% if node_status.data[entry].status == "OK" %}
+                {% set count.value = count.value + 1 %}
+            {% endif %}
+        {% endfor %}
+        <div id="node_status_topbar" class="row">
+            <div class="col-4">
+                <h6>Update timestamp: <span id="node_status_time">{{ node_status.timestamp|timestamptodatetime }}</span></h6>
+            </div>
+            <div class="col-4">
+                <h6>Workers up: <span id="node-count" class="badge badge-success node_ping_status">{{ count.value }}</span></h6>
+            </div>
+        </div>
         <table id="node_status_table" class="table table-striped table-dark">
             <thead>
             <tr>
@@ -17,8 +30,8 @@
             <tbody id="status_body">
             {% for entry in node_status.data %}
                 <tr>
-                    <th scope="row">{{ entry }}</th>
-                    <td><span class="badge {% if node_status.data[entry].status == "OK" %}badge-success{% else %}badge-danger{% endif %}">{{ node_status.data[entry].status }}</span></td>
+                    <th scope="row" class="node_worker_name">{{ entry }}</th>
+                    <td><span class="badge {% if node_status.data[entry].status == "OK" %}badge-success{% else %}badge-danger{% endif %} node_ping_status">{{ node_status.data[entry].status }}</span></td>
                     <td>{{ node_status.data[entry].active }} / {{ node_status.data[entry].task_count }}</td>
                     <td>{{ node_status.data[entry].uptime }}</td>
                     <td>{{ node_status.data[entry].nswap }}</td>

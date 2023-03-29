@@ -97,3 +97,28 @@ hr.ruler {
     width: 100%;
     table-layout: fixed;
 }
+
+#node_status_table thead,
+#node_status_table tbody {
+  text-align: center;
+}
+
+.node_worker_name {
+  text-align: left;
+}
+
+#node-count {
+  margin-left: 10px;
+}
+
+.node_ping_status {
+  padding: 0.25em 0.4em;
+}
+
+#node_status_topbar {
+  margin-bottom: 0.5rem;
+}
+
+#node_status_time {
+  color: #6c7293;
+}
