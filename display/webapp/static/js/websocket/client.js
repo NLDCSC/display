@@ -34,40 +34,65 @@ $(document).ready(function () {
     });
 
     socket.on('push_all_screenshots', function (msg, cb) {
-        if (msg["data"] !== null) {
+
+        if ("data" in msg) {
 
             let tab_content = $("#content_" + msg["tab_hash"])
 
-            tab_content.html(msg["html_data"])
+            try {
+                msg["data"].forEach(item => {
 
-            msg["data"].forEach(item => {
+                    let img_content = $("#img_content_" + msg["tab_hash"] + '_' + item.sc_id)
+                    let mod_time = $("#mod_time_" + msg["tab_hash"] + '_' + item.sc_id)
 
-                let img_content = $("#img_content_" + msg["tab_hash"] + '_' + item.sc_id)
-                let mod_time = $("#mod_time_" + msg["tab_hash"] + '_' + item.sc_id)
-
-                if (item.hasOwnProperty('sc_src')) {
-                    img_content.attr("src", item.sc_src);
-                }
-
-                mod_time.text(item.mod_time);
-
-                if (item.changed === "0") {
-                    if (!img_content.hasClass('red-src')) {
-                        img_content.addClass('red-src');
+                    if (item.hasOwnProperty('sc_src')) {
+                        img_content.attr("src", item.sc_src);
                     }
-                }
 
-                if (item.changed === "1") {
-                    if (img_content.hasClass('red-src')) {
-                        img_content.removeClass('red-src');
+                    mod_time.text(item.mod_time);
+
+                    if (item.changed === "0") {
+                        if (!img_content.hasClass('red-src')) {
+                            img_content.addClass('red-src');
+                        }
                     }
-                }
 
-                mod_time.toggleClass("active");
-                setTimeout(function () {
+                    if (item.changed === "1") {
+                        if (img_content.hasClass('red-src')) {
+                            img_content.removeClass('red-src');
+                        }
+                    }
+
                     mod_time.toggleClass("active");
-                }, 8000);
+                    setTimeout(function () {
+                        mod_time.toggleClass("active");
+                    }, 8000);
 
+                })
+            } catch (e) {
+
+            }
+
+            SetTabContentFilter();
+
+            $("#tab_change_loading").hide()
+            tab_content.removeClass("grey_out")
+
+            SetAllEventListeners();
+
+        } else if ("html_data" in msg) {
+
+            let tab_hash = msg["tab_hash"]
+            let tab_content = $("#content_" + tab_hash)
+
+            if (tab_content[0].firstElementChild.id === "loading_spinner") {
+                tab_content.html(msg["html_data"])
+            }
+
+            let images_containers = $('div[id^=do_open-sc_'+ tab_hash +']')
+
+            images_containers.each(function(value){
+                socket.emit("get_hash_screenshot", images_containers[value].attributes["data-id"].nodeValue, tab_hash)
             })
 
             SetTabContentFilter();
@@ -76,6 +101,45 @@ $(document).ready(function () {
             tab_content.removeClass("grey_out")
 
             SetAllEventListeners();
+        }
+
+        if (cb) {
+            cb(client_id = socket.sid, data = msg["tab_hash"]);
+        }
+
+    });
+
+    socket.on('push_hash_screenshot', function (msg, cb) {
+
+        if (msg["url_screenshot"] !== 'undefined') {
+
+            let tab_content = $("#content_" + msg["tab_hash"])
+
+            let img_content = $("#img_content_" + msg["tab_hash"] + '_' + msg["url_screenshot"].sc_id)
+            let mod_time = $("#mod_time_" + msg["tab_hash"] + '_' + msg["url_screenshot"].sc_id)
+
+            if (msg["url_screenshot"].hasOwnProperty('sc_src')) {
+                img_content.attr("src", msg["url_screenshot"].sc_src);
+            }
+
+            mod_time.text(msg["url_screenshot"].mod_time);
+
+            if (msg["url_screenshot"].changed === "0") {
+                if (!img_content.hasClass('red-src')) {
+                    img_content.addClass('red-src');
+                }
+            }
+
+            if (msg["url_screenshot"].changed === "1") {
+                if (img_content.hasClass('red-src')) {
+                    img_content.removeClass('red-src');
+                }
+            }
+
+            mod_time.toggleClass("active");
+            setTimeout(function () {
+                mod_time.toggleClass("active");
+            }, 8000);
 
             if (cb) {
                 cb(client_id = socket.sid, data = msg["tab_hash"]);
@@ -119,7 +183,7 @@ $(document).ready(function () {
         DestroyScrollingTabs()
         ReEnableDisplayFilter();
         SetKeyDownEvents();
-        
+
         SetTabContentFilter();
 
         if (tab_select.length) {

@@ -196,6 +196,17 @@ class ScreenShotHandler(object):
         except KeyError:
             return ret_data
 
+    def get_hash_screenshot(self, url_hash):
+
+        ret_data = {
+            "sc_id": url_hash,
+            "sc_src": getB64_screenshot(url_hash),
+            "mod_time": get_mod_time(url_hash),
+            "changed": get_compare_image(url_hash),
+        }
+
+        return ret_data
+
     def get_changed_screenshots_per_tab(self, tab_name):
 
         ret_data = []

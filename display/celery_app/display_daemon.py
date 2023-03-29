@@ -698,7 +698,7 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
             except KeyError:
                 # selenium key is not there; so it's safe to add to the evidence workload
                 evidence_workload.append(url_data)
-            
+
             if csc:
                 new_filename = f"csc-{uuid.uuid4()}.png"
             else:
@@ -782,22 +782,22 @@ def store_node_status():
     pinged = inspect_handle.ping()
 
     for each in pinged:
-        if pinged[each] == {'ok': 'pong'}:
-            status_dict[each]['status'] = "OK"
+        if pinged[each] == {"ok": "pong"}:
+            status_dict[each]["status"] = "OK"
         else:
-            status_dict[each]['status'] = "NOK"
+            status_dict[each]["status"] = "NOK"
 
     active = inspect_handle.active()
 
     for each in active:
-        status_dict[each]['active'] = len(active[each])
+        status_dict[each]["active"] = len(active[each])
 
     stats = inspect_handle.stats()
 
     for each in stats:
-        status_dict[each]['task_count'] = sum(list(stats[each]['total'].values()))
-        status_dict[each]['uptime'] = stats[each]['uptime']
-        status_dict[each]['nswap'] = stats[each]['rusage']['nswap']
+        status_dict[each]["task_count"] = sum(list(stats[each]["total"].values()))
+        status_dict[each]["uptime"] = stats[each]["uptime"]
+        status_dict[each]["nswap"] = stats[each]["rusage"]["nswap"]
 
     store_dict = {"timestamp": int(time.time()), "data": dict(status_dict)}
 
