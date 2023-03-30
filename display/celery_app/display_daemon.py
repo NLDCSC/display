@@ -202,7 +202,8 @@ def balance_screenshot_workload():
             if last_run_number < total_chunks_needed:
                 conn.set("last_run_number", last_run_number + 1)
             else:
-                conn.set("last_run_number", 0)
+                # Reset last_run_number to 0 and set 1 for the next run to prevent 0 from running twice
+                conn.set("last_run_number", 1)
                 last_run_number = 0
         else:
             # never run before, storing 0
