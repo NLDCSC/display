@@ -547,7 +547,7 @@ function SetTabClick(evt) {
         $("#content_" + tab_hash).addClass("grey_out")
     }
 
-    window.socket.emit("change_display_tab", {"data": selected_tab});
+    window.socket.emit("change_display_tab", {"tab_name": selected_tab, "tab_hash": tab_hash});
 
 }
 

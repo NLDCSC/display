@@ -15,7 +15,8 @@ $(document).ready(function () {
         elementsTabArray.forEach(item => {
             if ($("#" + item.id).hasClass('active')) {
                 let current_selected = item.attributes["data-name"].nodeValue;
-                socket.emit("change_display_tab", {"data": current_selected})
+                let tab_hash = item.attributes["data-hash"].nodeValue;
+                socket.emit("change_display_tab", {"tab_name": current_selected, "tab_hash": tab_hash})
             }
         });
     });
