@@ -127,7 +127,7 @@ def do_disconnect():
 
 
 @socketio.on("change_display_tab", namespace="/display")
-def do_change_display_tab(tab_name):
+def do_change_display_tab(data):
     global clients
 
     req_client = clients.get(request.sid)
@@ -135,19 +135,20 @@ def do_change_display_tab(tab_name):
     if req_client.current_tab is not None:
         leave_room(req_client.current_tab)
 
-    join_room(tab_name["data"])
+    join_room(data["tab_name"])
     old_tab = req_client.current_tab
-    req_client.current_tab = tab_name["data"]
+    req_client.current_tab = data["tab_name"]
+    req_client.current_tab_hash = data["tab_hash"]
 
     logger.info(
-        f"Client: {req_client.sid} is changing room from {old_tab} to {tab_name['data']}"
+        f"Client: {req_client.sid} is changing room from {old_tab} to {data['tab_name']}"
     )
 
     display_sources = get_display_sources(config.SCREENSHOT_HEADER_TABS)
 
-    display_sources = {tab_name["data"]: display_sources[tab_name["data"]]}
+    display_sources = {data["tab_name"]: display_sources[data["tab_name"]]}
 
-    key = tab_name["data"]
+    key = data["tab_name"]
 
     html_data = render_template(
         "partials/content_rows.html", display_sources=display_sources, key=key
@@ -164,21 +165,21 @@ def do_change_display_tab(tab_name):
             "push_all_screenshots",
             {
                 "html_data": html_data,
-                "tab_hash": hashlib.md5(tab_name["data"].encode("utf-8")).hexdigest()[
+                "tab_hash": hashlib.md5(data["tab_name"].encode("utf-8")).hexdigest()[
                     :6
                 ],
             },
             to=req_client.sid,
             timeout=10,
         )
-        logger.info(f"Client {req_client.sid} received data on tab: {tab_name['data']}")
+        logger.info(f"Client {req_client.sid} received data on tab: {data['tab_name']}")
     except SocketIOTimeOutError:
         logger.warning(f"Timeout error on client: {req_client}; retrying!")
         emit(
             "push_all_screenshots",
             {
                 "html_data": html_data,
-                "tab_hash": hashlib.md5(tab_name["data"].encode("utf-8")).hexdigest()[
+                "tab_hash": hashlib.md5(data["tab_name"].encode("utf-8")).hexdigest()[
                     :6
                 ],
             },
@@ -188,45 +189,48 @@ def do_change_display_tab(tab_name):
 
 
 @socketio.on("get_hash_screenshot", namespace="/display")
-def do_get_hash_screenshot(url_hash, tab_hash):
+def do_get_hash_screenshot(url_hash, tab_hash, last_element: bool = False):
     global clients
 
     req_client = clients.get(request.sid)
 
-    sh = ScreenShotHandler()
+    if req_client.current_tab_hash == tab_hash:
+        sh = ScreenShotHandler()
 
-    url_screenshot = sh.get_hash_screenshot(url_hash=url_hash)
+        url_screenshot = sh.get_hash_screenshot(url_hash=url_hash)
 
-    @copy_current_request_context
-    def cfm_received(client_id, data):
-        cfm_received_data(client_id=client_id, data=data)
+        @copy_current_request_context
+        def cfm_received(client_id, data):
+            cfm_received_data(client_id=client_id, data=data)
 
-    # using call here to wait for the callback of the client; timeout error is raised is callback is not received in
-    # time; retrying the second time with the emit event
-    try:
-        call(
-            "push_hash_screenshot",
-            {
-                "url_screenshot": url_screenshot,
-                "tab_hash": tab_hash,
-            },
-            to=req_client.sid,
-            timeout=10,
-        )
-        logger.info(
-            f"Client {req_client.sid} received data on screenshot hash: {url_hash}"
-        )
-    except SocketIOTimeOutError:
-        logger.warning(f"Timeout error on client: {req_client}; retrying!")
-        emit(
-            "push_hash_screenshot",
-            {
-                "url_screenshot": url_screenshot,
-                "tab_hash": tab_hash,
-            },
-        )
-
-    logger.info(f"Client details: {req_client.client_details()}")
+        # using call here to wait for the callback of the client; timeout error is raised is callback is not received in
+        # time; retrying the second time with the emit event
+        try:
+            call(
+                "push_hash_screenshot",
+                {
+                    "url_screenshot": url_screenshot,
+                    "tab_hash": tab_hash,
+                    "last_element": last_element,
+                },
+                to=req_client.sid,
+                timeout=10,
+            )
+            logger.info(
+                f"Client {req_client.sid} received data on screenshot hash: {url_hash}"
+            )
+        except SocketIOTimeOutError:
+            logger.warning(f"Timeout error on client: {req_client}; retrying!")
+            emit(
+                "push_hash_screenshot",
+                {
+                    "url_screenshot": url_screenshot,
+                    "tab_hash": tab_hash,
+                    "last_element": last_element,
+                },
+            )
+    else:
+        logger.warning(f"Client {req_client.sid} has changed tabs; disregarding...")
 
 
 @socketio.on("rebuild_request", namespace="/display")

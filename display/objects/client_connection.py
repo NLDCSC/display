@@ -13,11 +13,14 @@ class ClientConnection(object):
 
         self.current_tab = None
 
+        self.current_tab_hash = None
+
     def client_details(self):
         return {
             "sid": self.sid,
             "con_status": self.con_status,
             "current_tab": self.current_tab,
+            "current_tab_hash": self.current_tab_hash,
         }
 
     def __repr__(self):
