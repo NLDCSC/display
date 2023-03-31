@@ -331,7 +331,20 @@ function SetTabContentFilter(tab_value = null) {
         if (filter_data.length > 1){
             filter_data.forEach(function (value) {
                 if (value){
-                    let filtered_contents = get_items.filter('div[id*=' + value +']')
+                    let check_visible = $('button[id^="tab_"]:visible')
+
+                    var tab_hash = 0
+
+                    check_visible.each(function (elem) {
+                        let el = $("#" + check_visible[elem].id)
+                        if (el.hasClass('active')){
+
+                            tab_hash = el[0].attributes['data-hash'].nodeValue
+
+                        }
+                    })
+
+                    let filtered_contents = get_items.filter('div[id^=item_' + tab_hash + '_' + value +']')
 
                     if (filtered_contents.length !== 0){
                         filtered_contents.each(function (item_id){
@@ -343,51 +356,41 @@ function SetTabContentFilter(tab_value = null) {
                             }
                         })
                         // distribute the remaining visible items evenly over the rows (6 per row)
-                        // get current active tab
-                        let check_visible = $('button[id^="tab_"]:visible')
 
-                        check_visible.each(function (elem) {
-                            let el = $("#" + check_visible[elem].id)
-                            if (el.hasClass('active')){
+                        let active_rows = $('div[id^=row_' + tab_hash +']')
 
-                                let tab_hash = el[0].attributes['data-hash'].nodeValue
+                        active_rows.each(function (val) {
+                            let el = $("#" + active_rows[val].id)
+                            let row_number = el[0].attributes['data-row-number'].nodeValue
+                            if(el.children(':visible').length === 6) {
+                                return true;
+                            } else {
+                                // fetch next row
+                                let next_row = $("#row_" + tab_hash + "_" + (parseInt(row_number) + 1))
 
-                                let active_rows = $('div[id^=row_' + tab_hash +']')
+                                while (el.children(':visible').length !== 6){
 
-                                active_rows.each(function (val) {
-                                    let el = $("#" + active_rows[val].id)
-                                    let row_number = el[0].attributes['data-row-number'].nodeValue
-                                    if(el.children(':visible').length === 6) {
-                                        return true;
-                                    } else {
-                                        // fetch next row
-                                        let next_row = $("#row_" + tab_hash + "_" + (parseInt(row_number) + 1))
+                                    if (next_row.length !== 0) {
 
-                                        while (el.children(':visible').length !== 6){
+                                        // console.log("next_row: " + next_row.children(':visible').length)
+                                        // console.log("next_row_id: " + next_row.attr('id'))
 
-                                            if (next_row.length !== 0) {
-
-                                                // console.log("next_row: " + next_row.children(':visible').length)
-                                                // console.log("next_row_id: " + next_row.attr('id'))
-
-                                                try {
-                                                    $("#" + next_row[0].firstElementChild.id).appendTo(el);
-                                                    if (next_row.children(':visible').length === 0) {
-                                                        next_row.hide()
-                                                    }
-                                                } catch (error) {
-                                                    break;
-                                                }
-                                            } else if (next_row.length === 0) {
-                                                break;
-                                            } else {
-                                                // this row is empty, so hide the row...
-                                                el.hide()
-                                                break;
+                                        try {
+                                            $("#" + next_row[0].firstElementChild.id).appendTo(el);
+                                            if (next_row.children(':visible').length === 0) {
+                                                next_row.hide()
                                             }
+                                        } catch (error) {
+                                            break;
                                         }
+                                    } else if (next_row.length === 0) {
+                                        break;
+                                    } else {
+                                        // this row is empty, so hide the row...
+                                        el.hide()
+                                        break;
                                     }
-                                })
+                                }
                             }
                         })
                     }
@@ -401,6 +404,7 @@ function SetTabContentFilter(tab_value = null) {
         }
     } else {
         let filtered_contents = get_items.filter('div[id*=' + tab_value +']:hidden')
+
         if (filtered_contents.length !== 0){
             filtered_contents.each(function (item_id){
                 let el = $("#" + filtered_contents[item_id].id)
@@ -409,52 +413,53 @@ function SetTabContentFilter(tab_value = null) {
                 if(el_parent.children(':visible').length === 0) {
                     el_parent.show()
                 }
-                // distribute the remaining visible items evenly over the rows (6 per row)
-                let check_visible = $('button[id^="tab_"]:visible')
-
-                check_visible.each(function (elem) {
-                    let el = $("#" + check_visible[elem].id)
-                    if (el.hasClass('active')){
-
-                        let tab_hash = el[0].attributes['data-hash'].nodeValue
-
-                        let active_rows = $('div[id^=row_' + tab_hash +']')
-
-                        active_rows.each(function (val) {
-                            let el = $("#" + active_rows[val].id)
-                            let row_number = el[0].attributes['data-row-number'].nodeValue
-                            if(el.children(':visible').length === 6) {
-                                return true;
-                            } else if(el.children(':visible').length > 6) {
-                                // fetch next row
-                                let next_row = $("#row_" + tab_hash + "_" + (parseInt(row_number) + 1))
-
-                                while (el.children(':visible').length > 6){
-
-                                    if (next_row.length === 0) {
-                                        next_row.show()
-                                        try{
-                                            $("#" + el[0].lastElementChild.id).appendTo(next_row);
-                                        } catch (error) {
-                                            break;
-                                        }
-                                    } else if (next_row.length > 0) {
-                                        next_row.show()
-                                        try{
-                                            $("#" + el[0].lastElementChild.id).prependTo(next_row);
-                                        } catch (error) {
-                                            break;
-                                        }
-                                    }
-
-                                }
-                            }
-
-                        })
-
-                    }
-                })
             })
+            // distribute the remaining visible items evenly over the rows (6 per row)
+            let check_visible = $('button[id^="tab_"]:visible')
+
+            check_visible.each(function (elem) {
+                let el = $("#" + check_visible[elem].id)
+                if (el.hasClass('active')){
+
+                    let tab_hash = el[0].attributes['data-hash'].nodeValue
+
+                    let active_rows = $('div[id^=row_' + tab_hash +']')
+
+                    active_rows.each(function (val) {
+                        let el = $("#" + active_rows[val].id)
+                        let row_number = el[0].attributes['data-row-number'].nodeValue
+                        if(el.children(':visible').length === 6) {
+                            return true;
+                        } else if(el.children(':visible').length > 6) {
+                            // fetch next row
+                            let next_row = $("#row_" + tab_hash + "_" + (parseInt(row_number) + 1))
+
+                            while (el.children(':visible').length > 6){
+
+                                if (next_row.length === 0) {
+                                    next_row.show()
+                                    try{
+                                        $("#" + el[0].lastElementChild.id).appendTo(next_row);
+                                    } catch (error) {
+                                        break;
+                                    }
+                                } else if (next_row.length > 0) {
+                                    next_row.show()
+                                    try{
+                                        $("#" + el[0].lastElementChild.id).prependTo(next_row);
+                                    } catch (error) {
+                                        break;
+                                    }
+                                }
+
+                            }
+                        }
+
+                    })
+
+                }
+            })
+
         }
     }
 }

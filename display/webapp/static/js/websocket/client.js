@@ -93,15 +93,18 @@ $(document).ready(function () {
             let images_containers = $('div[id^=do_open-sc_'+ tab_hash +']')
 
             images_containers.each(function(value){
-                socket.emit("get_hash_screenshot", images_containers[value].attributes["data-id"].nodeValue, tab_hash)
+                let isLastElement = value === images_containers.length - 1;
+
+                if (isLastElement) {
+                    socket.emit("get_hash_screenshot", images_containers[value].attributes["data-id"].nodeValue, tab_hash, isLastElement)
+                } else {
+                    socket.emit("get_hash_screenshot", images_containers[value].attributes["data-id"].nodeValue, tab_hash)
+                }
+
             })
 
-            SetTabContentFilter();
-
-            $("#tab_change_loading").hide()
-            tab_content.removeClass("grey_out")
-
             SetAllEventListeners();
+
         }
 
         if (cb) {
@@ -146,6 +149,13 @@ $(document).ready(function () {
                 cb(client_id = socket.sid, data = msg["tab_hash"]);
             }
 
+            if (msg["last_element"]) {
+                SetTabContentFilter();
+
+                $("#tab_change_loading").hide()
+                tab_content.removeClass("grey_out")
+            }
+
         }
 
     });
@@ -184,6 +194,8 @@ $(document).ready(function () {
         DestroyScrollingTabs()
         ReEnableDisplayFilter();
         SetKeyDownEvents();
+
+        SetDisplayFilter()
 
         SetTabContentFilter();
 

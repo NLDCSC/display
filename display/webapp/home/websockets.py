@@ -189,7 +189,7 @@ def do_change_display_tab(data):
 
 
 @socketio.on("get_hash_screenshot", namespace="/display")
-def do_get_hash_screenshot(url_hash, tab_hash):
+def do_get_hash_screenshot(url_hash, tab_hash, last_element: bool = False):
     global clients
 
     req_client = clients.get(request.sid)
@@ -211,6 +211,7 @@ def do_get_hash_screenshot(url_hash, tab_hash):
                 {
                     "url_screenshot": url_screenshot,
                     "tab_hash": tab_hash,
+                    "last_element": last_element,
                 },
                 to=req_client.sid,
                 timeout=10,
@@ -225,6 +226,7 @@ def do_get_hash_screenshot(url_hash, tab_hash):
                 {
                     "url_screenshot": url_screenshot,
                     "tab_hash": tab_hash,
+                    "last_element": last_element,
                 },
             )
     else:
