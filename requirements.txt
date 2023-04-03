@@ -10,6 +10,8 @@ Flask-Migrate==4.0.4
 Flask-WTF==1.1.1
 Flask_SQLAlchemy==3.0.3
 Flask-Login==0.6.2
+Flask-OIDC==1.4.0
+itsdangerous==2.0.1
 ansicolors==1.1.8
 python-dotenv==1.0.0
 Jinja2==3.1.2

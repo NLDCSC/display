@@ -4,7 +4,7 @@ from flask_login import current_user, login_user, login_required, logout_user
 from display.webapp.app.models import users
 from . import auth
 from .forms import LoginForm
-from ..run import login_manager
+from ..run import login_manager, config
 
 
 @login_manager.user_loader
@@ -33,14 +33,24 @@ def func_login():
             return redirect(url_for("home.index"))
         else:
             msg = "Incorrect username/password!"
-            return render_template("login.html", header=header, form=form, msg=msg)
+            return render_template("login.html", header=header, form=form, msg=msg, openid=config.OPENID_LOGIN)
 
-    return render_template("login.html", header=header, form=form)
+    return render_template("login.html", header=header, form=form, openid=config.OPENID_LOGIN)
 
 
 @auth.route("/logout")
 @login_required
 def logout():
     logout_user()
+
+    if config.OPENID_LOGIN:
+        try:
+            from .openid_login import oidc_logout
+
+            oidc_logout()
+        except ImportError:
+            pass
+        except TypeError:
+            pass
 
     return redirect(url_for("auth.func_login"))

@@ -39,8 +39,6 @@ class Config(object):
     SYSLOG_SERVER = os.getenv("SYSLOG_SERVER", "172.16.1.1")
     SYSLOG_PORT = int(os.getenv("SYSLOG_PORT", 5140))
 
-    OPENID_LOGIN = getenv_bool("OPENID_LOGIN", "True")
-
     CONFIG_PATH = os.getenv("CONFIG_PATH", "/app/data/config/")
     CONFIG_FILE = os.getenv("CONFIG_FILE", "config.json")
     SCREENSHOT_SOURCE_CONFIG_FILE = os.getenv(
@@ -74,3 +72,22 @@ class Config(object):
     SCREENSHOT_HEADER_TABS = getenv_bool("SCREENSHOT_HEADER_TABS", "True")
 
     TAB_ROTATE_TIMER = int(os.getenv("TAB_ROTATE_TIMER", 90))
+
+    OPENID_LOGIN = getenv_bool("OPENID_LOGIN", "True")
+
+    OIDC_CLIENT_SECRETS = os.getenv("OIDC_CLIENT_SECRETS", "client_secrets.json")
+    OIDC_ID_TOKEN_COOKIE_SECURE = getenv_bool("OIDC_ID_TOKEN_COOKIE_SECURE", "False")
+    OIDC_REQUIRE_VERIFIED_EMAIL = getenv_bool("OIDC_REQUIRE_VERIFIED_EMAIL", "False")
+    OIDC_USER_INFO_ENABLED = getenv_bool("OIDC_USER_INFO_ENABLED", "True")
+    OIDC_OPENID_REALM = os.getenv("OIDC_OPENID_REALM", "display")
+    OIDC_SCOPES = os.getenv("OIDC_SCOPES", ["openid", "profile", "roles"])
+    OIDC_INTROSPECTION_AUTH_METHOD = os.getenv(
+        "OIDC_INTROSPECTION_AUTH_METHOD", "client_secret_post"
+    )
+    OIDC_VALID_ISSUERS = os.getenv("OIDC_VALID_ISSUERS", "https://OIDC_VALID_ISSUERS")
+    OVERWRITE_REDIRECT_URI = os.getenv("OVERWRITE_REDIRECT_URI", False)
+    OIDC_CALLBACK_ROUTE = os.getenv("OIDC_CALLBACK_ROUTE", "/oidc_callback")
+    OIDC_ID_TOKEN_COOKIE_PATH = os.getenv("OIDC_ID_TOKEN_COOKIE_PATH", "/")
+    OIDC_ID_TOKEN_COOKIE_NAME = os.getenv(
+        "OIDC_ID_TOKEN_COOKIE_NAME", "display_oidc_cookie"
+    )

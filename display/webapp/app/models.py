@@ -11,7 +11,6 @@ class users(UserMixin, db.Model):
     id = db.Column("id", db.Integer, primary_key=True)
     username = db.Column("username", db.String(48), unique=True)
     password_hash = db.Column("password", db.String(512))
-    role = db.Column("role", db.String(16), default="user")
     created = db.Column("created", db.Integer, default=0)
     updated = db.Column("updated", db.Integer, default=0)
     group_member = db.relationship("groupmembers", backref="user", lazy="joined")
@@ -35,7 +34,6 @@ class users(UserMixin, db.Model):
         user_dict = {
             "id": self.id,
             "username": self.username,
-            "role": self.role,
         }
 
         return user_dict
