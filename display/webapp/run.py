@@ -7,7 +7,10 @@ import rfc3339 as rfc3339
 from flask import Flask, render_template, request, g
 from flask_bootstrap import Bootstrap
 from flask_fontawesome import FontAwesome
+from flask_login import LoginManager
+from flask_migrate import Migrate
 from flask_socketio import SocketIO
+from flask_sqlalchemy import SQLAlchemy
 
 from display.helpers.app_logger import AppLogger
 from display.webapp.config import Config
@@ -19,6 +22,10 @@ fa = FontAwesome()
 bootstrap = Bootstrap()
 
 socketio = SocketIO()
+
+login_manager = LoginManager()
+db = SQLAlchemy()
+migrate = Migrate(compare_type=True)
 
 config = Config()
 
@@ -33,6 +40,10 @@ def create_app(version):
     )
 
     app.config["version"] = "{}".format(version)
+
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["SQLALCHEMY_POOL_RECYCLE"] = 299
+    app.config["SQLALCHEMY_POOL_TIMEOUT"] = 20
 
     if not config.DEBUG:
         app.config["SESSION_COOKIE_NAME"] = "display.session"
@@ -57,9 +68,22 @@ def create_app(version):
             app, message_queue=app.config["REDIS_URL"], cors_allowed_origins="*"
         )
 
+    db.init_app(app)
+    migrate.init_app(app, db)
+
+    login_manager.init_app(app)
+    login_manager.login_message = "Sorry, login required!"
+    login_manager.login_message_category = "danger"
+    login_manager.login_view = "auth.func_login"
+    login_manager.session_protection = "strong"
+
     from display.webapp.home import home as home_blueprint
 
     app.register_blueprint(home_blueprint, url_prefix=app.config["WEB_ROOT"])
+
+    from display.webapp.auth import auth as auth_blueprint
+
+    app.register_blueprint(auth_blueprint, url_prefix=app.config["WEB_ROOT"])
 
     from display.webapp.api import api as api_blueprint
 

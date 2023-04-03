@@ -399,3 +399,24 @@ div#pills-tabContent.tab-content {
 #wiki-link a {
   color: white;
 }
+
+.set-white {
+  color: white;
+}
+
+.set-white:hover {
+  color: #575555;
+}
+
+div.float-right.user-details div.dropdown.show div.dropdown-menu.show a.dropdown-item:hover {
+  font-weight: bolder;
+  color: white
+}
+
+div.float-right.user-details div.dropdown.show div.dropdown-menu.show {
+  margin-top: 0;
+}
+
+.user-details {
+  margin-right: 15px;
+}

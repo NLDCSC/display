@@ -2,6 +2,7 @@ import hashlib
 import logging
 
 from flask import copy_current_request_context, request, render_template
+from flask_login import login_required
 from flask_socketio import emit, disconnect, join_room, leave_room, call
 from socketio.exceptions import TimeoutError as SocketIOTimeOutError
 
@@ -27,6 +28,7 @@ clients = ClientPool()
 
 
 @socketio.on("disconnect_request", namespace="/display")
+@login_required
 def disconnect_request():
     @copy_current_request_context
     def can_disconnect():
@@ -44,11 +46,13 @@ def disconnect_request():
 
 
 @socketio.on("my_ping", namespace="/display")
+@login_required
 def ping_pong():
     emit("my_pong", room=request.sid)
 
 
 @socketio.on("async_mode", namespace="/display")
+@login_required
 def get_async_mode():
     logger.info(f"Async mode request from: {request.sid}")
 
@@ -71,6 +75,7 @@ def cfm_received_data(client_id, data):
 
 
 @socketio.on("connect", namespace="/display")
+@login_required
 def connect():
     global clients
 
@@ -94,6 +99,7 @@ def connect():
 
 
 @socketio.on("active_connect", namespace="/display")
+@login_required
 def active_connect():
     global clients
 
@@ -109,6 +115,7 @@ def active_connect():
 
 
 @socketio.on("disconnect", namespace="/display")
+@login_required
 def do_disconnect():
     global clients
 
@@ -127,6 +134,7 @@ def do_disconnect():
 
 
 @socketio.on("change_display_tab", namespace="/display")
+@login_required
 def do_change_display_tab(data):
     global clients
 
@@ -189,6 +197,7 @@ def do_change_display_tab(data):
 
 
 @socketio.on("get_hash_screenshot", namespace="/display")
+@login_required
 def do_get_hash_screenshot(url_hash, tab_hash, last_element: bool = False):
     global clients
 
@@ -234,6 +243,7 @@ def do_get_hash_screenshot(url_hash, tab_hash, last_element: bool = False):
 
 
 @socketio.on("rebuild_request", namespace="/display")
+@login_required
 def do_rebuild_request():
     global clients
 
@@ -276,6 +286,7 @@ def do_rebuild_request():
 
 
 @socketio.on("create_custom_screenshot", namespace="/display")
+@login_required
 def do_create_custom_screenshot(data):
     logger.info(f"Client: {request.sid} is creating custom screenshot...")
 
@@ -283,6 +294,7 @@ def do_create_custom_screenshot(data):
 
 
 @socketio.on("see_custom_screenshot", namespace="/display")
+@login_required
 def do_see_custom_screenshot(reqdata):
     logger.info(f"Client: {request.sid} is requesting to see custom screenshot...")
 

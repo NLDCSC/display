@@ -18,6 +18,17 @@ class Config(object):
 
     WEB_ROOT = os.getenv("WEB_ROOT", "")
 
+    DB_HOST = os.getenv("DB_HOST", "mysql")
+
+    MYSQL_DATABASE = os.getenv("MYSQL_DATABASE", "display")
+    MYSQL_USER = os.getenv("MYSQL_USER", "display")
+    MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "secret")
+
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        "SQLALCHEMY_DATABASE_URI",
+        f"mysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{DB_HOST}/{MYSQL_DATABASE}",
+    )
+
     PROPAGATE_EXCEPTIONS = getenv_bool("PROPAGATE_EXCEPTIONS", "True")
 
     LOG_FILE_PATH = os.getenv("LOG_FILE_PATH", "/app/data/logs/")

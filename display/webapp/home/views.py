@@ -5,6 +5,7 @@ import os
 
 import redis
 from flask import render_template, send_from_directory, current_app, make_response
+from flask_login import login_required
 
 from display.helpers.app_logger import AppLogger
 from . import home
@@ -25,6 +26,7 @@ config = Config()
 
 
 @home.route("/")
+@login_required
 def index():
     display_sources = get_display_sources(config.SCREENSHOT_HEADER_TABS)
 
@@ -50,6 +52,7 @@ def index():
 
 
 @home.get("/status/nodes")
+@login_required
 def get_status_nodes():
 
     host, port = config.REDIS_URL.split("//")[1][:-1].split(":")
@@ -69,6 +72,7 @@ def get_status_nodes():
 
 
 @home.route("/screenshot/<path:filename>")
+@login_required
 def get_screenshot(filename):
     try:
         sh = ScreenShotHandler()
@@ -101,6 +105,7 @@ def get_timeline_data(url_hash):
 
 
 @home.route("/timeline/<url_hash>")
+@login_required
 def timeline(url_hash):
     sh = ScreenShotHandler()
 
@@ -114,6 +119,7 @@ def timeline(url_hash):
 
 
 @home.route("/last_screenshot/<path:filename>")
+@login_required
 def get_last_screenshot(filename):
     try:
         data = send_from_directory(
@@ -125,6 +131,7 @@ def get_last_screenshot(filename):
 
 
 @home.route("/timeline/get_picture/<path:url_hash>/<path:filename>")
+@login_required
 def get_timeline_picture(url_hash, filename):
     data = send_from_directory(
         current_app.config["TIMELINE_LOCATION"], f"{url_hash}/{filename}.png"
@@ -133,6 +140,7 @@ def get_timeline_picture(url_hash, filename):
 
 
 @home.route("/timeline/download_picture/<path:url_hash>/<path:filename>")
+@login_required
 def download_picture(url_hash, filename):
 
     sh = ScreenShotHandler()

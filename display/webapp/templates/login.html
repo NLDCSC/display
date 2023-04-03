@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ header }} | {{ get_version() }}</title>
+
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/display.png') }}" />
+
+    <link href="{{ url_for('static', filename='css/bootstrap/bootstrap.min.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static', filename='css/login.min.css') }}" rel="stylesheet" />
+
+    <script type="text/javascript" src="{{ url_for('static', filename='js/jquery/jquery-3.6.0.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap/bootstrap.bundle.min.js') }}"></script>
+</head>
+
+<body>
+<div class="login-dark">
+    <form method="post">
+        {{ form.hidden_tag() }}
+        <h2 class="sr-only">Login</h2>
+        <div class="illustration"><img src="{{ url_for('static', filename='img/display.png') }}"></div>
+        <div class="form-group">
+            <label class="form-control-label">USERNAME</label>
+            {{ form.username(class_="form-control") }}
+        </div>
+        <div class="form-group">
+            <label class="form-control-label">PASSWORD</label>
+            {{ form.password(class_="form-control") }}
+        </div>
+        <div class="form-group">
+            <div class="row">
+                <div class="col-12 loginbttm">
+                    <div class="col-6 login-btm login-button">
+                        {{ form.submit(class_="btn btn-outline-primary") }}
+                    </div>
+                    <div id="error-msg" class="col-6 login-btm login-text">
+                        <!-- Error Message -->
+                        {% if msg is defined %}
+                            {{ msg }}
+                        {% endif %}
+                        {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                                {% for message in messages %}
+                                    {{ message }}
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+</body>
+
+</html>

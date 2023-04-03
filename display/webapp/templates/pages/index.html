@@ -62,6 +62,18 @@
                                     <a>Async mode: <b><span id="async_mode">{{ async_mode }}</span></b></a><br/>
                                     <a>Average latency: <b><span id="ping_pong"></span>ms</b></a>
                                 </div>
+                                <div class="float-right user-details">
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <span class="mdi mdi-account-circle"></span>
+                                        </button>
+                                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                            <h6 class="dropdown-header">User: {{ current_user.username }}</h6>
+                                            <div class="dropdown-divider"></div>
+                                            <a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div id="app" class="float-right"></div>
                             </div>
                         </div>
