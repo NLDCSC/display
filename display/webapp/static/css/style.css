@@ -337,6 +337,7 @@ div#pills-tabContent.tab-content {
   width: 2rem;
   height: 2rem;
   float: right;
+  top: -5px;
 }
 
 .base-timer__svg {

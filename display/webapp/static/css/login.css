@@ -144,8 +144,10 @@ input[type=password] {
 .login-text {
     text-align: left;
     padding-left: 12px;
-    color: #A2A4A4;
+    /*color: #A2A4A4;*/
+    color: #ccc90a;
     font-weight: bold;
+    margin-top: 15px;
 }
 
 .loginbttm {
