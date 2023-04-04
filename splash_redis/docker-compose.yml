@@ -58,8 +58,6 @@ services:
     restart: always
     env_file:
       - .env
-    ports:
-      - 3306:3306
     security_opt:
       - seccomp:unconfined
     volumes:
