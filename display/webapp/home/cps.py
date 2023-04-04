@@ -17,14 +17,6 @@ def md5(eval_ctx, value):
     return hashlib.md5(value.encode("utf-8")).hexdigest()[:6]
 
 
-@home.context_processor
-def get_last_bt_number():
-    def get_last_bt_number():
-        return config.LAST_BLUE_TEAM
-
-    return dict(get_last_bt_number=get_last_bt_number)
-
-
 @pass_eval_context
 @home.app_template_filter()
 def timestamptodatetime(eval_ctx, value):
