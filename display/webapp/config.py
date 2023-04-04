@@ -45,8 +45,6 @@ class Config(object):
         "SCREENSHOT_SOURCE_CONFIG_FILE", "screenshot_config.json"
     )
 
-    LAST_BLUE_TEAM = int(os.getenv("LAST_BLUE_TEAM", 24))
-
     SPLASH_HOST = os.getenv("SPLASH_HOST", "ha_proxy")
     SPLASH_PORT = int(os.getenv("SPLASH_PORT", 8050))
 
@@ -76,7 +74,7 @@ class Config(object):
     OPENID_LOGIN = getenv_bool("OPENID_LOGIN", "True")
 
     OIDC_CLIENT_SECRETS = os.getenv("OIDC_CLIENT_SECRETS", "client_secrets.json")
-    OIDC_ID_TOKEN_COOKIE_SECURE = getenv_bool("OIDC_ID_TOKEN_COOKIE_SECURE", "False")
+    OIDC_COOKIE_SECURE = getenv_bool("OIDC_COOKIE_SECURE", "True")
     OIDC_REQUIRE_VERIFIED_EMAIL = getenv_bool("OIDC_REQUIRE_VERIFIED_EMAIL", "False")
     OIDC_USER_INFO_ENABLED = getenv_bool("OIDC_USER_INFO_ENABLED", "True")
     OIDC_OPENID_REALM = os.getenv("OIDC_OPENID_REALM", "display")
