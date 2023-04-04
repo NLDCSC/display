@@ -21,7 +21,7 @@
         {{ form.hidden_tag() }}
         <h2 class="sr-only">Login</h2>
         {% if openid %}
-            <div class="social-auth-links text-center mt-2 mb-3">
+            <div class="text-center mt-2 mb-3">
                 <a href="{{ url_for('auth.oidc_login') }}" class="btn btn-block btn-danger">
                     <i class="fab fa-openid mr-2"></i> Sign in using SSO
                 </a>
