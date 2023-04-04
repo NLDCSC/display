@@ -98,6 +98,12 @@ class tracelog(db.Model):
     )
     user = db.Column("user", db.String(128), default="display")
     result = db.Column("result", db.String(512))
+    status_code = db.Column(
+        "status_code",
+        db.Integer,
+        default=0,
+        index=True,
+    )
     reason = db.Column("reason", db.String(512))
 
     def __repr__(self):
