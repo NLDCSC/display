@@ -34,7 +34,11 @@ with app.app_context():
 
     for each in default_groups:
         print(f"Creating group {each}")
-        new_group = groups(name=each["group_name"], description=each["group_description"], created=int(time.time()))
+        new_group = groups(
+            name=each["group_name"],
+            description=each["group_description"],
+            created=int(time.time()),
+        )
         db.session.add(new_group)
 
     db.session.commit()

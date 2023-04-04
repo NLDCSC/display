@@ -33,9 +33,17 @@ def func_login():
             return redirect(url_for("home.index"))
         else:
             msg = "Incorrect username/password!"
-            return render_template("login.html", header=header, form=form, msg=msg, openid=config.OPENID_LOGIN)
+            return render_template(
+                "login.html",
+                header=header,
+                form=form,
+                msg=msg,
+                openid=config.OPENID_LOGIN,
+            )
 
-    return render_template("login.html", header=header, form=form, openid=config.OPENID_LOGIN)
+    return render_template(
+        "login.html", header=header, form=form, openid=config.OPENID_LOGIN
+    )
 
 
 @auth.route("/logout")

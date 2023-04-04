@@ -15,12 +15,12 @@ from . import auth
 def oidc_login():
     this_client_secrets = oidc.client_secrets
 
-    username = oidc.user_getfield('preferred_username')
+    username = oidc.user_getfield("preferred_username")
 
     client_roles = oidc.user_getfield("resource_access")
 
     try:
-        client_roles = client_roles[this_client_secrets['client_id']]['roles']
+        client_roles = client_roles[this_client_secrets["client_id"]]["roles"]
     except KeyError:
         oidc_logout()
         abort(401)
@@ -44,11 +44,10 @@ def oidc_login():
 
         if len(account.group_member) != 0:
 
-            group_names = [x.group.name for x in account.group_member]
+            group_names = account.get_user_groups()
 
             for role in kc_roles:
                 # already member of a group; check, alter when needed and save to backend
-                group_memb = account.group_member[0]
 
                 if role not in group_names:
                     # not yet in group; fetching group id
@@ -64,8 +63,6 @@ def oidc_login():
 
                         group_id = new_group.id
 
-                    group_memb.userid = group_id
-                    db.session.add(group_memb)
                     db.session.commit()
 
         else:
