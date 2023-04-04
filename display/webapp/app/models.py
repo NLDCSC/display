@@ -1,5 +1,3 @@
-import time
-
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -87,7 +85,7 @@ class tracelog(db.Model):
     timestamp = db.Column(
         "timestamp",
         db.Integer,
-        default=int(time.time()),
+        default=0,
         index=True,
     )
     action = db.Column(
@@ -97,7 +95,12 @@ class tracelog(db.Model):
         index=True,
     )
     user = db.Column("user", db.String(128), default="display")
-    result = db.Column("result", db.String(512))
+    result = db.Column(
+        "result",
+        db.Integer,
+        default=0,
+        index=True,
+    )
     status_code = db.Column(
         "status_code",
         db.Integer,

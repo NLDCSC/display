@@ -8,7 +8,9 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
+from display.core.trace_log import TraceLog
 from display.webapp.config import Config
+from display.webapp.helpers.constants.common import tracelog_action, tracelog_result
 from display.webapp.helpers.utils.screenshots import (
     getB64_screenshot,
     get_mod_time,
@@ -225,12 +227,28 @@ class ScreenShotHandler(object):
                                 "changed": is_changed,
                             }
                         )
+                        TraceLog.insert(
+                            {
+                                "url": self.get_url_by_hash(each),
+                                "url_hash": each,
+                                "action": tracelog_action.STATE_CHANGE,
+                                "result": tracelog_result.CHANGED,
+                            }
+                        )
                     else:
                         ret_data.append(
                             {
                                 "sc_id": each,
                                 "mod_time": get_mod_time(each),
                                 "changed": is_changed,
+                            }
+                        )
+                        TraceLog.insert(
+                            {
+                                "url": self.get_url_by_hash(each),
+                                "url_hash": each,
+                                "action": tracelog_action.STATE_CHANGE,
+                                "result": tracelog_result.NOT_CHANGED,
                             }
                         )
                 return ret_data
@@ -252,12 +270,28 @@ class ScreenShotHandler(object):
                     "changed": is_changed,
                 }
             )
+            TraceLog.insert(
+                {
+                    "url": self.get_url_by_hash(the_hash),
+                    "url_hash": the_hash,
+                    "action": tracelog_action.STATE_CHANGE,
+                    "result": tracelog_result.CHANGED,
+                }
+            )
         else:
             ret_data.append(
                 {
                     "sc_id": the_hash,
                     "mod_time": get_mod_time(the_hash),
                     "changed": is_changed,
+                }
+            )
+            TraceLog.insert(
+                {
+                    "url": self.get_url_by_hash(the_hash),
+                    "url_hash": the_hash,
+                    "action": tracelog_action.STATE_CHANGE,
+                    "result": tracelog_result.NOT_CHANGED,
                 }
             )
 
@@ -353,7 +387,7 @@ class ScreenShotHandler(object):
                 data = buffer.getvalue()
             filesize = len(data)
             size_deviation = filesize / target_filesize
-            self.logger.info(
+            self.logger.debug(
                 "size: {}; factor: {:.3f}".format(filesize, size_deviation)
             )
 

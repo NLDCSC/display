@@ -47,8 +47,7 @@ def create_app(version):
     app.config["version"] = "{}".format(version)
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["SQLALCHEMY_POOL_RECYCLE"] = 299
-    app.config["SQLALCHEMY_POOL_TIMEOUT"] = 20
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_recycle": 299, "pool_timeout": 20}
 
     if not config.DEBUG:
         app.config["SESSION_COOKIE_NAME"] = "display.session"

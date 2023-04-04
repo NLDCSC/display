@@ -69,6 +69,8 @@ class Config(object):
 
     SCREENSHOT_HEADER_TABS = getenv_bool("SCREENSHOT_HEADER_TABS", "True")
 
+    SCREENSHOT_EVIDENCE_ENABLED = getenv_bool("SCREENSHOT_EVIDENCE_ENABLED", "True")
+
     TAB_ROTATE_TIMER = int(os.getenv("TAB_ROTATE_TIMER", 90))
 
     OPENID_LOGIN = getenv_bool("OPENID_LOGIN", "True")

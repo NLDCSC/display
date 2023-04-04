@@ -1,3 +1,7 @@
+from dotenv import load_dotenv
+
+load_dotenv(".env")
+
 import base64
 import collections
 import hashlib
@@ -8,14 +12,11 @@ import os
 import shutil
 import time
 import uuid
+import redis
 
-from dotenv import load_dotenv
-
-load_dotenv(".env")
+from flask_login import current_user
 
 from io import BytesIO
-import redis
-from celery.result import AsyncResult, allow_join_result
 
 from selenium.common import TimeoutException
 from selenium.webdriver.common.by import By
@@ -23,11 +24,14 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from kombu import Queue
 from celery import Celery
+from celery.result import AsyncResult, allow_join_result
 from celery.app.log import TaskFormatter
 from celery.signals import task_prerun, after_setup_task_logger, after_setup_logger
 from celery.utils.log import get_task_logger
 from flask_socketio import SocketIO
 
+from display.core.trace_log import TraceLog
+from display.webapp.helpers.constants.common import tracelog_action, tracelog_result
 from display.core.screenshot_handler import ScreenShotHandler
 from display.core.dedub_files import DeduplicateFilesInFolder
 from display.helpers.app_logger import AppLogger
@@ -619,6 +623,16 @@ def create_custom_screenshot(data):
 
     display_sources = {sh.get_tab_by_hash(data["data"])[0]: [url_data]}
 
+    TraceLog.insert(
+        {
+            "url": sh.get_url_by_hash(data["data"]),
+            "url_hash": data["data"],
+            "action": tracelog_action.OD_SCREENSHOT,
+            "result": tracelog_result.REQUESTED,
+            "user": current_user.username,
+        }
+    )
+
     logger.info(f"Hash mapped to url: {display_sources}!")
 
     ss = AsyncScreenshots(display_sources)
@@ -693,12 +707,13 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
             ss = AsyncScreenshots()
 
             # check if this url is part of the selenium workload, if it isn't append to the evidence workload!
-            try:
-                if target not in ss.screen_shot_sources["selenium"]:
+            if config.SCREENSHOT_EVIDENCE_ENABLED:
+                try:
+                    if target not in ss.screen_shot_sources["selenium"]:
+                        evidence_workload.append(url_data)
+                except KeyError:
+                    # selenium key is not there; so it's safe to add to the evidence workload
                     evidence_workload.append(url_data)
-            except KeyError:
-                # selenium key is not there; so it's safe to add to the evidence workload
-                evidence_workload.append(url_data)
 
             if csc:
                 new_filename = f"csc-{uuid.uuid4()}.png"
