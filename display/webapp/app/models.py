@@ -32,9 +32,14 @@ class users(UserMixin, db.Model):
         user_dict = {
             "id": self.id,
             "username": self.username,
+            "groupsmember": self.get_user_groups(),
         }
 
         return user_dict
+
+    def get_user_groups(self):
+
+        return [x.group.name for x in self.group_member]
 
 
 class groups(db.Model):
