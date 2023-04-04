@@ -1,3 +1,5 @@
+import time
+
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -7,7 +9,7 @@ from display.webapp.run import db
 class users(UserMixin, db.Model):
     __tablename__ = "users"
     id = db.Column("id", db.Integer, primary_key=True)
-    username = db.Column("username", db.String(48), unique=True)
+    username = db.Column("username", db.String(128), unique=True)
     password_hash = db.Column("password", db.String(512))
     created = db.Column("created", db.Integer, default=0)
     updated = db.Column("updated", db.Integer, default=0)
@@ -71,3 +73,32 @@ class groupmembers(db.Model):
 
     def __repr__(self):
         return f"<< Groupmember: {self.id} >>"
+
+
+class tracelog(db.Model):
+    __tablename__ = "tracelog"
+    id = db.Column("id", db.Integer, primary_key=True)
+    url = db.Column("url", db.String(512))
+    url_hash = db.Column(
+        "url_hash",
+        db.String(12),
+        index=True,
+    )
+    timestamp = db.Column(
+        "timestamp",
+        db.Integer,
+        default=int(time.time()),
+        index=True,
+    )
+    action = db.Column(
+        "action",
+        db.Integer,
+        default=0,
+        index=True,
+    )
+    user = db.Column("user", db.String(128), default="display")
+    result = db.Column("result", db.String(512))
+    reason = db.Column("reason", db.String(512))
+
+    def __repr__(self):
+        return f"<< Tracelog: {self.id} / {self.url_hash}"
