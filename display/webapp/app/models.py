@@ -3,8 +3,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from display.webapp.run import db
 
-__all__ = ["users", "groups", "groupmembers"]
-
 
 class users(UserMixin, db.Model):
     __tablename__ = "users"
