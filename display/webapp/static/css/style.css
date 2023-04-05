@@ -415,7 +415,7 @@ div.float-right.user-details div.dropdown.show div.dropdown-menu.show {
 }
 
 #display-tracelog {
-  width: 100%;
+    width: 100%;
 }
 
 .dataTables_wrapper .dataTable thead .sorting::after {
@@ -425,4 +425,61 @@ div.float-right.user-details div.dropdown.show div.dropdown-menu.show {
 
 .dataTables_wrapper .dataTable thead .sorting::before {
   line-height: 1.5;
+}
+
+div.dataTables_paginate {
+  font-size: 12px;
+}
+
+div#display-tracelog_paginate.dataTables_paginate.paging_simple_numbers {
+  margin-top: 10px;
+}
+
+.paginate_button {
+
+}
+
+.page-link {
+  background-color: #2a3038;
+  color: white;
+  border: 1px solid #424548;
+}
+
+.page-link:focus {
+  box-shadow: 0 0 0 0.2rem rgba(111, 135, 162, 0.25);
+}
+
+.page-link:hover {
+  color: #373737;
+}
+
+.page-item.active .page-link {
+  background-color: #717171;
+  border: 1px solid #424548;
+}
+
+.page-item.disabled .page-link {
+  background-color: #202228;
+  color: #6c757d;
+  border: 1px solid #424548;
+}
+
+.dataTables_info {
+  color: #6c757d;
+}
+
+div#display-tracelog_wrapper.dataTables_wrapper.dt-bootstrap5.no-footer div.row {
+  margin-right: 0 ;
+  margin-left: 0;
+}
+
+.dt-row {
+  max-height: 65vh;
+  overflow: scroll;
+}
+
+table#display-tracelog.table.table-striped.table-dark.dataTable.no-footer thead tr th {
+  position: sticky;
+  top: 0px;  /* 0px if you don't have a navbar, but something is required */
+  background: #212529;
 }
