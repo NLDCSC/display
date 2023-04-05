@@ -138,10 +138,11 @@ function SetAllEventListeners() {
     });
 
     $("#display-filter")[0].addEventListener("click", SetDisplayFilter)
+    $("#btn_close")[0].addEventListener("click", CloseDisplayFilter)
 
     $("#node-status")[0].addEventListener("click", OpenNodeStatus)
 
-    $("#btn_close")[0].addEventListener("click", CloseDisplayFilter)
+    $("#tracelog")[0].addEventListener("click", OpenTracelog)
 
     let CheckBoxes = DOMRegex(/^cb\_/)
 
@@ -261,7 +262,7 @@ function SetDisplayFilter() {
         })
     });
 
-    $("#popup1").show()
+    $("#popup-filter").show()
 }
 
 function OpenNodeStatus(){
@@ -270,11 +271,17 @@ function OpenNodeStatus(){
         url: BasePath + "status/nodes",
     })
         .done(function( data ) {
-            $("#popup2").html(data)
+            $("#popup-node").html(data)
             $("#btn_close2")[0].addEventListener("click", CloseNodeStatus)
-            $("#popup2").show()
+            $("#popup-node").show()
         });
 
+}
+
+function OpenTracelog() {
+    $("#btn_close3")[0].addEventListener("click", CloseTracelog)
+    $('#display-tracelog').DataTable();
+    $("#popup-tracelog").show()
 }
 
 function SetTabVisibility(el) {
@@ -465,7 +472,11 @@ function SetTabContentFilter(tab_value = null) {
 }
 
 function CloseNodeStatus() {
-    $("#popup2").hide()
+    $("#popup-node").hide()
+}
+
+function CloseTracelog() {
+    $("#popup-tracelog").hide()
 }
 
 function CloseDisplayFilter() {
@@ -478,7 +489,7 @@ function CloseDisplayFilter() {
         check_visible[0].click()
     }
 
-    $("#popup1").hide()
+    $("#popup-filter").hide()
 }
 
 function ReEnableDisplayFilter() {
@@ -497,8 +508,9 @@ function SetKeyDownEvents() {
     $(document).keydown(function (event) {
         if (event.keyCode === 27) {
             let modal_sel = $('#the-modal')
-            let popup_sel = $('#popup1')
-            let popup_stat = $('#popup2')
+            let popup_sel = $('#popup-filter')
+            let popup_stat = $('#popup-node')
+            let popup_trace = $('#popup-tracelog')
             if (modal_sel.is(":visible")) {
                 modal_sel.hide();
             }
@@ -507,6 +519,9 @@ function SetKeyDownEvents() {
             }
             if (popup_stat.is(":visible")) {
                 CloseNodeStatus();
+            }
+            if (popup_trace.is(":visible")) {
+                CloseTracelog();
             }
         }
     });

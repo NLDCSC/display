@@ -251,7 +251,7 @@ div[id^="actions_"] {
 
 #tab-selector{
   position: absolute;
-  left: 415px;
+  left: 460px;
 }
 
 div.dropdown-multicol2{
@@ -318,7 +318,7 @@ div#pills-tabContent.tab-content {
 
 #tab-rotate {
   position: absolute;
-  left: 335px;
+  left: 380px;
   top: -2px;
 }
 
@@ -401,14 +401,6 @@ div#pills-tabContent.tab-content {
   color: white;
 }
 
-.set-white {
-  color: white;
-}
-
-.set-white:hover {
-  color: #575555;
-}
-
 div.float-right.user-details div.dropdown.show div.dropdown-menu.show a.dropdown-item:hover {
   font-weight: bolder;
   color: white
@@ -420,4 +412,17 @@ div.float-right.user-details div.dropdown.show div.dropdown-menu.show {
 
 .user-details {
   margin-right: 15px;
+}
+
+#display-tracelog {
+  width: 100%;
+}
+
+.dataTables_wrapper .dataTable thead .sorting::after {
+  right: 0.8rem;
+  line-height: 1.5;
+}
+
+.dataTables_wrapper .dataTable thead .sorting::before {
+  line-height: 1.5;
 }
