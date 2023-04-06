@@ -230,7 +230,7 @@ class ScreenShotHandler(object):
                         TraceLog.insert(
                             {
                                 "url": self.get_url_by_hash(each),
-                                "url_hash": each,
+                                "hash": each,
                                 "action": tracelog_action.STATE_CHANGE,
                                 "result": tracelog_result.CHANGED,
                             }
@@ -246,7 +246,7 @@ class ScreenShotHandler(object):
                         TraceLog.insert(
                             {
                                 "url": self.get_url_by_hash(each),
-                                "url_hash": each,
+                                "hash": each,
                                 "action": tracelog_action.STATE_CHANGE,
                                 "result": tracelog_result.NOT_CHANGED,
                             }
@@ -273,7 +273,7 @@ class ScreenShotHandler(object):
             TraceLog.insert(
                 {
                     "url": self.get_url_by_hash(the_hash),
-                    "url_hash": the_hash,
+                    "hash": the_hash,
                     "action": tracelog_action.STATE_CHANGE,
                     "result": tracelog_result.CHANGED,
                 }
@@ -289,7 +289,7 @@ class ScreenShotHandler(object):
             TraceLog.insert(
                 {
                     "url": self.get_url_by_hash(the_hash),
-                    "url_hash": the_hash,
+                    "hash": the_hash,
                     "action": tracelog_action.STATE_CHANGE,
                     "result": tracelog_result.NOT_CHANGED,
                 }

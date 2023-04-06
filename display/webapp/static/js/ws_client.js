@@ -280,7 +280,80 @@ function OpenNodeStatus(){
 
 function OpenTracelog() {
     $("#btn_close3")[0].addEventListener("click", CloseTracelog)
-    $('#display-tracelog').DataTable();
+    let dataTable = $('#display-tracelog')
+    dataTable.DataTable().clear().destroy();
+    dataTable.DataTable({
+        "processing": true,
+        "serverSide": true,
+        "ajax": {
+            "url": "/fetch_log_data",
+            "type": "POST"
+        },
+        "columns": [
+            {"data": "url", "name": "URL"},
+            {"data": "hash", "name": "Hash"},
+            {"data": "timestamp", "name": "Timestamp"},
+            {"data": "action", "name": "Action", className: "table_center_text",
+                render: function (data, type, row) {
+
+                    let action = row["action"]
+
+                    if (action === "SCREENSHOT") {
+                        return '<span class="badge badge-screenshot logging_badges">' + action + '</span>'
+                    } else if (action === "STATE CHANGE") {
+                        return '<span class="badge badge-statechange logging_badges">' + action + '</span>'
+                    } else if (action === "OD SCREENSHOT") {
+                        return '<span class="badge badge-odscreenshot logging_badges">' + action + '</span>'
+                    } else if (action === "EVIDENCE") {
+                        return '<span class="badge badge-evidence logging_badges">' + action + '</span>'
+                    } else {
+                        return action
+                    }
+
+                }
+            },
+            {"data": "user", "name": "User"},
+            {"data": "result", "name": "Result", className: "table_center_text",
+                render: function (data, type, row) {
+
+                    let result = row["result"]
+
+                    if (result === "ERROR") {
+                        return '<span class="badge badge-danger logging_badges">' + result + '</span>'
+                    } else if (result === "SUCCESS"){
+                        return '<span class="badge badge-success logging_badges">' + result + '</span>'
+                    } else if (result === "NOT_CHANGED"){
+                        return '<span class="badge badge-info logging_badges">' + result + '</span>'
+                    } else if (result === "CHANGED"){
+                        return '<span class="badge badge-warning logging_badges">' + result + '</span>'
+                    } else if (result === "UNKNOWN"){
+                        return '<span class="badge badge-warning logging_badges">' + result + '</span>'
+                    } else {
+                        return '<span class="badge badge-requested logging_badges">' + result + '</span>'
+                    }
+
+                }
+            },
+            {
+                "data": "status_code", "name": "Status code", className: "table_center_text",
+                render: function (data, type, row) {
+
+                    let status_code = row["status_code"]
+
+                    if (status_code === 0) {
+                        return ''
+                    } else {
+                        return '<span class="badge badge-statuscode logging_badges">' + status_code + '</span>'
+                    }
+                }
+            },
+            {"data": "reason", "name": "Reason"},
+        ],
+        stateSave: true,
+        "search": {
+            "regex": true
+        }
+    });
     $("#popup-tracelog").show()
 }
 

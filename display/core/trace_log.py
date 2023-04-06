@@ -9,7 +9,9 @@ from display.webapp.config import Config
 
 config = Config()
 
-engine = create_engine(config.SQLALCHEMY_DATABASE_URI, **{"pool_recycle": 299, "pool_timeout": 20})
+engine = create_engine(
+    config.SQLALCHEMY_DATABASE_URI, **{"pool_recycle": 299, "pool_timeout": 20}
+)
 Session = sessionmaker(engine)
 
 

@@ -4,7 +4,13 @@ import logging
 import os
 
 import redis
-from flask import render_template, send_from_directory, current_app, make_response
+from flask import (
+    render_template,
+    send_from_directory,
+    current_app,
+    make_response,
+    request,
+)
 from flask_login import login_required
 
 from display.helpers.app_logger import AppLogger
@@ -16,7 +22,9 @@ from ..helpers.utils.timelines import (
     get_mtime_sorted_timeline_dir_from_hash,
     get_mod_time_from_path,
 )
+from ..run import db
 from ...core.screenshot_handler import ScreenShotHandler
+from ...helpers.server_side_dt import ServerSideDataTable
 
 logging.setLoggerClass(AppLogger)
 
@@ -159,3 +167,17 @@ def download_picture(url_hash, filename):
     response.mimetype = "image/png"
     # return the Response object
     return response
+
+
+@home.post("/fetch_log_data")
+@login_required
+def fetch_nodes_data():
+    ssd = ServerSideDataTable(
+        request=request,
+        backend=db,
+        target_model="tracelog",
+    )
+
+    return_data = ssd.output_result()
+
+    return return_data

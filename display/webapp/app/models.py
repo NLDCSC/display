@@ -1,6 +1,7 @@
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from display.webapp.helpers.utils.times import timestampTOdatetimestring
 from display.webapp.run import db
 
 
@@ -77,8 +78,8 @@ class tracelog(db.Model):
     __tablename__ = "tracelog"
     id = db.Column("id", db.Integer, primary_key=True)
     url = db.Column("url", db.String(512))
-    url_hash = db.Column(
-        "url_hash",
+    hash = db.Column(
+        "hash",
         db.String(12),
         index=True,
     )
@@ -90,15 +91,13 @@ class tracelog(db.Model):
     )
     action = db.Column(
         "action",
-        db.Integer,
-        default=0,
+        db.String(25),
         index=True,
     )
     user = db.Column("user", db.String(128), default="display")
     result = db.Column(
         "result",
-        db.Integer,
-        default=0,
+        db.String(25),
         index=True,
     )
     status_code = db.Column(
@@ -109,5 +108,17 @@ class tracelog(db.Model):
     )
     reason = db.Column("reason", db.String(512))
 
+    def to_data_dict(self):
+        return {
+            "url": self.url,
+            "hash": self.hash,
+            "timestamp": timestampTOdatetimestring(self.timestamp, True),
+            "action": self.action,
+            "user": self.user,
+            "result": self.result,
+            "status_code": self.status_code,
+            "reason": self.reason,
+        }
+
     def __repr__(self):
-        return f"<< Tracelog: {self.id} / {self.url_hash}"
+        return f"<< Tracelog: {self.id} / {self.url_hash} >>"

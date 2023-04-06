@@ -14,8 +14,6 @@ import time
 import uuid
 import redis
 
-from flask_login import current_user
-
 from io import BytesIO
 
 from selenium.common import TimeoutException
@@ -626,10 +624,9 @@ def create_custom_screenshot(data):
     TraceLog.insert(
         {
             "url": sh.get_url_by_hash(data["data"]),
-            "url_hash": data["data"],
+            "hash": data["data"],
             "action": tracelog_action.OD_SCREENSHOT,
             "result": tracelog_result.REQUESTED,
-            "user": current_user.username,
         }
     )
 

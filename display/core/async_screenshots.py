@@ -174,7 +174,7 @@ class AsyncScreenshots(object):
                                         "url": self.screenshotHandler.get_url_by_hash(
                                             k
                                         ),
-                                        "url_hash": k,
+                                        "hash": k,
                                         "action": tracelog_action.SCREENSHOT,
                                         "result": tracelog_result.OK,
                                         "status_code": 200,
@@ -192,7 +192,7 @@ class AsyncScreenshots(object):
                                             "url": self.screenshotHandler.get_url_by_hash(
                                                 k
                                             ),
-                                            "url_hash": k,
+                                            "hash": k,
                                             "action": tracelog_action.SCREENSHOT,
                                             "result": tracelog_result.NOK,
                                             "status_code": the_result["error"],
@@ -212,7 +212,7 @@ class AsyncScreenshots(object):
                                         "url": self.screenshotHandler.get_url_by_hash(
                                             k
                                         ),
-                                        "url_hash": k,
+                                        "hash": k,
                                         "action": tracelog_action.SCREENSHOT,
                                         "result": tracelog_result.OK,
                                         "status_code": 200,
@@ -223,7 +223,7 @@ class AsyncScreenshots(object):
                             TraceLog.insert(
                                 {
                                     "url": self.screenshotHandler.get_url_by_hash(k),
-                                    "url_hash": k,
+                                    "hash": k,
                                     "action": tracelog_action.EVIDENCE,
                                     "result": tracelog_result.OK,
                                     "status_code": 200,
@@ -308,7 +308,7 @@ class AsyncScreenshots(object):
             TraceLog.insert(
                 {
                     "url": entry["url"],
-                    "url_hash": url_hash,
+                    "hash": url_hash,
                     "action": tracelog_action.SCREENSHOT,
                     "result": tracelog_result.UNK,
                     "reason": err,

@@ -137,3 +137,41 @@ hr.ruler {
 #node_status_time {
   color: #6c7293;
 }
+
+.logging_badges {
+  padding: 0.25em 0.4em;
+}
+
+.table_center_text {
+  text-align: center;
+}
+
+.badge-statuscode {
+  background: #506f79;
+  color: #ffffff;
+}
+
+.badge-screenshot {
+  background: #85a86d;
+  color: #ffffff;
+}
+
+.badge-statechange {
+  background: #6c4a39;
+  color: #ffffff;
+}
+
+.badge-requested {
+  background: #3f9599;
+  color: #ffffff;
+}
+
+.badge-evidence {
+  background: #4e3bd2;
+  color: #ffffff;
+}
+
+.badge-odscreenshot {
+  background: #9a1d6b;
+  color: #ffffff;
+}

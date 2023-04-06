@@ -6,6 +6,10 @@ import sre_constants
 from collections import namedtuple, defaultdict
 import re
 
+from sqlalchemy import text, or_
+
+from display.webapp.app.models import tracelog
+
 
 class ServerSideDataTable(object):
     """
@@ -14,14 +18,19 @@ class ServerSideDataTable(object):
     """
 
     def __init__(
-            self,
-            request,
-            backend,
+        self,
+        request,
+        backend,
+        target_model,
     ):
 
         self.request_values = request.values
 
         self.backend = backend
+
+        self.target_model = target_model
+
+        self.models = {"tracelog": tracelog}
 
         self.columns, self.ordering, self.results, self.fields, self.data_length = (
             None,
@@ -61,40 +70,42 @@ class ServerSideDataTable(object):
 
         self.columns, self.ordering = self.__data_columns_ordering()
 
-        # for each in self.ordering:
-        #     if self.ordering[each]["dir"] == "asc":
-        #         self.sort.append(
-        #             (
-        #                 self.columns[self.ordering[each]["column"]]["data"],
-        #                 pymongo.ASCENDING,
-        #             )
-        #         )
-        #     else:
-        #         self.sort.append(
-        #             (
-        #                 self.columns[self.ordering[each]["column"]]["data"],
-        #                 pymongo.DESCENDING,
-        #             )
-        #         )
+        for each in self.ordering:
+            if self.ordering[each]["dir"] == "asc":
+                self.sort.append(
+                    (
+                        self.columns[self.ordering[each]["column"]]["data"],
+                        "asc",
+                    )
+                )
+            else:
+                self.sort.append(
+                    (
+                        self.columns[self.ordering[each]["column"]]["data"],
+                        "desc",
+                    )
+                )
 
         self.fields = defaultdict(int)
 
         for each in self.columns:
             self.fields[self.columns[each]["data"]] = 1
 
-        self.fields["_id"] = self.add_id
-
         if len(self.sort) == 0:
-            self.sort = None
+            self.sort = ""
+        else:
+            self.sort = self.__stringify_sort_list()
 
-        self.total = self.backend.count()
+        self.total = self.models[self.target_model].query.filter().count()
 
         self.filtered = self.__data_filter()
 
         self._fetch_results()
 
         if len(self.filtered) != 0:
-            self.total_filtered = self.backend.count(self.filtered)
+            self.total_filtered = (
+                self.models[self.target_model].query.filter(or_(*self.filtered)).count()
+            )
         else:
             self.total_filtered = self.total
 
@@ -104,13 +115,37 @@ class ServerSideDataTable(object):
         """
         Method responsible for querying the backend and fetching the results from the database
         """
+        if len(self.filtered) != 0:
+            data_objects = (
+                self.models[self.target_model]
+                .query.filter(or_(*self.filtered))
+                .order_by(text(self.sort))
+                .offset(self.data_length.start)
+                .limit(self.data_length.length)
+                .all()
+            )
+        else:
+            data_objects = (
+                self.models[self.target_model]
+                .query.filter()
+                .order_by(text(self.sort))
+                .offset(self.data_length.start)
+                .limit(self.data_length.length)
+                .all()
+            )
 
-        self.results = []
+        self.results = [x.to_data_dict() for x in data_objects]
 
     def _post_fetch_processing(self):
-        if len(self.post_fetch_actions) != 0:
-            for each in self.post_fetch_actions:
-                getattr(self, f"_{each}")()
+        pass
+
+    def __stringify_sort_list(self):
+        ret_list = []
+
+        for each in self.sort:
+            ret_list.append(f"{each[0]} {each[1]}")
+
+        return ",".join(ret_list)
 
     def __data_dimension(self):
         """
@@ -173,60 +208,70 @@ class ServerSideDataTable(object):
         :rtype: dict
         """
 
-        docfilter = defaultdict(list)
+        # docfilter = defaultdict(list)
 
         search_val = self.request_values["search[value]"]
 
+        search_args = []
+
         if search_val != "" and search_val != "$":
 
-            try:
-                regex = re.compile(search_val, re.IGNORECASE)
+            search_args = [
+                getattr(
+                    self.models[self.target_model], self.columns[col]["data"]
+                ).regexp_match(f"{search_val}")
+                for col in self.columns
+                if self.columns[col]["searchable"]
+            ]
 
-                # get list with searchable columns
-                column_search_list = [
-                    self.columns[i]["data"]
-                    for i in self.columns
-                    if self.columns[i]["searchable"]
-                ]
+        return search_args
 
-                for each in column_search_list:
-                    docfilter["$or"].append(
-                        {
-                            "$expr": {
-                                "$regexMatch": {
-                                    "input": {"$toString": f"${each}"},
-                                    "regex": search_val,
-                                }
-                            }
-                        }
-                    )
-            except sre_constants.error:
-                pass
+        # try:
+        #     regex = re.compile(search_val, re.IGNORECASE)
+        #
+        #     # get list with searchable columns
+        #     column_search_list = [
+        #         self.columns[i]["data"]
+        #         for i in self.columns
+        #         if self.columns[i]["searchable"]
+        #     ]
+        #
+        #     for each in column_search_list:
+        #         docfilter["$or"].append(
+        #             {
+        #                 "$expr": {
+        #                     "$regexMatch": {
+        #                         "input": {"$toString": f"${each}"},
+        #                         "regex": search_val,
+        #                     }
+        #                 }
+        #             }
+        #         )
+        # except sre_constants.error:
+        #     pass
 
-        # create an additional column filter with entries in the columns[x]['search']['value']
-
-        colfilter = {
-            self.columns[key]["data"]: self.columns[key]["search"]["value"]
-            for (key, value) in self.columns.items()
-            if (
-                    self.columns[key]["search"]["value"] != ""
-                    and self.columns[key]["search"]["regex"] == "false"
-            )
-        }
-
-        colregexfilter = {
-            self.columns[key]["data"]: {"$regex": self.columns[key]["search"]["value"]}
-            for (key, value) in self.columns.items()
-            if (
-                    self.columns[key]["search"]["value"] != ""
-                    and self.columns[key]["search"]["regex"] == "true"
-            )
-        }
-
-        if len(colfilter) != 0:
-            docfilter["$and"].append(colfilter)
-
-        if len(colregexfilter) != 0:
-            docfilter["$and"].append(colregexfilter)
-
-        return docfilter
+        # # create an additional column filter with entries in the columns[x]['search']['value']
+        #
+        # colfilter = {
+        #     self.columns[key]["data"]: self.columns[key]["search"]["value"]
+        #     for (key, value) in self.columns.items()
+        #     if (
+        #         self.columns[key]["search"]["value"] != ""
+        #         and self.columns[key]["search"]["regex"] == "false"
+        #     )
+        # }
+        #
+        # colregexfilter = {
+        #     self.columns[key]["data"]: {"$regex": self.columns[key]["search"]["value"]}
+        #     for (key, value) in self.columns.items()
+        #     if (
+        #         self.columns[key]["search"]["value"] != ""
+        #         and self.columns[key]["search"]["regex"] == "true"
+        #     )
+        # }
+        #
+        # if len(colfilter) != 0:
+        #     docfilter["$and"].append(colfilter)
+        #
+        # if len(colregexfilter) != 0:
+        #     docfilter["$and"].append(colregexfilter)
