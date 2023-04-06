@@ -291,8 +291,6 @@ function OpenTracelog() {
         },
         "columns": [
             {"data": "url", "name": "URL"},
-            {"data": "hash", "name": "Hash"},
-            {"data": "timestamp", "name": "Timestamp"},
             {"data": "action", "name": "Action", className: "table_center_text",
                 render: function (data, type, row) {
 
@@ -312,6 +310,8 @@ function OpenTracelog() {
 
                 }
             },
+            {"data": "hash", "name": "Hash"},
+            {"data": "timestamp", "name": "Timestamp"},
             {"data": "user", "name": "User"},
             {"data": "result", "name": "Result", className: "table_center_text",
                 render: function (data, type, row) {
@@ -349,7 +349,6 @@ function OpenTracelog() {
             },
             {"data": "reason", "name": "Reason"},
         ],
-        stateSave: true,
         "search": {
             "regex": true
         }
