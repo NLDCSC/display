@@ -181,7 +181,9 @@ class ScreenShotHandler(object):
         if the_hash in self.hash_to_url_mapping:
             return the_hash
         else:
-            raise ValueError("The requested url hash is not a part of the urls in the configuration!")
+            raise ValueError(
+                "The requested url hash is not a part of the urls in the configuration!"
+            )
 
     def get_all_screenshots(self, tab_name):
 

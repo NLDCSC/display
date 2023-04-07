@@ -2,7 +2,7 @@ import base64
 from urllib.parse import urlparse
 
 from flask import request
-from flask_restx import Namespace, Resource, abort, inputs
+from flask_restx import Namespace, Resource, abort
 from werkzeug.exceptions import BadRequestKeyError
 
 from display.celery_app.display_daemon import create_custom_screenshot
@@ -11,7 +11,6 @@ from .models.general import error
 from .models.screenshots import (
     screenshot_data,
     screenshot_create_data,
-    screenshot_request,
 )
 from ..auth.permissions import require_apikey
 
