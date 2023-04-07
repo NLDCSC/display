@@ -20,7 +20,8 @@
 
 #popup-filter,
 #popup-node,
-#popup-tracelog {
+#popup-tracelog,
+#popup-api-key {
   z-index: 1;
 }
 
@@ -54,13 +55,24 @@
   background-color: #1e1e1e;
 }
 
+.popup_api_key {
+  margin: 70px auto;
+  padding: 20px;
+  border-radius: 5px;
+  width: 20%;
+  position: relative;
+  transition: all 5s ease-in-out;
+  background-color: #1e1e1e;
+}
+
 hr.ruler {
   border: 2px solid #484747;
 }
 
 .popup h2,
 .popup_status h2,
-.popup_tracelog h2 {
+.popup_tracelog h2,
+.popup_api_key h2 {
   margin-top: 0;
   color: white;
   font-family: Tahoma, Arial, sans-serif;
@@ -68,7 +80,8 @@ hr.ruler {
 
 .popup .popup-close,
 .popup_status .popup-close,
-.popup_tracelog .popup-close {
+.popup_tracelog .popup-close,
+.popup_api_key .popup-close {
   position: absolute;
   top: 20px;
   right: 30px;
@@ -90,7 +103,8 @@ hr.ruler {
 
 .popup .content,
 .popup_status .content,
-.popup_tracelog .content {
+.popup_tracelog .content,
+.popup_api_key .content {
   height: 50vh;
   overflow-y: auto;
   overflow-x: hidden;
@@ -108,9 +122,9 @@ hr.ruler {
 
 #node_status_table thead,
 #node_status_table tbody tr {
-    display: table;
-    width: 100%;
-    table-layout: fixed;
+  display: table;
+  width: 100%;
+  table-layout: fixed;
 }
 
 #node_status_table thead,
@@ -174,4 +188,17 @@ hr.ruler {
 .badge-odscreenshot {
   background: #9a1d6b;
   color: #ffffff;
+}
+
+.badge-timeline {
+  background: #92cc1b;
+  color: #ffffff;
+}
+
+#gen-api-key {
+  background-color: #000;
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+  font-family: "Lucida Console", "Courier New", monospace;
 }

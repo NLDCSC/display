@@ -50,6 +50,11 @@
                                         <span class="mdi mdi-wikipedia"></span>
                                     </a>
                                 </button>
+                                <button id="api-doc-link" type="button" class="btn btn-outline" title="API Documentation">
+                                    <a href="/api/#" target="_blank">
+                                        <span class="mdi mdi-book-open-variant"></span>
+                                    </a>
+                                </button>
                                 <button id="node-status" type="button" class="btn btn-outline" title="Show Display Node status">
                                     <span class="mdi mdi-monitor-dashboard"></span>
                                 </button>
@@ -74,6 +79,7 @@
                                         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                             <h6 class="dropdown-header">User: {{ current_user.username }}</h6>
                                             <div class="dropdown-divider"></div>
+                                            <button id="api-key-create" class="dropdown-item">(Re)create api key</button>
                                             <a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a>
                                         </div>
                                     </div>

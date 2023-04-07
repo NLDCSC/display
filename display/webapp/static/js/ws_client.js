@@ -144,6 +144,8 @@ function SetAllEventListeners() {
 
     $("#tracelog")[0].addEventListener("click", OpenTracelog)
 
+    $("#api-key-create")[0].addEventListener("click", OpenApiKeyCreate)
+
     let CheckBoxes = DOMRegex(/^cb\_/)
 
     CheckBoxes.forEach(function (elem) {
@@ -278,6 +280,17 @@ function OpenNodeStatus(){
 
 }
 
+function OpenApiKeyCreate() {
+    $.ajax({
+        url: BasePath + "create_api_key",
+    })
+        .done(function( data ) {
+            $("#popup-api-key").html(data)
+            $("#btn_close4")[0].addEventListener("click", CloseApiKey)
+            $("#popup-api-key").show()
+        });
+}
+
 function OpenTracelog() {
     $("#btn_close3")[0].addEventListener("click", CloseTracelog)
     let dataTable = $('#display-tracelog')
@@ -304,6 +317,8 @@ function OpenTracelog() {
                         return '<span class="badge badge-odscreenshot logging_badges">' + action + '</span>'
                     } else if (action === "EVIDENCE") {
                         return '<span class="badge badge-evidence logging_badges">' + action + '</span>'
+                    } else if (action === "TIMELINE") {
+                        return '<span class="badge badge-timeline logging_badges">' + action + '</span>'
                     } else {
                         return action
                     }
@@ -549,6 +564,10 @@ function CloseNodeStatus() {
 
 function CloseTracelog() {
     $("#popup-tracelog").hide()
+}
+
+function CloseApiKey() {
+    $("#popup-api-key").hide()
 }
 
 function CloseDisplayFilter() {

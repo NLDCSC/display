@@ -1,0 +1,12 @@
+<div class="popup_api_key">
+    <h2>Api key:</h2>
+    <button class="popup-close" id="btn_close4">&times;</button>
+    <hr class="ruler">
+    {% if api_key is defined %}
+        <h6>This API key will only be shown once and cannot be viewed again!</h6>
+        <h6>Please store it somewhere safe...</h6>
+        <div id="gen-api-key">{{ api_key }}</div>
+    {% else %}
+        <h6>No API key created, please contact admin...</h6>
+    {% endif %}
+</div>

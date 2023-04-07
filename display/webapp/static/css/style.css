@@ -251,7 +251,7 @@ div[id^="actions_"] {
 
 #tab-selector{
   position: absolute;
-  left: 460px;
+  left: 505px;
 }
 
 div.dropdown-multicol2{
@@ -318,7 +318,7 @@ div#pills-tabContent.tab-content {
 
 #tab-rotate {
   position: absolute;
-  left: 380px;
+  left: 425px;
   top: -2px;
 }
 
@@ -393,15 +393,19 @@ div#pills-tabContent.tab-content {
   border-top: 1px solid #2c2e33;
 }
 
-#gitlab-link a {
+#gitlab-link a,
+#wiki-link a,
+#api-doc-link a {
   color: white;
 }
 
-#wiki-link a {
-  color: white;
+div.float-right.user-details div.dropdown.show div.dropdown-menu.show a.dropdown-item,
+div.float-right.user-details div.dropdown.show div.dropdown-menu.show button.dropdown-item {
+  font-size: 12px;
 }
 
-div.float-right.user-details div.dropdown.show div.dropdown-menu.show a.dropdown-item:hover {
+div.float-right.user-details div.dropdown.show div.dropdown-menu.show a.dropdown-item:hover,
+div.float-right.user-details div.dropdown.show div.dropdown-menu.show button.dropdown-item:hover {
   font-weight: bolder;
   color: white
 }
@@ -433,10 +437,6 @@ div.dataTables_paginate {
 
 div#display-tracelog_paginate.dataTables_paginate.paging_simple_numbers {
   margin-top: 10px;
-}
-
-.paginate_button {
-
 }
 
 .page-link {
