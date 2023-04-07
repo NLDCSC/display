@@ -49,6 +49,9 @@ def create_app(version):
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_recycle": 299, "pool_timeout": 20}
 
+    app.config["SWAGGER_UI_DOC_EXPANSION"] = "list"
+    app.config["RESTX_MASK_SWAGGER"] = False
+
     if not config.DEBUG:
         app.config["SESSION_COOKIE_NAME"] = "display.session"
         app.config["SESSION_COOKIE_SECURE"] = True
@@ -92,7 +95,7 @@ def create_app(version):
 
     app.register_blueprint(auth_blueprint, url_prefix=app.config["WEB_ROOT"])
 
-    from display.webapp.api import api as api_blueprint
+    from display.webapp.api import api_bp as api_blueprint
 
     app.register_blueprint(api_blueprint, url_prefix=f"{app.config['WEB_ROOT']}/api")
 

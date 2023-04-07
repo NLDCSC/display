@@ -627,6 +627,7 @@ def create_custom_screenshot(data):
             "hash": data["data"],
             "action": tracelog_action.OD_SCREENSHOT,
             "result": tracelog_result.REQUESTED,
+            "reason": "User requested to create a custom screenshot",
         }
     )
 
@@ -735,6 +736,16 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
                         config.TIMELINE_LOCATION, each["sc_id"], evidence_filename
                     ),
                 )
+
+            TraceLog.insert(
+                {
+                    "url": sh.get_url_by_hash(each["sc_id"]),
+                    "hash": each["sc_id"],
+                    "action": tracelog_action.TIMELINE,
+                    "result": tracelog_result.OK,
+                    "reason": "Previous state screenshots moved to timeline!",
+                }
+            )
 
     if len(evidence_workload) != 0:
         logger.info(

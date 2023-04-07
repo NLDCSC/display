@@ -176,7 +176,12 @@ class ScreenShotHandler(object):
 
     def get_hash_by_url(self, the_url):
 
-        return hashlib.md5(the_url.encode("utf-8")).hexdigest()[:6]
+        the_hash = hashlib.md5(the_url.encode("utf-8")).hexdigest()[:6]
+
+        if the_hash in self.hash_to_url_mapping:
+            return the_hash
+        else:
+            raise ValueError("The requested url hash is not a part of the urls in the configuration!")
 
     def get_all_screenshots(self, tab_name):
 

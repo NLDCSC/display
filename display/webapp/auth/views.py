@@ -1,10 +1,12 @@
+import time
+
 from flask import render_template, redirect, url_for
 from flask_login import current_user, login_user, login_required, logout_user
 
 from display.webapp.app.models import users
 from . import auth
 from .forms import LoginForm
-from ..run import login_manager, config
+from ..run import login_manager, config, db
 
 
 @login_manager.user_loader
@@ -62,3 +64,23 @@ def logout():
             pass
 
     return redirect(url_for("auth.func_login"))
+
+
+@auth.route("/create_api_key")
+@login_required
+def create_api_key():
+
+    this_user = users.query.filter_by(username=current_user.username).first()
+
+    if this_user is not None:
+
+        this_user.api_key = this_user.create_api_key()
+        this_user.updated = int(time.time())
+
+        db.session.add(this_user)
+        db.session.commit()
+
+        return render_template("partials/api-key.html", api_key=this_user.api_key)
+
+    else:
+        return render_template("partials/api-key.html")

@@ -1,3 +1,6 @@
+import hashlib
+import uuid
+
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -10,6 +13,7 @@ class users(UserMixin, db.Model):
     id = db.Column("id", db.Integer, primary_key=True)
     username = db.Column("username", db.String(128), unique=True)
     password_hash = db.Column("password", db.String(512))
+    api_key = db.Column("api_key", db.String(128))
     created = db.Column("created", db.Integer, default=0)
     updated = db.Column("updated", db.Integer, default=0)
     group_member = db.relationship("groupmembers", backref="user", lazy="joined")
@@ -41,6 +45,13 @@ class users(UserMixin, db.Model):
     def get_user_groups(self):
 
         return [x.group.name for x in self.group_member]
+
+    def create_api_key(self):
+        random_uuid = uuid.uuid4()
+
+        key = hashlib.md5(str(random_uuid).encode("utf-8")).hexdigest()
+
+        return key
 
 
 class groups(db.Model):
