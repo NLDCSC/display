@@ -123,6 +123,9 @@ def timeline(url_hash):
 
     timeline_data = get_timeline_data(url_hash=url_hash)
 
+    # cap the timeline_data to the first 1000 items
+    timeline_data = timeline_data[:1000]
+
     return render_template("pages/timeline.html", header="Display", **locals())
 
 
