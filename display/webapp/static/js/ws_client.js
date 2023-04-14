@@ -480,7 +480,7 @@ function JustifyTabContent(tab_hash) {
 
     active_rows.each(function (val) {
 
-        console.log("================================================================ STARTING ACTIVE ROW LOOP ================================================================")
+        // console.log("================================================================ STARTING ACTIVE ROW LOOP ================================================================")
 
         let el = $("#" + active_rows[val].id)
         let row_number = parseInt(el[0].attributes['data-row-number'].nodeValue)
@@ -517,8 +517,8 @@ function JustifyTabContent(tab_hash) {
                         // console.log("current_row: " + el.children(':visible').length)
                         // console.log("next_row.length: " + next_row.length)
 
-                        console.log("next_row: " + next_row.children(':visible').length)
-                        console.log("next_row_id: " + next_row.attr('id'))
+                        // console.log("next_row: " + next_row.children(':visible').length)
+                        // console.log("next_row_id: " + next_row.attr('id'))
 
                         try {
                             // console.log("ADDING")
