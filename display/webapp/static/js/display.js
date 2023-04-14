@@ -51,5 +51,8 @@ function getColumnCount(){
 
 function resizeEnd() {
   // console.log("Current bootstrap breakpoint:" + getBootstrapBreakpoint())
-  SetTabContentFilter();
+  let check_visible = $('button[id^="tab_"]:visible').filter(".active")
+
+  let data_hash = check_visible[0].attributes['data-hash'].nodeValue
+  JustifyTabContent(data_hash);
 }

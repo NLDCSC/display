@@ -74,7 +74,7 @@ $(document).ready(function () {
 
             }
 
-            SetTabContentFilter();
+            JustifyTabContent(msg["tab_hash"]);
 
             $("#tab_change_loading").hide()
             tab_content.removeClass("grey_out")
@@ -150,7 +150,7 @@ $(document).ready(function () {
             }
 
             if (msg["last_element"]) {
-                SetTabContentFilter();
+                JustifyTabContent(msg["tab_hash"]);
 
                 $("#tab_change_loading").hide()
                 tab_content.removeClass("grey_out")
@@ -197,7 +197,7 @@ $(document).ready(function () {
 
         SetDisplayFilter()
 
-        SetTabContentFilter();
+        JustifyTabContent(msg["tab"]);
 
         if (tab_select.length) {
             tab_select.click();
