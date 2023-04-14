@@ -26,3 +26,30 @@ function showMessage(msg_type, message) {
     title: "&nbsp;&nbsp;" + message,
   });
 }
+
+function getBootstrapBreakpoint(){
+  var w = $(document).innerWidth();
+  return (w < 576) ? 'xs' : ((w < 768) ? 'sm' : ((w < 992) ? 'md' : ((w < 1200) ? 'lg' : 'xlg')));
+}
+
+function getColumnCount(){
+
+  var breakpoint = getBootstrapBreakpoint();
+
+  if (breakpoint === "xs") {
+    return 1
+  } else if (breakpoint === "sm") {
+    return 2
+  } else if (breakpoint === "md") {
+    return 3
+  } else if (breakpoint === "lg") {
+    return 4
+  } else {
+    return 6
+  }
+}
+
+function resizeEnd() {
+  // console.log("Current bootstrap breakpoint:" + getBootstrapBreakpoint())
+  SetTabContentFilter();
+}

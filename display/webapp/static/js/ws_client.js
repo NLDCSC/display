@@ -355,42 +355,86 @@ function SetTabContentFilter(tab_value = null) {
                                 el_parent.hide()
                             }
                         })
-                        // distribute the remaining visible items evenly over the rows (6 per row)
+                        // distribute the remaining visible items evenly over the rows (depending on screen size)
+
+                        // Check how many items are in the current tab, add additional rows if column count
+                        // requires it
+                        let column_count = getColumnCount()
+
+                        let numItems = $('div[id^=item_' + tab_hash +']').length
+
+                        let row_count_needed = Math.floor(numItems / column_count )
+
+                        let active_rows_count = $('div[id^=row_' + tab_hash +']').length
+
+                        if (active_rows_count < row_count_needed) {
+                            for (let i = 1; i <= row_count_needed; i++) {
+                                let node = $("#row_" + tab_hash + "_" + i)
+                                if (Object.keys(node).length === 0) {
+                                    // clone the first row
+                                    let next_row = $("#row_" + tab_hash + "_1").clone()
+                                    // clear children
+                                    next_row.empty();
+                                    // set new id and attrs
+                                    next_row.attr('data-row-number', i);
+                                    next_row[0].id = "row_" + tab_hash + "_" + i
+                                    // append this row to the parent
+                                    parent_node = $("#content_" + tab_hash)
+
+                                    next_row.appendTo(parent_node);
+                                }
+                            }
+
+                        }
 
                         let active_rows = $('div[id^=row_' + tab_hash +']')
+
+                        // console.log("Rows needed: " + row_count_needed)
 
                         active_rows.each(function (val) {
                             let el = $("#" + active_rows[val].id)
                             let row_number = el[0].attributes['data-row-number'].nodeValue
-                            if(el.children(':visible').length === 6) {
+
+                            if(el.children(':visible').length === column_count) {
                                 return true;
                             } else {
                                 // fetch next row
                                 let next_row = $("#row_" + tab_hash + "_" + (parseInt(row_number) + 1))
 
-                                while (el.children(':visible').length !== 6){
+                                // console.log(next_row)
 
-                                    if (next_row.length !== 0) {
+                                while (el.children(':visible').length !== column_count){
 
-                                        // console.log("next_row: " + next_row.children(':visible').length)
-                                        // console.log("next_row_id: " + next_row.attr('id'))
+                                    if (el.children(':visible').length > column_count) {
+                                        $("#" + el[0].lastElementChild.id).prependTo(next_row);
+                                        next_row.show();
+                                        // console.log("Adding to next row...")
+                                    } else {
+                                        // console.log("current_row: " + el.children(':visible').length)
 
-                                        try {
-                                            $("#" + next_row[0].firstElementChild.id).appendTo(el);
-                                            if (next_row.children(':visible').length === 0) {
-                                                next_row.hide()
+                                        if (next_row.length !== 0) {
+
+                                            // console.log("next_row: " + next_row.children(':visible').length)
+                                            // console.log("next_row_id: " + next_row.attr('id'))
+
+                                            try {
+                                                $("#" + next_row[0].firstElementChild.id).appendTo(el);
+                                                if (next_row.children(':visible').length === 0) {
+                                                    next_row.hide()
+                                                }
+                                            } catch (error) {
+                                                break;
                                             }
-                                        } catch (error) {
+                                        } else if (next_row.length === 0) {
+                                            break;
+                                        } else {
+                                            // this row is empty, so hide the row...
+                                            el.hide()
                                             break;
                                         }
-                                    } else if (next_row.length === 0) {
-                                        break;
-                                    } else {
-                                        // this row is empty, so hide the row...
-                                        el.hide()
-                                        break;
                                     }
                                 }
+                                // console.log("current_row reached configured length: " + el.children(':visible').length)
                             }
                         })
                     }
@@ -405,6 +449,8 @@ function SetTabContentFilter(tab_value = null) {
     } else {
         let filtered_contents = get_items.filter('div[id*=' + tab_value +']:hidden')
 
+        let column_count = getColumnCount()
+
         if (filtered_contents.length !== 0){
             filtered_contents.each(function (item_id){
                 let el = $("#" + filtered_contents[item_id].id)
@@ -414,7 +460,7 @@ function SetTabContentFilter(tab_value = null) {
                     el_parent.show()
                 }
             })
-            // distribute the remaining visible items evenly over the rows (6 per row)
+            // distribute the remaining visible items evenly over the rows (depending on screen size)
             let check_visible = $('button[id^="tab_"]:visible')
 
             check_visible.each(function (elem) {
@@ -425,16 +471,18 @@ function SetTabContentFilter(tab_value = null) {
 
                     let active_rows = $('div[id^=row_' + tab_hash +']')
 
+                    console.log("Active rows length" + active_rows.length)
+
                     active_rows.each(function (val) {
                         let el = $("#" + active_rows[val].id)
                         let row_number = el[0].attributes['data-row-number'].nodeValue
-                        if(el.children(':visible').length === 6) {
+                        if(el.children(':visible').length === column_count) {
                             return true;
-                        } else if(el.children(':visible').length > 6) {
+                        } else if(el.children(':visible').length > column_count) {
                             // fetch next row
                             let next_row = $("#row_" + tab_hash + "_" + (parseInt(row_number) + 1))
 
-                            while (el.children(':visible').length > 6){
+                            while (el.children(':visible').length > column_count){
 
                                 if (next_row.length === 0) {
                                     next_row.show()
