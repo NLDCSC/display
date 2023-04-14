@@ -190,7 +190,8 @@ function SetDisplayFilter() {
     });
 
     get_list_cookie("display-tab-filter").forEach(function (value) {
-        $("#cbtab_" + value).prop('checked', false)
+        $("#cbtab_tar_" + value).prop('checked', false)
+        $("#cbtab_head_" + value).prop('checked', false)
     })
 
     $("#check_all_tar").click(function () {
