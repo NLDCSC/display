@@ -55,4 +55,5 @@ function resizeEnd() {
 
   let data_hash = check_visible[0].attributes['data-hash'].nodeValue
   JustifyTabContent(data_hash);
+  $('.img-wrap').show();
 }

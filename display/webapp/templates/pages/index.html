@@ -108,6 +108,7 @@
 
         });
         $(window).resize(function() {
+            $('.img-wrap').hide();
             if(this.resizeTO) clearTimeout(this.resizeTO);
             this.resizeTO = setTimeout(function() {
                 $(this).trigger('resizeEnd');

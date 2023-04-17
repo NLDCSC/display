@@ -480,7 +480,7 @@ function JustifyTabContent(tab_hash) {
 
     active_rows.each(function (val) {
 
-        // console.log("================================================================ STARTING ACTIVE ROW LOOP ================================================================")
+        // console.log("================= STARTING ACTIVE ROW LOOP ===========================")
 
         let el = $("#" + active_rows[val].id)
         let row_number = parseInt(el[0].attributes['data-row-number'].nodeValue)
