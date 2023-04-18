@@ -1,3 +1,18 @@
+/*// X-Small devices (portrait phones, less than 576px)*/
+/*@media (max-width: 575.98px) { ... }*/
+
+/*// Small devices (landscape phones, less than 768px)*/
+/*@media (max-width: 767.98px) { ... }*/
+
+/*// Medium devices (tablets, less than 992px)*/
+/*@media (max-width: 991.98px) { ... }*/
+
+/*// Large devices (desktops, less than 1200px)*/
+/*@media (max-width: 1199.98px) { ... }*/
+
+/*// X-Large devices (large desktops, less than 1400px)*/
+/*@media (max-width: 1399.98px) { ... }*/
+
 .main-panel {
   padding-top: 0;
 }
@@ -25,7 +40,8 @@
   height: 100%;
 }
 
-.img-wrap {
+.img-wrap,
+.template_img-wrap {
   width: 100%;
   height: 100%;
 }
@@ -45,6 +61,12 @@
 .green-src {
   border: solid;
   color: #08a707;
+  border-width: 4px;
+}
+
+.grey-src {
+  border: solid;
+  color: #535453;
   border-width: 4px;
 }
 
@@ -82,6 +104,12 @@
   font-size: small;
   transition: all 1.5s ease-out;
 }
+@media (min-width: 1200px) and (max-width: 1250px) {
+  .mod-time {
+    font-size: 11px;
+    padding-top: 3px;
+  }
+}
 
 .nav-tabs .nav-link {
   background: #000;
@@ -103,6 +131,36 @@
   font-size: 10px;
   margin-right: 15px;
   margin-bottom: 5px;
+}
+
+@media (max-width: 768px) {
+  .con-details {
+    display: none;
+  }
+
+  #gitlab-link {
+    display: none;
+  }
+
+  #wiki-link {
+    display: none;
+  }
+
+  #node-status {
+    display: none;
+  }
+
+  #tab-rotate {
+    left: 190px !important;
+  }
+
+  #tab-selector {
+    left: 260px !important;
+  }
+
+  #con_status {
+    margin-bottom: 20px;
+  }
 }
 
 .conn-pads {
@@ -202,6 +260,26 @@ div[id^="actions_"] {
 
 .timeline {
   right: 116px;
+}
+
+@media (min-width: 1200px) and (max-width: 1250px) {
+  .create-screenshot,
+  .open-url,
+  .download,
+  .timeline  {
+    width: 23px;
+  }
+  .open-url {
+    right: 46px;
+  }
+
+  .download {
+    right: 72px;
+  }
+
+  .timeline {
+    right: 98px;
+  }
 }
 
 .create-screenshot:hover,

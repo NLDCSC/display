@@ -27,6 +27,7 @@
   padding: 20px;
   border-radius: 5px;
   width: 30%;
+  min-width: 500px;
   position: relative;
   transition: all 5s ease-in-out;
   background-color: #1e1e1e;

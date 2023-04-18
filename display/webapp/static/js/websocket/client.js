@@ -107,6 +107,8 @@ $(document).ready(function () {
 
         }
 
+        $('.template-row').hide();
+
         if (cb) {
             cb(client_id = socket.sid, data = msg["tab_hash"]);
         }
