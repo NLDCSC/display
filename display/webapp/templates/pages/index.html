@@ -109,13 +109,21 @@
         });
         $(window).resize(function() {
             $('.img-wrap').hide();
+            $('.template-row').show();
             if(this.resizeTO) clearTimeout(this.resizeTO);
             this.resizeTO = setTimeout(function() {
                 $(this).trigger('resizeEnd');
             }, 500);
+
+            //if(this.resizeCOL) clearTimeout(this.resizeCOL);
+            //this.resizeCOL = setTimeout(function() {
+            //    $(this).trigger('resizeCutColumns');
+            //}, 50);
+            $(this).trigger('resizeCutColumns');
         });
 
         $(window).bind('resizeEnd', resizeEnd);
+        $(window).bind('resizeCutColumns', resizeCutColumns);
         resizeEnd();
 
     </script>

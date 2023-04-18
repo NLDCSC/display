@@ -1,0 +1,18 @@
+<div id="template_row" class="row content-row template-row">
+    {% for row in range(6) %}
+        {% set top_loop = loop.index %}
+        <div id="template_item_{{ loop.index }}" class="img-col col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2">
+            <div class="template_img-wrap">
+                <div>Column {{ loop.index }}<span id="template_mod_time" class="mod-time">never</span>
+                </div>
+                <div id="template_sc" class="display-contents">
+                    <img
+                            id="template_img"
+                            class="img-src grey-src"
+                            src=""
+                    >
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>

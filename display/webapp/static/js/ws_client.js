@@ -355,15 +355,14 @@ function SetTabContentFilter(tab_value = null) {
                                 el_parent.hide()
                             }
                         })
-                        JustifyTabContent(tab_hash)
+                        JustifyTabContent(tab_hash, true)
                     }
                 }
             })
         } else {
-            get_items.each(function (value) {
-                let el = $("#" + get_items[value].id)
-                el.show()
-            })
+            let check_visible = $('button[id^="tab_"]:visible').filter(".active")
+            let tab_hash = check_visible[0].attributes['data-hash'].nodeValue
+            JustifyTabContent(tab_hash)
         }
     } else {
         let filtered_contents = get_items.filter('div[id*=' + tab_value +']:hidden')
@@ -433,7 +432,9 @@ function SetTabContentFilter(tab_value = null) {
     }
 }
 
-function JustifyTabContent(tab_hash) {
+function JustifyTabContent(tab_hash, filtered = false) {
+
+    filter_data = get_list_cookie("display-tab-filter")
 
     // distribute the remaining visible items evenly over the rows (depending on screen size)
 
@@ -496,8 +497,6 @@ function JustifyTabContent(tab_hash) {
         // console.log("column_count: " + column_count)
 
         if(el.children(':visible').length === column_count) {
-            // console.log("FULL ROW")
-            // console.log(el);
             return true;
         } else {
             // fetch next row
@@ -541,6 +540,9 @@ function JustifyTabContent(tab_hash) {
                                     }
                                 }
 
+                            }
+                            if ((filtered && next_row.children(':visible').length === 0) || filter_data.length > 1) {
+                                next_row.hide();
                             }
                             break;
                         }

@@ -74,7 +74,7 @@ $(document).ready(function () {
 
             }
 
-            JustifyTabContent(msg["tab_hash"]);
+            SetTabContentFilter();
 
             $("#tab_change_loading").hide()
             tab_content.removeClass("grey_out")
@@ -106,6 +106,8 @@ $(document).ready(function () {
             SetAllEventListeners();
 
         }
+
+        $('.template-row').hide();
 
         if (cb) {
             cb(client_id = socket.sid, data = msg["tab_hash"]);
@@ -150,7 +152,7 @@ $(document).ready(function () {
             }
 
             if (msg["last_element"]) {
-                JustifyTabContent(msg["tab_hash"]);
+                SetTabContentFilter();
 
                 $("#tab_change_loading").hide()
                 tab_content.removeClass("grey_out")
@@ -197,7 +199,7 @@ $(document).ready(function () {
 
         SetDisplayFilter()
 
-        JustifyTabContent(msg["tab"]);
+        SetTabContentFilter();
 
         if (tab_select.length) {
             tab_select.click();

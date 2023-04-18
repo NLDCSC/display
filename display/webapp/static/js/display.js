@@ -55,5 +55,40 @@ function resizeEnd() {
 
   let data_hash = check_visible[0].attributes['data-hash'].nodeValue
   JustifyTabContent(data_hash);
+  $('.template-row').hide();
   $('.img-wrap').show();
+}
+
+function resizeCutColumns() {
+  // console.log("Adjusting column count...")
+
+  let column_count = getColumnCount()
+
+  console.log(column_count)
+
+  if (column_count !== 6) {
+    let new_i = 6 - (6 - column_count)
+    for (let i = 1; i <= column_count; i++){
+      let my_id = $("#template_item_" + i)
+      // console.log(my_id)
+      my_id.show()
+    }
+    for (let i = 1; i <= (6 - new_i); i++){
+      let my_id = $("#template_item_" + (new_i + i))
+      // console.log(my_id)
+      my_id.hide()
+    }
+  } else {
+    for (let i = 1; i <= 6; i++){
+      let my_id = $("#template_item_" + i)
+      // console.log(my_id)
+      my_id.show()
+    }
+  }
+  // for (let i = new_i; i <= 6; i++){
+  //   let my_id = $("#template_item_" + (6 - i))
+  //   // console.log(my_id)
+  //   my_id.hide()
+  // }
+
 }
