@@ -83,7 +83,7 @@ def _version():
                 return "unknown.version"
     finally:
         try:
-            copy(version_file, os.path.join(_PKG_DIR, "orbit", "webapp", "VERSION"))
+            copy(version_file, os.path.join(_PKG_DIR, "display", "webapp", "VERSION"))
         except FileNotFoundError:
             pass
 
