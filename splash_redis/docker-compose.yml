@@ -12,7 +12,7 @@ services:
     env_file:
       - .env
     ports:
-      - 8050:8050
+      - 0.0.0.0:8050:8050
     networks:
       - frontend
       - backend
@@ -48,6 +48,29 @@ services:
     networks:
       - backend
 
+  mysql:
+    image: display-mysql
+    build:
+      context: .
+      dockerfile: ../.docker/images/mysql/dockerfile-mysql
+    command: --default-authentication-plugin=mysql_native_password
+    hostname: mysql
+    restart: always
+    env_file:
+      - .env
+    security_opt:
+      - seccomp:unconfined
+    volumes:
+      - "../docker_data/mysql_data:/var/lib/mysql"
+    networks:
+      backend:
+        ipv4_address: 172.26.1.5
+
 networks:
   frontend:
   backend:
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "172.26.1.1"
+    ipam:
+      config:
+        - subnet: 172.26.1.0/24

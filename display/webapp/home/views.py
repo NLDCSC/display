@@ -4,7 +4,14 @@ import logging
 import os
 
 import redis
-from flask import render_template, send_from_directory, current_app, make_response
+from flask import (
+    render_template,
+    send_from_directory,
+    current_app,
+    make_response,
+    request,
+)
+from flask_login import login_required
 
 from display.helpers.app_logger import AppLogger
 from . import home
@@ -15,7 +22,9 @@ from ..helpers.utils.timelines import (
     get_mtime_sorted_timeline_dir_from_hash,
     get_mod_time_from_path,
 )
+from ..run import db
 from ...core.screenshot_handler import ScreenShotHandler
+from ...helpers.server_side_dt import ServerSideDataTable
 
 logging.setLoggerClass(AppLogger)
 
@@ -25,6 +34,7 @@ config = Config()
 
 
 @home.route("/")
+@login_required
 def index():
     display_sources = get_display_sources(config.SCREENSHOT_HEADER_TABS)
 
@@ -50,6 +60,7 @@ def index():
 
 
 @home.get("/status/nodes")
+@login_required
 def get_status_nodes():
 
     host, port = config.REDIS_URL.split("//")[1][:-1].split(":")
@@ -69,6 +80,7 @@ def get_status_nodes():
 
 
 @home.route("/screenshot/<path:filename>")
+@login_required
 def get_screenshot(filename):
     try:
         sh = ScreenShotHandler()
@@ -101,6 +113,7 @@ def get_timeline_data(url_hash):
 
 
 @home.route("/timeline/<url_hash>")
+@login_required
 def timeline(url_hash):
     sh = ScreenShotHandler()
 
@@ -117,6 +130,7 @@ def timeline(url_hash):
 
 
 @home.route("/last_screenshot/<path:filename>")
+@login_required
 def get_last_screenshot(filename):
     try:
         data = send_from_directory(
@@ -128,6 +142,7 @@ def get_last_screenshot(filename):
 
 
 @home.route("/timeline/get_picture/<path:url_hash>/<path:filename>")
+@login_required
 def get_timeline_picture(url_hash, filename):
     data = send_from_directory(
         current_app.config["TIMELINE_LOCATION"], f"{url_hash}/{filename}.png"
@@ -136,6 +151,7 @@ def get_timeline_picture(url_hash, filename):
 
 
 @home.route("/timeline/download_picture/<path:url_hash>/<path:filename>")
+@login_required
 def download_picture(url_hash, filename):
 
     sh = ScreenShotHandler()
@@ -154,3 +170,17 @@ def download_picture(url_hash, filename):
     response.mimetype = "image/png"
     # return the Response object
     return response
+
+
+@home.post("/fetch_log_data")
+@login_required
+def fetch_nodes_data():
+    ssd = ServerSideDataTable(
+        request=request,
+        backend=db,
+        target_model="tracelog",
+    )
+
+    return_data = ssd.output_result()
+
+    return return_data

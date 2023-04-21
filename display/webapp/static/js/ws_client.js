@@ -138,10 +138,13 @@ function SetAllEventListeners() {
     });
 
     $("#display-filter")[0].addEventListener("click", SetDisplayFilter)
+    $("#btn_close")[0].addEventListener("click", CloseDisplayFilter)
 
     $("#node-status")[0].addEventListener("click", OpenNodeStatus)
 
-    $("#btn_close")[0].addEventListener("click", CloseDisplayFilter)
+    $("#tracelog")[0].addEventListener("click", OpenTracelog)
+
+    $("#api-key-create")[0].addEventListener("click", OpenApiKeyCreate)
 
     let CheckBoxes = DOMRegex(/^cb\_/)
 
@@ -261,7 +264,7 @@ function SetDisplayFilter() {
         })
     });
 
-    $("#popup1").show()
+    $("#popup-filter").show()
 }
 
 function OpenNodeStatus(){
@@ -270,11 +273,102 @@ function OpenNodeStatus(){
         url: BasePath + "status/nodes",
     })
         .done(function( data ) {
-            $("#popup2").html(data)
+            $("#popup-node").html(data)
             $("#btn_close2")[0].addEventListener("click", CloseNodeStatus)
-            $("#popup2").show()
+            $("#popup-node").show()
         });
 
+}
+
+function OpenApiKeyCreate() {
+    $.ajax({
+        url: BasePath + "create_api_key",
+    })
+        .done(function( data ) {
+            $("#popup-api-key").html(data)
+            $("#btn_close4")[0].addEventListener("click", CloseApiKey)
+            $("#popup-api-key").show()
+        });
+}
+
+function OpenTracelog() {
+    $("#btn_close3")[0].addEventListener("click", CloseTracelog)
+    let dataTable = $('#display-tracelog')
+    dataTable.DataTable().clear().destroy();
+    dataTable.DataTable({
+        "processing": true,
+        "serverSide": true,
+        "ajax": {
+            "url": "/fetch_log_data",
+            "type": "POST"
+        },
+        "columns": [
+            {"data": "url", "name": "URL"},
+            {"data": "action", "name": "Action", className: "table_center_text",
+                render: function (data, type, row) {
+
+                    let action = row["action"]
+
+                    if (action === "SCREENSHOT") {
+                        return '<span class="badge badge-screenshot logging_badges">' + action + '</span>'
+                    } else if (action === "STATE CHANGE") {
+                        return '<span class="badge badge-statechange logging_badges">' + action + '</span>'
+                    } else if (action === "OD SCREENSHOT") {
+                        return '<span class="badge badge-odscreenshot logging_badges">' + action + '</span>'
+                    } else if (action === "EVIDENCE") {
+                        return '<span class="badge badge-evidence logging_badges">' + action + '</span>'
+                    } else if (action === "TIMELINE") {
+                        return '<span class="badge badge-timeline logging_badges">' + action + '</span>'
+                    } else {
+                        return action
+                    }
+
+                }
+            },
+            {"data": "hash", "name": "Hash"},
+            {"data": "timestamp", "name": "Timestamp"},
+            {"data": "user", "name": "User"},
+            {"data": "result", "name": "Result", className: "table_center_text",
+                render: function (data, type, row) {
+
+                    let result = row["result"]
+
+                    if (result === "ERROR") {
+                        return '<span class="badge badge-danger logging_badges">' + result + '</span>'
+                    } else if (result === "SUCCESS"){
+                        return '<span class="badge badge-success logging_badges">' + result + '</span>'
+                    } else if (result === "NOT_CHANGED"){
+                        return '<span class="badge badge-info logging_badges">' + result + '</span>'
+                    } else if (result === "CHANGED"){
+                        return '<span class="badge badge-warning logging_badges">' + result + '</span>'
+                    } else if (result === "UNKNOWN"){
+                        return '<span class="badge badge-warning logging_badges">' + result + '</span>'
+                    } else {
+                        return '<span class="badge badge-requested logging_badges">' + result + '</span>'
+                    }
+
+                }
+            },
+            {
+                "data": "status_code", "name": "Status code", className: "table_center_text",
+                render: function (data, type, row) {
+
+                    let status_code = row["status_code"]
+
+                    if (status_code === 0) {
+                        return ''
+                    } else {
+                        return '<span class="badge badge-statuscode logging_badges">' + status_code + '</span>'
+                    }
+                }
+            },
+            {"data": "reason", "name": "Reason"},
+        ],
+        "search": {
+            "regex": true
+        }
+    });
+    $("#popup-tracelog").show()
 }
 
 function SetTabVisibility(el) {
@@ -355,55 +449,21 @@ function SetTabContentFilter(tab_value = null) {
                                 el_parent.hide()
                             }
                         })
-                        // distribute the remaining visible items evenly over the rows (6 per row)
-
-                        let active_rows = $('div[id^=row_' + tab_hash +']')
-
-                        active_rows.each(function (val) {
-                            let el = $("#" + active_rows[val].id)
-                            let row_number = el[0].attributes['data-row-number'].nodeValue
-                            if(el.children(':visible').length === 6) {
-                                return true;
-                            } else {
-                                // fetch next row
-                                let next_row = $("#row_" + tab_hash + "_" + (parseInt(row_number) + 1))
-
-                                while (el.children(':visible').length !== 6){
-
-                                    if (next_row.length !== 0) {
-
-                                        // console.log("next_row: " + next_row.children(':visible').length)
-                                        // console.log("next_row_id: " + next_row.attr('id'))
-
-                                        try {
-                                            $("#" + next_row[0].firstElementChild.id).appendTo(el);
-                                            if (next_row.children(':visible').length === 0) {
-                                                next_row.hide()
-                                            }
-                                        } catch (error) {
-                                            break;
-                                        }
-                                    } else if (next_row.length === 0) {
-                                        break;
-                                    } else {
-                                        // this row is empty, so hide the row...
-                                        el.hide()
-                                        break;
-                                    }
-                                }
-                            }
-                        })
+                        JustifyTabContent(tab_hash, true)
                     }
                 }
             })
         } else {
-            get_items.each(function (value) {
-                let el = $("#" + get_items[value].id)
-                el.show()
-            })
+            let check_visible = $('button[id^="tab_"]:visible').filter(".active")
+            let tab_hash = check_visible[0].attributes['data-hash'].nodeValue
+            JustifyTabContent(tab_hash)
         }
     } else {
         let filtered_contents = get_items.filter('div[id*=' + tab_value +']:hidden')
+
+        let column_count = getColumnCount()
+
+        console.log("column_count: " + column_count)
 
         if (filtered_contents.length !== 0){
             filtered_contents.each(function (item_id){
@@ -414,7 +474,7 @@ function SetTabContentFilter(tab_value = null) {
                     el_parent.show()
                 }
             })
-            // distribute the remaining visible items evenly over the rows (6 per row)
+            // distribute the remaining visible items evenly over the rows (depending on screen size)
             let check_visible = $('button[id^="tab_"]:visible')
 
             check_visible.each(function (elem) {
@@ -425,16 +485,18 @@ function SetTabContentFilter(tab_value = null) {
 
                     let active_rows = $('div[id^=row_' + tab_hash +']')
 
+                    // console.log("Active rows length: " + active_rows.length)
+
                     active_rows.each(function (val) {
                         let el = $("#" + active_rows[val].id)
                         let row_number = el[0].attributes['data-row-number'].nodeValue
-                        if(el.children(':visible').length === 6) {
+                        if(el.children(':visible').length === column_count) {
                             return true;
-                        } else if(el.children(':visible').length > 6) {
+                        } else if(el.children(':visible').length > column_count) {
                             // fetch next row
                             let next_row = $("#row_" + tab_hash + "_" + (parseInt(row_number) + 1))
 
-                            while (el.children(':visible').length > 6){
+                            while (el.children(':visible').length > column_count){
 
                                 if (next_row.length === 0) {
                                     next_row.show()
@@ -464,8 +526,138 @@ function SetTabContentFilter(tab_value = null) {
     }
 }
 
+function JustifyTabContent(tab_hash, filtered = false) {
+
+    filter_data = get_list_cookie("display-tab-filter")
+
+    // distribute the remaining visible items evenly over the rows (depending on screen size)
+
+    // Check how many items are in the current tab, add additional rows if column count
+    // requires it
+    let column_count= getColumnCount()
+
+    let numItems = $('div[id^=item_' + tab_hash +']').length
+
+    var row_count_needed = Math.ceil(numItems / column_count )
+
+    if (row_count_needed === 0) {
+        // minimal of 1 row needed....
+        row_count_needed = 1
+    }
+
+    let active_rows_count = $('div[id^=row_' + tab_hash +']').length
+
+    // console.log("Rows needed: " + row_count_needed)
+
+    if (active_rows_count !== 0 && active_rows_count < row_count_needed) {
+        for (let i = 1; i <= row_count_needed; i++) {
+            let node = $("#row_" + tab_hash + "_" + i)
+            if (Object.keys(node).length === 0) {
+                // clone the first row
+                let next_row = $("#row_" + tab_hash + "_1").clone()
+                // clear children
+                next_row.empty();
+                // set new id and attrs
+                next_row.attr('data-row-number', i);
+                next_row[0].id = "row_" + tab_hash + "_" + i
+                // append this row to the parent
+                parent_node = $("#content_" + tab_hash)
+
+                next_row.appendTo(parent_node);
+            }
+        }
+
+    }
+
+    let active_rows = $('div[id^=row_' + tab_hash +']')
+
+    // console.log(active_rows)
+
+    active_rows.each(function (val) {
+
+        // console.log("================= STARTING ACTIVE ROW LOOP ===========================")
+
+        let el = $("#" + active_rows[val].id)
+        let row_number = parseInt(el[0].attributes['data-row-number'].nodeValue)
+
+        if (row_number > row_count_needed) {
+            el.remove();
+            return true;
+
+        }
+
+        // console.log(el);
+        // console.log("row_number: " + row_number)
+        // console.log("column_count: " + column_count)
+
+        if(el.children(':visible').length === column_count) {
+            return true;
+        } else {
+            // fetch next row
+            let next_row = $("#row_" + tab_hash + "_" + (row_number + 1))
+            next_row.show();
+            // console.log(next_row)
+
+            if (next_row.length !== 0) {
+
+                while (el.children(':visible').length !== column_count){
+
+                    if (el.children(':visible').length > column_count) {
+                        $("#" + el[0].lastElementChild.id).prependTo(next_row);
+                        next_row.show();
+                        // console.log("Adding to next row...")
+                    } else {
+                        // console.log("current_row: " + el.children(':visible').length)
+                        // console.log("next_row.length: " + next_row.length)
+
+                        // console.log("next_row: " + next_row.children(':visible').length)
+                        // console.log("next_row_id: " + next_row.attr('id'))
+
+                        try {
+                            // console.log("ADDING")
+                            $("#" + next_row[0].firstElementChild.id).appendTo(el);
+                            if (el.children().length !== 0) {
+                                el.show();
+                            }
+                        } catch (error) {
+                            let cycle_rows = row_number
+                            while (cycle_rows <= active_rows_count && el.children(':visible').length !== column_count) {
+                                cycle_rows++
+                                let fetch_next_row = $("#row_" + tab_hash + "_" + cycle_rows)
+
+                                while (fetch_next_row.children().length !== 0 && el.children(':visible').length !== column_count){
+                                    try {
+                                        // console.log("ADDING WHILE LOOP")
+                                        $("#" + fetch_next_row[0].firstElementChild.id).appendTo(el);
+                                    } catch (error){
+                                        break;
+                                    }
+                                }
+
+                            }
+                            if ((filtered && next_row.children(':visible').length === 0) || filter_data.length > 1) {
+                                next_row.hide();
+                            }
+                            break;
+                        }
+                    }
+                }
+                // console.log("current_row reached configured length: " + el.children(':visible').length)
+            }
+        }
+    })
+}
+
 function CloseNodeStatus() {
-    $("#popup2").hide()
+    $("#popup-node").hide()
+}
+
+function CloseTracelog() {
+    $("#popup-tracelog").hide()
+}
+
+function CloseApiKey() {
+    $("#popup-api-key").hide()
 }
 
 function CloseDisplayFilter() {
@@ -478,7 +670,7 @@ function CloseDisplayFilter() {
         check_visible[0].click()
     }
 
-    $("#popup1").hide()
+    $("#popup-filter").hide()
 }
 
 function ReEnableDisplayFilter() {
@@ -497,8 +689,9 @@ function SetKeyDownEvents() {
     $(document).keydown(function (event) {
         if (event.keyCode === 27) {
             let modal_sel = $('#the-modal')
-            let popup_sel = $('#popup1')
-            let popup_stat = $('#popup2')
+            let popup_sel = $('#popup-filter')
+            let popup_stat = $('#popup-node')
+            let popup_trace = $('#popup-tracelog')
             if (modal_sel.is(":visible")) {
                 modal_sel.hide();
             }
@@ -507,6 +700,9 @@ function SetKeyDownEvents() {
             }
             if (popup_stat.is(":visible")) {
                 CloseNodeStatus();
+            }
+            if (popup_trace.is(":visible")) {
+                CloseTracelog();
             }
         }
     });

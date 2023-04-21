@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block head_css %}
+    <link href="{{ url_for('static', filename='css/datatables/dataTables.bootstrap5.min.css') }}" rel="stylesheet"/>
     <link href="{{ url_for('static', filename='css/sweetalert2/bootstrap-4.min.css') }}" rel="stylesheet"/>
     <link href="{{ url_for('static', filename='css/scroll_tabs/jquery.scrolling-tabs.min.css') }}" rel="stylesheet"/>
     <link href="{{ url_for('static', filename='css/modal.min.css') }}" rel="stylesheet"/>
@@ -9,6 +10,9 @@
 {% endblock %}
 
 {% block head_scripts %}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/datatables/jquery.dataTables.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/datatables/dataTables.bootstrap5.min.js') }}"></script>
+
     <script type="text/javascript" src="{{ url_for('static', filename='js/sweetalert2/sweetalert2.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='js/display.min.js') }}"></script>
 
@@ -22,6 +26,7 @@
     <script> const TIME_LIMIT = {{ tab_rotate_timer }}; </script>
 
     <script type="text/javascript" src="{{ url_for('static', filename='js/timer.min.js') }}"></script>
+
 {% endblock %}
 
 {% block body %}
@@ -45,8 +50,16 @@
                                         <span class="mdi mdi-wikipedia"></span>
                                     </a>
                                 </button>
+                                <button id="api-doc-link" type="button" class="btn btn-outline" title="API Documentation">
+                                    <a href="/api/#" target="_blank">
+                                        <span class="mdi mdi-book-open-variant"></span>
+                                    </a>
+                                </button>
                                 <button id="node-status" type="button" class="btn btn-outline" title="Show Display Node status">
                                     <span class="mdi mdi-monitor-dashboard"></span>
+                                </button>
+                                <button id="tracelog" type="button" class="btn btn-outline" title="Show Display Logging">
+                                    <span class="mdi mdi-card-bulleted-settings-outline"></span>
                                 </button>
                                 <button id="tab-rotate" type="button" class="btn btn-outline btn-outline-success btn-outline-danger" title="Enable/disable tab rotation on visible tabs">
                                     <img src="{{ url_for('static', filename='img/tab_rotate.png') }}" alt="tab_rotate">
@@ -58,11 +71,24 @@
                             <div class="float-right">
                                 <span id="con_status"
                                       class="badge badge-danger float-right menu_badge conn-pads">CONN</span>
+                                <div class="float-right user-details">
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <span class="mdi mdi-account-circle"></span>
+                                        </button>
+                                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                            <h6 class="dropdown-header">User: {{ current_user.username }}</h6>
+                                            <div class="dropdown-divider"></div>
+                                            <button id="api-key-create" class="dropdown-item">(Re)create api key</button>
+                                            <a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="app" class="float-right"></div>
                                 <div class="float-right con-details">
                                     <a>Async mode: <b><span id="async_mode">{{ async_mode }}</span></b></a><br/>
                                     <a>Average latency: <b><span id="ping_pong"></span>ms</b></a>
                                 </div>
-                                <div id="app" class="float-right"></div>
                             </div>
                         </div>
                     </div>
@@ -107,5 +133,25 @@
             });
 
         });
+        $(window).resize(function() {
+            $('.img-wrap').hide();
+            $('.template-row').show();
+            if(this.resizeTO) clearTimeout(this.resizeTO);
+            this.resizeTO = setTimeout(function() {
+                $(this).trigger('resizeEnd');
+            }, 500);
+
+            //if(this.resizeCOL) clearTimeout(this.resizeCOL);
+            //this.resizeCOL = setTimeout(function() {
+            //    $(this).trigger('resizeCutColumns');
+            //}, 50);
+            $(this).trigger('resizeCutColumns');
+        });
+
+        $(window).bind('resizeEnd', resizeEnd);
+        $(window).bind('resizeCutColumns', resizeCutColumns);
+        resizeEnd();
+
     </script>
+
 {% endblock %}

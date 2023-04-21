@@ -4,6 +4,7 @@ async_header_collector.py
 """
 import asyncio
 import hashlib
+import json
 import logging
 import os
 import shutil
@@ -13,9 +14,11 @@ from pathlib import Path
 import aiohttp
 
 from display.core.screenshot_handler import ScreenShotHandler
+from display.core.trace_log import TraceLog
 from display.external_apis.splash.splash_api import SplashApi
 from display.helpers.logger_class import HelperLogger
 from display.webapp.config import Config
+from display.webapp.helpers.constants.common import tracelog_action, tracelog_result
 from display.webapp.helpers.utils.sources import get_screenshot_sources
 
 logging.setLoggerClass(HelperLogger)
@@ -87,6 +90,8 @@ class AsyncScreenshots(object):
             protocol="http",
             user_agent=self.config.USER_AGENT,
         )
+
+        self.screenshotHandler = ScreenShotHandler()
 
         self.current_wd = os.path.dirname(os.path.abspath(__file__))
 
@@ -164,9 +169,36 @@ class AsyncScreenshots(object):
                             if v[:4] == b"\x89PNG":
                                 # picture taken; process
                                 self.store_normal_picture(k, v)
+                                TraceLog.insert(
+                                    {
+                                        "url": self.screenshotHandler.get_url_by_hash(
+                                            k
+                                        ),
+                                        "hash": k,
+                                        "action": tracelog_action.SCREENSHOT,
+                                        "result": tracelog_result.OK,
+                                        "status_code": 200,
+                                    }
+                                )
                             else:
                                 # no picture assume uncatched error for now!
                                 self.store_error_picture(k)
+
+                                the_result = json.loads(v)
+
+                                if "error" in the_result:
+                                    TraceLog.insert(
+                                        {
+                                            "url": self.screenshotHandler.get_url_by_hash(
+                                                k
+                                            ),
+                                            "hash": k,
+                                            "action": tracelog_action.SCREENSHOT,
+                                            "result": tracelog_result.NOK,
+                                            "status_code": the_result["error"],
+                                            "reason": the_result["description"],
+                                        }
+                                    )
                         elif isinstance(v, str):
                             if v == "ERROR":
                                 # set to error pic
@@ -175,7 +207,29 @@ class AsyncScreenshots(object):
                             # dict with normal and evidence keys
                             if not evidence_shot:
                                 self.store_normal_picture(k, v["normal"])
+                                TraceLog.insert(
+                                    {
+                                        "url": self.screenshotHandler.get_url_by_hash(
+                                            k
+                                        ),
+                                        "hash": k,
+                                        "action": tracelog_action.SCREENSHOT,
+                                        "result": tracelog_result.OK,
+                                        "status_code": 200,
+                                    }
+                                )
                             self.store_evidence_picture(k, v["evidence"])
+
+                            TraceLog.insert(
+                                {
+                                    "url": self.screenshotHandler.get_url_by_hash(k),
+                                    "hash": k,
+                                    "action": tracelog_action.EVIDENCE,
+                                    "result": tracelog_result.OK,
+                                    "status_code": 200,
+                                }
+                            )
+
                         else:
                             # assume it's an error for now
                             self.store_error_picture(k)
@@ -225,7 +279,7 @@ class AsyncScreenshots(object):
         ) as f:
             data = f.read()
 
-        self.logger.warning(f"Setting error picture for {hash}")
+        self.logger.debug(f"Setting error picture for {hash}")
         with open(
             os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}.png"),
             "wb",
@@ -235,8 +289,7 @@ class AsyncScreenshots(object):
         self.minify_current_screenshot(hash=hash)
 
     def minify_current_screenshot(self, hash):
-        sh = ScreenShotHandler()
-        sh.limit_img_size(hash)
+        self.screenshotHandler.limit_img_size(hash)
 
     async def fetch(self, session, entry):
         url_hash = hashlib.md5(entry["url"].encode("utf-8")).hexdigest()[:6]
@@ -251,6 +304,15 @@ class AsyncScreenshots(object):
         except Exception as err:
             self.logger.warning(
                 f"Error getting {entry['url']} data.... Error observed: {err}"
+            )
+            TraceLog.insert(
+                {
+                    "url": entry["url"],
+                    "hash": url_hash,
+                    "action": tracelog_action.SCREENSHOT,
+                    "result": tracelog_result.UNK,
+                    "reason": err,
+                }
             )
             return {url_hash: "ERROR"}
 

@@ -7,7 +7,10 @@ import rfc3339 as rfc3339
 from flask import Flask, render_template, request, g
 from flask_bootstrap import Bootstrap
 from flask_fontawesome import FontAwesome
+from flask_login import LoginManager
+from flask_migrate import Migrate
 from flask_socketio import SocketIO
+from flask_sqlalchemy import SQLAlchemy
 
 from display.helpers.app_logger import AppLogger
 from display.webapp.config import Config
@@ -20,7 +23,16 @@ bootstrap = Bootstrap()
 
 socketio = SocketIO()
 
+login_manager = LoginManager()
+db = SQLAlchemy()
+migrate = Migrate(compare_type=True)
+
 config = Config()
+
+if config.OPENID_LOGIN:
+    from flask_oidc import OpenIDConnect
+
+    oidc = OpenIDConnect()
 
 
 def create_app(version):
@@ -33,6 +45,12 @@ def create_app(version):
     )
 
     app.config["version"] = "{}".format(version)
+
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_recycle": 299, "pool_timeout": 20}
+
+    app.config["SWAGGER_UI_DOC_EXPANSION"] = "list"
+    app.config["RESTX_MASK_SWAGGER"] = False
 
     if not config.DEBUG:
         app.config["SESSION_COOKIE_NAME"] = "display.session"
@@ -57,11 +75,27 @@ def create_app(version):
             app, message_queue=app.config["REDIS_URL"], cors_allowed_origins="*"
         )
 
+    db.init_app(app)
+    migrate.init_app(app, db)
+
+    if config.OPENID_LOGIN:
+        oidc.init_app(app)
+
+    login_manager.init_app(app)
+    login_manager.login_message = "Sorry, login required!"
+    login_manager.login_message_category = "danger"
+    login_manager.login_view = "auth.func_login"
+    login_manager.session_protection = "strong"
+
     from display.webapp.home import home as home_blueprint
 
     app.register_blueprint(home_blueprint, url_prefix=app.config["WEB_ROOT"])
 
-    from display.webapp.api import api as api_blueprint
+    from display.webapp.auth import auth as auth_blueprint
+
+    app.register_blueprint(auth_blueprint, url_prefix=app.config["WEB_ROOT"])
+
+    from display.webapp.api import api_bp as api_blueprint
 
     app.register_blueprint(api_blueprint, url_prefix=f"{app.config['WEB_ROOT']}/api")
 
