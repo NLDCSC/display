@@ -138,10 +138,13 @@ function SetAllEventListeners() {
     });
 
     $("#display-filter")[0].addEventListener("click", SetDisplayFilter)
+    $("#btn_close")[0].addEventListener("click", CloseDisplayFilter)
 
     $("#node-status")[0].addEventListener("click", OpenNodeStatus)
 
-    $("#btn_close")[0].addEventListener("click", CloseDisplayFilter)
+    $("#tracelog")[0].addEventListener("click", OpenTracelog)
+
+    $("#api-key-create")[0].addEventListener("click", OpenApiKeyCreate)
 
     let CheckBoxes = DOMRegex(/^cb\_/)
 
@@ -261,7 +264,7 @@ function SetDisplayFilter() {
         })
     });
 
-    $("#popup1").show()
+    $("#popup-filter").show()
 }
 
 function OpenNodeStatus(){
@@ -270,11 +273,102 @@ function OpenNodeStatus(){
         url: BasePath + "status/nodes",
     })
         .done(function( data ) {
-            $("#popup2").html(data)
+            $("#popup-node").html(data)
             $("#btn_close2")[0].addEventListener("click", CloseNodeStatus)
-            $("#popup2").show()
+            $("#popup-node").show()
         });
 
+}
+
+function OpenApiKeyCreate() {
+    $.ajax({
+        url: BasePath + "create_api_key",
+    })
+        .done(function( data ) {
+            $("#popup-api-key").html(data)
+            $("#btn_close4")[0].addEventListener("click", CloseApiKey)
+            $("#popup-api-key").show()
+        });
+}
+
+function OpenTracelog() {
+    $("#btn_close3")[0].addEventListener("click", CloseTracelog)
+    let dataTable = $('#display-tracelog')
+    dataTable.DataTable().clear().destroy();
+    dataTable.DataTable({
+        "processing": true,
+        "serverSide": true,
+        "ajax": {
+            "url": "/fetch_log_data",
+            "type": "POST"
+        },
+        "columns": [
+            {"data": "url", "name": "URL"},
+            {"data": "action", "name": "Action", className: "table_center_text",
+                render: function (data, type, row) {
+
+                    let action = row["action"]
+
+                    if (action === "SCREENSHOT") {
+                        return '<span class="badge badge-screenshot logging_badges">' + action + '</span>'
+                    } else if (action === "STATE CHANGE") {
+                        return '<span class="badge badge-statechange logging_badges">' + action + '</span>'
+                    } else if (action === "OD SCREENSHOT") {
+                        return '<span class="badge badge-odscreenshot logging_badges">' + action + '</span>'
+                    } else if (action === "EVIDENCE") {
+                        return '<span class="badge badge-evidence logging_badges">' + action + '</span>'
+                    } else if (action === "TIMELINE") {
+                        return '<span class="badge badge-timeline logging_badges">' + action + '</span>'
+                    } else {
+                        return action
+                    }
+
+                }
+            },
+            {"data": "hash", "name": "Hash"},
+            {"data": "timestamp", "name": "Timestamp"},
+            {"data": "user", "name": "User"},
+            {"data": "result", "name": "Result", className: "table_center_text",
+                render: function (data, type, row) {
+
+                    let result = row["result"]
+
+                    if (result === "ERROR") {
+                        return '<span class="badge badge-danger logging_badges">' + result + '</span>'
+                    } else if (result === "SUCCESS"){
+                        return '<span class="badge badge-success logging_badges">' + result + '</span>'
+                    } else if (result === "NOT_CHANGED"){
+                        return '<span class="badge badge-info logging_badges">' + result + '</span>'
+                    } else if (result === "CHANGED"){
+                        return '<span class="badge badge-warning logging_badges">' + result + '</span>'
+                    } else if (result === "UNKNOWN"){
+                        return '<span class="badge badge-warning logging_badges">' + result + '</span>'
+                    } else {
+                        return '<span class="badge badge-requested logging_badges">' + result + '</span>'
+                    }
+
+                }
+            },
+            {
+                "data": "status_code", "name": "Status code", className: "table_center_text",
+                render: function (data, type, row) {
+
+                    let status_code = row["status_code"]
+
+                    if (status_code === 0) {
+                        return ''
+                    } else {
+                        return '<span class="badge badge-statuscode logging_badges">' + status_code + '</span>'
+                    }
+                }
+            },
+            {"data": "reason", "name": "Reason"},
+        ],
+        "search": {
+            "regex": true
+        }
+    });
+    $("#popup-tracelog").show()
 }
 
 function SetTabVisibility(el) {
@@ -555,7 +649,15 @@ function JustifyTabContent(tab_hash, filtered = false) {
 }
 
 function CloseNodeStatus() {
-    $("#popup2").hide()
+    $("#popup-node").hide()
+}
+
+function CloseTracelog() {
+    $("#popup-tracelog").hide()
+}
+
+function CloseApiKey() {
+    $("#popup-api-key").hide()
 }
 
 function CloseDisplayFilter() {
@@ -568,7 +670,7 @@ function CloseDisplayFilter() {
         check_visible[0].click()
     }
 
-    $("#popup1").hide()
+    $("#popup-filter").hide()
 }
 
 function ReEnableDisplayFilter() {
@@ -587,8 +689,9 @@ function SetKeyDownEvents() {
     $(document).keydown(function (event) {
         if (event.keyCode === 27) {
             let modal_sel = $('#the-modal')
-            let popup_sel = $('#popup1')
-            let popup_stat = $('#popup2')
+            let popup_sel = $('#popup-filter')
+            let popup_stat = $('#popup-node')
+            let popup_trace = $('#popup-tracelog')
             if (modal_sel.is(":visible")) {
                 modal_sel.hide();
             }
@@ -597,6 +700,9 @@ function SetKeyDownEvents() {
             }
             if (popup_stat.is(":visible")) {
                 CloseNodeStatus();
+            }
+            if (popup_trace.is(":visible")) {
+                CloseTracelog();
             }
         }
     });

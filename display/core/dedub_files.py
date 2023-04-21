@@ -33,7 +33,7 @@ class DeduplicateFilesInFolder(object):
             for each_path in pool.map(
                 self.check_for_duplicates, self.dir_workload, chunksize=10
             ):
-                self.logger.info(f"Checked duplicates on path: {each_path}")
+                self.logger.debug(f"Checked duplicates on path: {each_path}")
 
     def chunk_reader(self, fobj, chunk_size=1024):
         """Generator that reads a file in chunks of bytes"""

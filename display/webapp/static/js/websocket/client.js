@@ -197,8 +197,6 @@ $(document).ready(function () {
         ReEnableDisplayFilter();
         SetKeyDownEvents();
 
-        SetDisplayFilter()
-
         SetTabContentFilter();
 
         if (tab_select.length) {
