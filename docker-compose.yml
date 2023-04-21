@@ -22,6 +22,8 @@ services:
     build:
       context: .
       dockerfile: .docker/images/flask/dockerfile-flask
+    depends_on:
+      - mysql
     deploy:
       replicas: 2
     restart: always
@@ -39,6 +41,8 @@ services:
     build:
       context: .
       dockerfile: .docker/images/flask/dockerfile-flask
+    depends_on:
+      - mysql
     deploy:
       replicas: 3
     restart: always
@@ -127,8 +131,6 @@ services:
       - PYTHONUNBUFFERED=TRUE
     volumes:
       - "./docker_data/flask:/app/data"
-    expose:
-      - 5671
     networks:
       - backend
 
@@ -146,10 +148,23 @@ services:
       - PYTHONUNBUFFERED=TRUE
     volumes:
       - "./docker_data/flask:/app/data"
-    expose:
-      - 5671
     networks:
       - backend
+
+  mysql:
+    image: display-mysql
+    build:
+      context: .
+      dockerfile: .docker/images/mysql/dockerfile-mysql
+    command: --default-authentication-plugin=mysql_native_password
+    hostname: mysql
+    restart: always
+    env_file:
+      - .env
+    security_opt:
+      - seccomp:unconfined
+    volumes:
+      - "./docker_data/mysql_data:/var/lib/mysql"
 
 networks:
   frontend:

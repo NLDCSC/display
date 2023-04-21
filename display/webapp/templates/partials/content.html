@@ -1,4 +1,4 @@
-<div id="popup1" class="overlay">
+<div id="popup-filter" class="overlay">
     <div class="popup">
         <h2>Display filter settings:</h2>
         <button class="popup-close" id="btn_close">&times;</button>
@@ -109,13 +109,19 @@
                 </div>
             </div>
         </div>
-
-
     </div>
 </div>
 
-<div id="popup2" class="overlay">
+<div id="popup-node" class="overlay">
     {% include "partials/node_status.html" %}
+</div>
+
+<div id="popup-tracelog" class="overlay">
+    {% include "partials/tracelog.html" %}
+</div>
+
+<div id="popup-api-key" class="overlay">
+    {% include "partials/api-key.html" %}
 </div>
 
 <ul class="nav nav-tabs" id="myTab" role="tablist">
@@ -130,6 +136,7 @@
 </ul>
 
 <div class="tab-content" id="myTabContent">
+    {% include "partials/template_row.html" %}
     <div id="tab_change_loading">
         <div class="loading-container">
             <div class="loading"></div>

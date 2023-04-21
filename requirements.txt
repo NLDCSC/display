@@ -6,6 +6,13 @@ gevent-websocket==0.10.1
 eventlet==0.33.3
 Flask-Bootstrap4==4.0.2
 Flask-FontAwesome==0.1.5
+Flask-Migrate==4.0.4
+Flask-WTF==1.1.1
+Flask_SQLAlchemy==3.0.3
+Flask-Login==0.6.2
+Flask-OIDC==1.4.0
+Flask-restx==1.1.0
+itsdangerous==2.0.1
 ansicolors==1.1.8
 python-dotenv==1.0.0
 Jinja2==3.1.2
@@ -22,3 +29,8 @@ setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerabil
 selenium==4.8.3
 kombu==5.2.4
 PyVirtualDisplay==3.0
+Werkzeug==2.2.3
+mysqlclient==2.1.1
+SQLAlchemy==2.0.8
+WTForms==3.0.1
+alembic==1.10.2
