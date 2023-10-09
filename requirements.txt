@@ -21,7 +21,7 @@ aiohttp==3.8.4
 celery[redis]==5.2.7
 numpy==1.24.2
 scikit-image==0.20.0
-opencv-python==4.7.0.72
+opencv-python==4.8.1.78.72
 rfc3339==6.2
 redis==4.5.4
 Pillow==9.5.0
