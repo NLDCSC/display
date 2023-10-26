@@ -29,7 +29,7 @@ setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerabil
 selenium==4.8.3
 kombu==5.2.4
 PyVirtualDisplay==3.0
-Werkzeug==2.2.3
+Werkzeug==3.0.1
 mysqlclient==2.1.1
 SQLAlchemy==2.0.8
 WTForms==3.0.1
