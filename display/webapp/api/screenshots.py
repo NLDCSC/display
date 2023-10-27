@@ -75,7 +75,11 @@ class Screenshots(Resource):
 
     @api.marshal_with(screenshot_create_data, skip_none=True)
     @api.param(
-        "display-url", description="URL to request new screenshot on", _in="formData"
+        "display-url",
+        description="URL to request new screenshot on",
+        example="https://av.baf.27.berylia.org",
+        _in="formData",
+        required=True,
     )
     @require_apikey
     def put(self):
