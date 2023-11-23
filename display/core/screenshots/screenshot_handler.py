@@ -8,9 +8,9 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
-from display.core.trace_log import TraceLog
+from display.core.database_log.db_log import DbLog
+from display.core.general.constants import tracelog_action, tracelog_result
 from display.webapp.config import Config
-from display.webapp.helpers.constants.common import tracelog_action, tracelog_result
 from display.webapp.helpers.utils.screenshots import (
     getB64_screenshot,
     get_mod_time,
@@ -234,7 +234,7 @@ class ScreenShotHandler(object):
                                 "changed": is_changed,
                             }
                         )
-                        TraceLog.insert(
+                        DbLog.insert(
                             {
                                 "url": self.get_url_by_hash(each),
                                 "hash": each,
@@ -250,7 +250,7 @@ class ScreenShotHandler(object):
                                 "changed": is_changed,
                             }
                         )
-                        TraceLog.insert(
+                        DbLog.insert(
                             {
                                 "url": self.get_url_by_hash(each),
                                 "hash": each,
@@ -277,7 +277,7 @@ class ScreenShotHandler(object):
                     "changed": is_changed,
                 }
             )
-            TraceLog.insert(
+            DbLog.insert(
                 {
                     "url": self.get_url_by_hash(the_hash),
                     "hash": the_hash,
@@ -293,7 +293,7 @@ class ScreenShotHandler(object):
                     "changed": is_changed,
                 }
             )
-            TraceLog.insert(
+            DbLog.insert(
                 {
                     "url": self.get_url_by_hash(the_hash),
                     "hash": the_hash,
@@ -335,7 +335,7 @@ class ScreenShotHandler(object):
         drawing = ImageDraw.Draw(photo)
         font = ImageFont.truetype(
             os.path.join(
-                self.current_wd, "../webapp/static/fonts/Roboto/Roboto-Black.ttf"
+                self.current_wd, "../../webapp/static/fonts/Roboto/Roboto-Black.ttf"
             ),
             20,
         )

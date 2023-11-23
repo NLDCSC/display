@@ -5,8 +5,6 @@ from datetime import datetime
 import colors
 import rfc3339 as rfc3339
 from flask import Flask, render_template, request, g
-from flask_bootstrap import Bootstrap
-from flask_fontawesome import FontAwesome
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_socketio import SocketIO
@@ -17,9 +15,6 @@ from display.webapp.config import Config
 from display.webapp.helpers.utils.times import timestampTOdatetimestring
 
 logging.setLoggerClass(AppLogger)
-
-fa = FontAwesome()
-bootstrap = Bootstrap()
 
 socketio = SocketIO()
 
@@ -59,9 +54,6 @@ def create_app(version):
         app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
     app.config.from_object(config)
-
-    fa.init_app(app)
-    bootstrap.init_app(app)
 
     if config.DEBUG:
         socketio.init_app(
@@ -116,6 +108,13 @@ def create_app(version):
             return timestampTOdatetimestring(ts)
 
         return dict(TSToDatetime=TSToDatetime)
+
+    @app.errorhandler(403)
+    def page_not_found(error):
+        return (
+            render_template("errors/403.html", header="Forbidden", error=True),
+            403,
+        )
 
     @app.errorhandler(404)
     def page_not_found(error):

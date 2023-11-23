@@ -7,7 +7,7 @@ from flask_socketio import emit, disconnect, join_room, leave_room, call
 from socketio.exceptions import TimeoutError as SocketIOTimeOutError
 
 from display.celery_app.display_daemon import create_custom_screenshot
-from display.core.screenshot_handler import ScreenShotHandler
+from display.core.screenshots.screenshot_handler import ScreenShotHandler
 from display.helpers.client_pool import ClientPool
 from display.helpers.logger_class import HelperLogger
 from display.objects.client_connection import ClientConnection

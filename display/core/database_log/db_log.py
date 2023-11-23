@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from display.errors.trace_log_errors import ValidationError
-from display.webapp.app.models import tracelog
+from display.webapp.app.models import Tracelog
 from display.webapp.config import Config
 
 config = Config()
@@ -15,7 +15,7 @@ engine = create_engine(
 Session = sessionmaker(engine)
 
 
-class TraceLog(object):
+class DbLog(object):
     """
     The TraceLog class is the class that handles the logging of all actions and results into the backend database.
     """
@@ -25,8 +25,8 @@ class TraceLog(object):
 
         with Session.begin() as session:
             try:
-                if TraceLog.validate(entry=entry):
-                    new_entry = tracelog(**entry, timestamp=int(time.time()))
+                if DbLog.validate(entry=entry):
+                    new_entry = Tracelog(**entry, timestamp=int(time.time()))
                     session.add(new_entry)
             except ValidationError:
                 raise
@@ -37,8 +37,8 @@ class TraceLog(object):
         with Session.begin() as session:
             for entry in entries:
                 try:
-                    if TraceLog.validate(entry=entry):
-                        new_entry = tracelog(**entry, timestamp=int(time.time()))
+                    if DbLog.validate(entry=entry):
+                        new_entry = Tracelog(**entry, timestamp=int(time.time()))
 
                         session.add(new_entry)
                 except ValidationError:
@@ -51,7 +51,7 @@ class TraceLog(object):
 
         key_list = [
             x
-            for x in tracelog().__dir__()
+            for x in Tracelog().__dir__()
             if not x.startswith("_")
             and not x.startswith("query")
             and x not in excluded_entries

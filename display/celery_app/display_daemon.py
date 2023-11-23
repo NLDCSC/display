@@ -1,4 +1,11 @@
+import contextlib
+
+from celery.backends.database import SessionManager
 from dotenv import load_dotenv
+
+from display.core.database_log.db_log import DbLog
+from display.core.general.constants import tracelog_action, tracelog_result
+from display.webapp.app.models import Tracelog
 
 load_dotenv(".env")
 
@@ -28,13 +35,11 @@ from celery.signals import task_prerun, after_setup_task_logger, after_setup_log
 from celery.utils.log import get_task_logger
 from flask_socketio import SocketIO
 
-from display.core.trace_log import TraceLog
-from display.webapp.helpers.constants.common import tracelog_action, tracelog_result
-from display.core.screenshot_handler import ScreenShotHandler
-from display.core.dedub_files import DeduplicateFilesInFolder
+from display.core.screenshots.screenshot_handler import ScreenShotHandler
+from display.core.files.dedub_files import DeduplicateFilesInFolder
 from display.helpers.app_logger import AppLogger
 from display.webapp.config import Config
-from display.core.async_screenshots import AsyncScreenshots
+from display.core.screenshots.async_screenshots import AsyncScreenshots
 from display.webapp.helpers.utils.sources import (
     get_display_sources,
     get_display_source_chunk,
@@ -120,6 +125,25 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(60.0, delete_duplicate_timeline_entries.s())
     sender.add_periodic_task(60.0, store_node_status.s())
     sender.add_periodic_task(1800.0, delete_old_timeline_screenshots.s())
+    sender.add_periodic_task(86400.0, delete_old_log_entries.s())
+
+
+@contextlib.contextmanager
+def get_db_session():
+    session_logger = logging.getLogger(__name__)
+
+    session_manager = SessionManager()
+    engine, Session = session_manager.create_session(config.SQLALCHEMY_DATABASE_URI)
+    session = Session()
+
+    try:
+        yield session
+    except Exception as err:
+        session_logger.warning(f"Error inserting data into database: {err}")
+        session_logger.exception(err)
+        session.rollback()
+    finally:
+        session.close()
 
 
 @app.task(
@@ -621,7 +645,7 @@ def create_custom_screenshot(data):
 
     display_sources = {sh.get_tab_by_hash(data["data"])[0]: [url_data]}
 
-    TraceLog.insert(
+    DbLog.insert(
         {
             "url": sh.get_url_by_hash(data["data"]),
             "hash": data["data"],
@@ -737,7 +761,7 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
                     ),
                 )
 
-            TraceLog.insert(
+            DbLog.insert(
                 {
                     "url": sh.get_url_by_hash(each["sc_id"]),
                     "hash": each["sc_id"],
@@ -789,6 +813,30 @@ def delete_duplicate_timeline_entries():
     ddf.execute()
 
     logger.info("Done with deduplication of timeline folders")
+
+
+@app.task(
+    ignore_result=True,
+)
+def delete_old_log_entries():
+    logger = get_task_logger(__name__)
+
+    logger.info("Starting check for removing old log lines from the database")
+
+    with get_db_session() as db:
+        # calculate delta in seconds;
+        time_delta = config.LOG_PURGE_TIME * 24 * 60 * 60
+
+        all_logs = (
+            db.query(Tracelog)
+            .filter(Tracelog.timestamp <= (int(time.time()) - time_delta))
+            .delete()
+        )
+        db.commit()
+
+        logger.info(f"Deleted {all_logs} log lines!")
+
+    logger.info("Done checking old log lines!")
 
 
 @app.task(

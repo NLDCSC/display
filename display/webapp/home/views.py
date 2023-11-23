@@ -13,6 +13,7 @@ from flask import (
 )
 from flask_login import login_required
 
+from display.core.screenshots.screenshot_handler import ScreenShotHandler
 from display.helpers.app_logger import AppLogger
 from . import home
 from ..config import Config
@@ -23,7 +24,6 @@ from ..helpers.utils.timelines import (
     get_mod_time_from_path,
 )
 from ..run import db
-from ...core.screenshot_handler import ScreenShotHandler
 from ...helpers.server_side_dt import ServerSideDataTable
 
 logging.setLoggerClass(AppLogger)

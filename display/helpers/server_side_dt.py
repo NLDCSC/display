@@ -7,7 +7,7 @@ from collections import namedtuple, defaultdict
 
 from sqlalchemy import text, or_
 
-from display.webapp.app.models import tracelog
+from display.webapp.app.models import Tracelog
 
 
 class ServerSideDataTable(object):
@@ -29,7 +29,7 @@ class ServerSideDataTable(object):
 
         self.target_model = target_model
 
-        self.models = {"tracelog": tracelog}
+        self.models = {"tracelog": Tracelog}
 
         self.columns, self.ordering, self.results, self.fields, self.data_length = (
             None,

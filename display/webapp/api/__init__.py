@@ -2,10 +2,9 @@ from flask import Blueprint
 from flask_restx import Api
 
 from set_version import VERSION
-from .screenshots import api as screenshots_api
-
 from .models.general import models as gen_models
 from .models.screenshots import models as scr_models
+from .screenshots import api as screenshots_api
 
 namespaces = [screenshots_api]
 

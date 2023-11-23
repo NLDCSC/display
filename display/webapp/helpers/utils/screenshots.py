@@ -3,7 +3,7 @@ import os
 
 import cv2
 
-from display.core.compare_screenshots import CompareScreenshots
+from display.core.screenshots.compare_screenshots import CompareScreenshots
 from display.webapp.config import Config
 from display.webapp.helpers.utils.times import timestampTOdatetimestring
 
