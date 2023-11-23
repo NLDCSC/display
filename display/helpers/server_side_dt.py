@@ -2,9 +2,8 @@
 server_side_dt.py
 ================
 """
-import sre_constants
-from collections import namedtuple, defaultdict
 import re
+from collections import namedtuple, defaultdict
 
 from sqlalchemy import text, or_
 
