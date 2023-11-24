@@ -90,6 +90,12 @@ def get_screenshot(filename):
         data = send_from_directory(
             current_app.config["SCREENSHOT_LOCATION"], f"{filename}_ts.png"
         )
+        # set filename to include BT
+        filename_data = data.headers.get("Content-Disposition")
+        filename_data = filename_data.replace(
+            filename, f"{filename}_{'_'.join(sh.get_tab_by_hash(filename))}"
+        )
+        data.headers.set("Content-Disposition", filename_data)
         return data
     except Exception:
         return send_from_directory(current_app.static_folder, "img/noScreenShot.png")
@@ -166,7 +172,9 @@ def download_picture(url_hash, filename):
 
     # forming a Response object with Headers to return from flask
     response = make_response(data.getvalue())
-    response.headers["Content-Disposition"] = f'attachment; filename="{filename}.png"'
+    response.headers[
+        "Content-Disposition"
+    ] = f'attachment; filename="{filename}_{"_".join(sh.get_tab_by_hash(the_hash=url_hash))}.png"'
     response.mimetype = "image/png"
     # return the Response object
     return response
