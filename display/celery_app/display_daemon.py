@@ -61,6 +61,7 @@ app = Celery(
     task_time_limit=900,
     task_default_queue="default",
     task_queues=(Queue("default"), Queue("nodes", routing_key="nodes")),
+    broker_connection_retry_on_startup=True,
     result_expires=300,
 )
 
