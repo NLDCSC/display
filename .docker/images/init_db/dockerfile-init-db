@@ -20,4 +20,7 @@ RUN rm ./install.sh
 COPY ./.docker/files/init_db/init.sh .
 RUN sed -i -e 's/\r$//' ./init.sh
 
-CMD ["./init.sh"]
+COPY ./.docker/files/init_db/wait-for-it.sh .
+RUN sed -i -e 's/\r$//' ./wait-for-it.sh
+
+CMD ["./wait-for-it.sh", "mysql:3306", "--", "./init.sh"]
