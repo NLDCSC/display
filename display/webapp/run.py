@@ -77,6 +77,7 @@ def create_app(version):
     login_manager.login_message = "Sorry, login required!"
     login_manager.login_message_category = "danger"
     login_manager.login_view = "auth.func_login"
+    login_manager.session_protection = "strong"
 
     from display.webapp.home import home as home_blueprint
 
