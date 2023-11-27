@@ -23,7 +23,7 @@ services:
       context: .
       dockerfile: .docker/images/flask/dockerfile-flask
     depends_on:
-      init-db:
+      init_db:
         condition: service_completed_successfully
     deploy:
       replicas: 2
@@ -43,7 +43,7 @@ services:
       context: .
       dockerfile: .docker/images/flask/dockerfile-flask
     depends_on:
-      init-db:
+      init_db:
         condition: service_completed_successfully
     deploy:
       replicas: 3
