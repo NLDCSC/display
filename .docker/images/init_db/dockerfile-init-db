@@ -1,0 +1,23 @@
+FROM python:3.10.12
+
+COPY . /app
+WORKDIR /app
+
+#RUN apt-get update
+#RUN apt-get -y install python3-dev python3-pip
+
+RUN pip install --upgrade pip
+
+RUN pip install -r requirements.txt
+
+COPY ./.docker/files/flask/install.sh .
+RUN sed -i -e 's/\r$//' ./install.sh
+
+RUN ./install.sh
+
+RUN rm ./install.sh
+
+COPY ./.docker/files/init_db/init.sh .
+RUN sed -i -e 's/\r$//' ./init.sh
+
+CMD ["init.sh"]
