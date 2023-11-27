@@ -175,7 +175,6 @@ services:
       dockerfile: .docker/images/init_db/dockerfile-init-db
     depends_on:
       - mysql
-    restart: always
     env_file:
       - .env
     environment:
