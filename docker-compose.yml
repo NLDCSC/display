@@ -23,7 +23,8 @@ services:
       context: .
       dockerfile: .docker/images/flask/dockerfile-flask
     depends_on:
-      - mysql
+      init-db:
+        condition: service_completed_successfully
     deploy:
       replicas: 2
     restart: always
@@ -42,7 +43,8 @@ services:
       context: .
       dockerfile: .docker/images/flask/dockerfile-flask
     depends_on:
-      - mysql
+      init-db:
+        condition: service_completed_successfully
     deploy:
       replicas: 3
     restart: always
@@ -165,6 +167,23 @@ services:
       - seccomp:unconfined
     volumes:
       - "./docker_data/mysql_data:/var/lib/mysql"
+
+  init_db:
+    image: display-init_db
+    build:
+      context: .
+      dockerfile: .docker/images/init_db/dockerfile-init-db
+    depends_on:
+      - mysql
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=TRUE
+    volumes:
+      - "./docker_data/flask:/app/data"
+    networks:
+      - backend
 
 networks:
   frontend:
