@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FILE=/data/INIT_COMPLETED
+FILE=/app/data/INIT_COMPLETED
 
 if [ -f "$FILE" ]; then
   echo "INIT Already performed, exiting!"
