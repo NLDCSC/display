@@ -20,4 +20,4 @@ RUN rm ./install.sh
 COPY ./.docker/files/init_db/init.sh .
 RUN sed -i -e 's/\r$//' ./init.sh
 
-CMD ["bash", "init.sh"]
+CMD ["./init.sh"]
