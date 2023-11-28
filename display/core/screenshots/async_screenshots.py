@@ -205,7 +205,35 @@ class AsyncScreenshots(object):
                                 self.store_error_picture(k)
                         elif isinstance(v, dict):
                             # dict with normal and evidence keys
-                            if not evidence_shot:
+                            if evidence_shot:
+                                # self.store_normal_picture(k, v["normal"])
+                                # DbLog.insert(
+                                #     {
+                                #         "url": self.screenshotHandler.get_url_by_hash(
+                                #             k
+                                #         ),
+                                #         "hash": k,
+                                #         "action": tracelog_action.SCREENSHOT,
+                                #         "result": tracelog_result.OK,
+                                #         "status_code": 200,
+                                #     }
+                                # )
+
+                                self.store_evidence_picture(k, v["evidence"])
+                                DbLog.insert(
+                                    {
+                                        "url": self.screenshotHandler.get_url_by_hash(
+                                            k
+                                        ),
+                                        "hash": k,
+                                        "action": tracelog_action.EVIDENCE,
+                                        "result": tracelog_result.OK,
+                                        "status_code": 200,
+                                    }
+                                )
+
+                            # dict with normal key
+                            else:
                                 self.store_normal_picture(k, v["normal"])
                                 DbLog.insert(
                                     {
@@ -218,24 +246,13 @@ class AsyncScreenshots(object):
                                         "status_code": 200,
                                     }
                                 )
-                            self.store_evidence_picture(k, v["evidence"])
-
-                            DbLog.insert(
-                                {
-                                    "url": self.screenshotHandler.get_url_by_hash(k),
-                                    "hash": k,
-                                    "action": tracelog_action.EVIDENCE,
-                                    "result": tracelog_result.OK,
-                                    "status_code": 200,
-                                }
-                            )
 
                         else:
                             # assume it's an error for now
                             self.store_error_picture(k)
 
             except Exception as err:
-                self.logger.error(f"Error processing {each}, Error produced --> {err}")
+                self.logger.error(f"Error processing {k}, Error produced --> {err}")
                 continue
 
     def store_normal_picture(self, hash, value):
