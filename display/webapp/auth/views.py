@@ -36,6 +36,11 @@ def func_login():
         account = Users.query.filter_by(username=form.username.data).first()
 
         if account and account.verify_password(form.password.data):
+            account.last_login = int(time.time())
+
+            db.session.add(account)
+            db.session.commit()
+
             login_user(account)
 
             return redirect(url_for("home.index"))

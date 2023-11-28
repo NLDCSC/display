@@ -53,7 +53,13 @@ def oidc_login():
 
     if account:
         # password validation is done by oidc; just log the user in
+        account.last_login = int(time.time())
+
+        db.session.add(account)
+        db.session.commit()
+
         login_user(account)
+
         return redirect(url_for("home.index"))
     else:
         # nobody found; create user account; set keycloak rights and groups and log the user in
@@ -67,6 +73,7 @@ def oidc_login():
         new_user.password = generate_random_password()
 
         new_user.created = int(time.time())
+        new_user.last_login = int(time.time())
 
         db.session.add(new_user)
         db.session.commit()
