@@ -76,7 +76,7 @@ class Config(object):
     LOG_FILE_PATH = os.getenv("LOG_FILE_PATH", "/app/data/logs/")
     LOG_FILE_NAME = os.getenv("LOG_FILE_NAME", "display.log")
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
-    LOG_PURGE_TIME = int(os.getenv("LOG_PURGE_TIME", 60))  # in minutes
+    LOG_PURGE_TIME = int(os.getenv("LOG_PURGE_TIME", 120))  # in minutes
 
     SYSLOG_ENABLE = getenv_bool("SYSLOG_ENABLE", "False")
     SYSLOG_SERVER = os.getenv("SYSLOG_SERVER", "172.16.1.1")

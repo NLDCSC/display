@@ -124,7 +124,7 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(60.0, delete_duplicate_timeline_entries.s())
     sender.add_periodic_task(60.0, store_node_status.s())
     sender.add_periodic_task(1800.0, delete_old_timeline_screenshots.s())
-    sender.add_periodic_task(86400.0, delete_old_log_entries.s())
+    sender.add_periodic_task(1800.0, delete_old_log_entries.s())
 
 
 @contextlib.contextmanager
