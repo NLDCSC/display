@@ -304,6 +304,7 @@ function OpenTracelog() {
             "type": "POST"
         },
         "columns": [
+            {"data": "timestamp", "name": "Timestamp"},
             {"data": "url", "name": "URL"},
             {"data": "action", "name": "Action", className: "table_center_text",
                 render: function (data, type, row) {
@@ -327,7 +328,6 @@ function OpenTracelog() {
                 }
             },
             {"data": "hash", "name": "Hash"},
-            {"data": "timestamp", "name": "Timestamp"},
             {"data": "user", "name": "User"},
             {"data": "result", "name": "Result", className: "table_center_text",
                 render: function (data, type, row) {
@@ -367,7 +367,8 @@ function OpenTracelog() {
         ],
         "search": {
             "regex": true
-        }
+        },
+        "order": [[0, 'desc'], [1, 'asc']],
     });
     $("#popup-tracelog").show()
 }
