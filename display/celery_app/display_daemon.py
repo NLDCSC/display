@@ -180,8 +180,9 @@ def guard_config():
     if former_hash != current_hash:
         logger.info("Configs are different, broadcasting client reloads...")
         socketio.emit(
-            "config_change", {"data": "reload"}, broadcast=True, namespace="/display"
+            "config_change", {"data": "reload"}, namespace="/display"
         )
+        logger.info("Broadcast send!")
     else:
         logger.info("Configs match!")
 
