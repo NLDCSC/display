@@ -154,7 +154,7 @@ class AsyncScreenshots(object):
                             os.mkdir(self.config.TIMELINE_LOCATION)
 
                         if not os.path.exists(
-                            os.path.join(self.config.SCREENSHOT_LOCATION, f"{k}.png")
+                                os.path.join(self.config.SCREENSHOT_LOCATION, f"{k}.png")
                         ):
                             self.logger.info(
                                 f"Creating {os.path.join(self.config.SCREENSHOT_LOCATION, f'{k}.png')}"
@@ -205,35 +205,7 @@ class AsyncScreenshots(object):
                                 self.store_error_picture(k)
                         elif isinstance(v, dict):
                             # dict with normal and evidence keys
-                            if evidence_shot:
-                                # self.store_normal_picture(k, v["normal"])
-                                # DbLog.insert(
-                                #     {
-                                #         "url": self.screenshotHandler.get_url_by_hash(
-                                #             k
-                                #         ),
-                                #         "hash": k,
-                                #         "action": tracelog_action.SCREENSHOT,
-                                #         "result": tracelog_result.OK,
-                                #         "status_code": 200,
-                                #     }
-                                # )
-
-                                self.store_evidence_picture(k, v["evidence"])
-                                DbLog.insert(
-                                    {
-                                        "url": self.screenshotHandler.get_url_by_hash(
-                                            k
-                                        ),
-                                        "hash": k,
-                                        "action": tracelog_action.EVIDENCE,
-                                        "result": tracelog_result.OK,
-                                        "status_code": 200,
-                                    }
-                                )
-
-                            # dict with normal key
-                            else:
+                            if not evidence_shot:
                                 self.store_normal_picture(k, v["normal"])
                                 DbLog.insert(
                                     {
@@ -247,9 +219,33 @@ class AsyncScreenshots(object):
                                     }
                                 )
 
+                            self.store_evidence_picture(k, v["evidence"])
+                            DbLog.insert(
+                                {
+                                    "url": self.screenshotHandler.get_url_by_hash(
+                                        k
+                                    ),
+                                    "hash": k,
+                                    "action": tracelog_action.EVIDENCE,
+                                    "result": tracelog_result.OK,
+                                    "status_code": 200,
+                                }
+                            )
+
                         else:
                             # assume it's an error for now
                             self.store_error_picture(k)
+                            DbLog.insert(
+                                {
+                                    "url": self.screenshotHandler.get_url_by_hash(
+                                        k
+                                    ),
+                                    "hash": k,
+                                    "action": tracelog_action.SCREENSHOT,
+                                    "result": tracelog_result.NOK,
+                                    "status_code": "?",
+                                }
+                            )
 
             except Exception as err:
                 self.logger.error(f"Error processing {k}, Error produced --> {err}")
@@ -265,8 +261,8 @@ class AsyncScreenshots(object):
 
         self.logger.info(f"Setting screenshot picture for {hash}")
         with open(
-            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}.png"),
-            "wb",
+                os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}.png"),
+                "wb",
         ) as f:
             f.write(value)
 
@@ -276,8 +272,8 @@ class AsyncScreenshots(object):
 
         self.logger.info(f"Setting evidence picture for {hash}")
         with open(
-            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}_eve.png"),
-            "wb",
+                os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}_eve.png"),
+                "wb",
         ) as f:
             f.write(value)
 
@@ -291,15 +287,15 @@ class AsyncScreenshots(object):
 
         # retrieve bin data
         with open(
-            os.path.join(self.current_wd, "../../webapp/static/img/noScreenShot.png"),
-            "rb",
+                os.path.join(self.current_wd, "../../webapp/static/img/noScreenShot.png"),
+                "rb",
         ) as f:
             data = f.read()
 
         self.logger.debug(f"Setting error picture for {hash}")
         with open(
-            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}.png"),
-            "wb",
+                os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}.png"),
+                "wb",
         ) as f:
             f.write(data)
 
@@ -312,9 +308,9 @@ class AsyncScreenshots(object):
         url_hash = hashlib.md5(entry["url"].encode("utf-8")).hexdigest()[:6]
         try:
             async with session.get(
-                self.splash_api.get_render_url(
-                    entry["url"], entry["wait"], entry["timeout"]
-                )
+                    self.splash_api.get_render_url(
+                        entry["url"], entry["wait"], entry["timeout"]
+                    )
             ) as response:
                 data = await response.content.read()
                 return {url_hash: data}
@@ -337,12 +333,12 @@ class AsyncScreenshots(object):
         sem = asyncio.Semaphore(100)
         async with sem:
             async with aiohttp.ClientSession(
-                loop=loop,
-                headers=self.headers,
-                connector=aiohttp.TCPConnector(verify_ssl=False),
-                timeout=aiohttp.ClientTimeout(
-                    total=30.0, sock_connect=30.0, sock_read=30.0, connect=30.0
-                ),
+                    loop=loop,
+                    headers=self.headers,
+                    connector=aiohttp.TCPConnector(verify_ssl=False),
+                    timeout=aiohttp.ClientTimeout(
+                        total=30.0, sock_connect=30.0, sock_read=30.0, connect=30.0
+                    ),
             ) as session:
                 results = await asyncio.gather(
                     *[self.fetch(session, entry) for entry in self.workload],
