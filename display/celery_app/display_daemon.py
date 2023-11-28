@@ -1,14 +1,8 @@
-import contextlib
-
-from celery.backends.database import SessionManager
 from dotenv import load_dotenv
-
-from display.core.database_log.db_log import DbLog
-from display.core.general.constants import tracelog_action, tracelog_result
-from display.webapp.app.models import Tracelog
 
 load_dotenv(".env")
 
+import contextlib
 import base64
 import collections
 import hashlib
@@ -34,7 +28,11 @@ from celery.app.log import TaskFormatter
 from celery.signals import task_prerun, after_setup_task_logger, after_setup_logger
 from celery.utils.log import get_task_logger
 from flask_socketio import SocketIO
+from celery.backends.database import SessionManager
 
+from display.core.database_log.db_log import DbLog
+from display.core.general.constants import tracelog_action, tracelog_result
+from display.webapp.app.models import Tracelog
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
 from display.core.files.dedub_files import DeduplicateFilesInFolder
 from display.helpers.app_logger import AppLogger
