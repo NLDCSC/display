@@ -179,9 +179,7 @@ def guard_config():
 
     if former_hash != current_hash:
         logger.info("Configs are different, broadcasting client reloads...")
-        socketio.emit(
-            "config_change", {"data": "reload"}, namespace="/display"
-        )
+        socketio.emit("config_change", {"data": "reload"}, namespace="/display")
         logger.info("Broadcast send!")
     else:
         logger.info("Configs match!")
@@ -332,7 +330,7 @@ def push_to_nodes(workload, evidence_shot=False):
     for each in chunked_list:
         res = execute_on_node.apply_async(
             queue="nodes",
-            kwargs={"entries": each},
+            kwargs={"entries": each, "evidence": evidence_shot},
         )
         task_ids.append(res.id)
 
@@ -413,9 +411,7 @@ def monitoring_nodes_results(data, evidence_shot=False):
                                             room=source,
                                             namespace="/display",
                                         )
-                                    handle_changes_for_timeline.delay(
-                                        data=tab_data, csc=True
-                                    )
+                                    handle_changes_for_timeline.delay(data=tab_data)
                                 except Exception as err:
                                     logger.error(
                                         f"Error processing updates.... --> Produced error: {err}"
@@ -625,6 +621,37 @@ def execute_on_node(entries, scroll_percent=0, evidence=True):
 
         except Exception as err:
             logger.error(f"Error encountered while taking screenshots: {err}")
+
+
+@app.task(
+    autoretry_for=(ConnectionResetError,),
+    retry_kwargs={"max_retries": 3},
+    retry_backoff=60,
+    retry_jitter=False,
+    ignore_result=True,
+)
+def create_custom_evidence_shot(data):
+    logger = get_task_logger(__name__)
+
+    logger.info(f"Starting custom evidence creation on {data}!")
+
+    sh = ScreenShotHandler()
+
+    url_data = [sh.get_data_by_hash(data["data"])]
+
+    DbLog.insert(
+        {
+            "url": sh.get_url_by_hash(data["data"]),
+            "hash": data["data"],
+            "action": tracelog_action.OD_EVIDENCE,
+            "result": tracelog_result.REQUESTED,
+            "reason": "User requested to create a custom evidence shot",
+        }
+    )
+
+    push_to_nodes.delay(url_data, evidence_shot=True)
+
+    logger.info(f"Finished processing custom evidence shot...")
 
 
 @app.task(
