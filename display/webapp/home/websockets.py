@@ -6,7 +6,7 @@ from flask_login import login_required
 from flask_socketio import emit, disconnect, join_room, leave_room, call
 from socketio.exceptions import TimeoutError as SocketIOTimeOutError
 
-from display.celery_app.display_daemon import create_custom_screenshot
+from display.celery_app.display_daemon import create_custom_screenshot, create_custom_evidence
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
 from display.helpers.client_pool import ClientPool
 from display.helpers.logger_class import HelperLogger
@@ -283,6 +283,14 @@ def do_rebuild_request():
     )
 
     logger.info(f"Client details: {req_client.client_details()}")
+
+
+@socketio.on("create_custom_evidence", namespace="/display")
+@login_required
+def do_create_custom_evidence(data):
+    logger.info(f"Client: {request.sid} is creating custom evidence...")
+
+    create_custom_evidence.delay(data=data)
 
 
 @socketio.on("create_custom_screenshot", namespace="/display")

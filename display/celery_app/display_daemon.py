@@ -318,7 +318,7 @@ def make_screenshots(display_sources):
     retry_jitter=False,
     ignore_result=True,
 )
-def push_to_nodes(workload, evidence_shot=False):
+def push_to_nodes(workload, evidence_shot=False, update_timestamp=False):
     logger = get_task_logger(__name__)
 
     logger.info("Pushing screenshots to nodes...")
@@ -338,11 +338,11 @@ def push_to_nodes(workload, evidence_shot=False):
 
     logger.info(f"Task ids: {task_ids}")
 
-    monitoring_nodes_results.delay(task_ids, evidence_shot)
+    monitoring_nodes_results.delay(task_ids, evidence_shot, update_timestamp)
 
 
 @app.task()
-def monitoring_nodes_results(data, evidence_shot=False):
+def monitoring_nodes_results(data, evidence_shot=False, update_timestamp=False):
     logger = get_task_logger(__name__)
 
     logger.info(f"Starting monitoring task ids: {data}")
@@ -391,12 +391,12 @@ def monitoring_nodes_results(data, evidence_shot=False):
 
                         if len(screenshot_list) == 1:
 
-                            if not evidence_shot:
+                            if not evidence_shot or update_timestamp:
                                 sources = sh.get_tab_by_hash(url_hash)
                                 try:
                                     tab_data = (
                                         sh.get_changed_data_from_custom_screenshots(
-                                            the_hash=url_hash
+                                            the_hash=url_hash, evidence_shot=evidence_shot
                                         )
                                     )
                                     for source in sources:
@@ -564,7 +564,7 @@ def execute_on_node(entries, scroll_percent=0):
     retry_jitter=False,
     ignore_result=True,
 )
-def create_custom_evidence_shot(data):
+def create_custom_evidence(data):
     logger = get_task_logger(__name__)
 
     logger.info(f"Starting custom evidence creation on {data}!")
@@ -583,7 +583,7 @@ def create_custom_evidence_shot(data):
         }
     )
 
-    push_to_nodes.delay(url_data, evidence_shot=True)
+    push_to_nodes.delay(url_data, evidence_shot=True, update_timestamp=True)
 
     logger.info(f"Finished processing custom evidence shot...")
 

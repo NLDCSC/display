@@ -262,7 +262,7 @@ class ScreenShotHandler(object):
         except KeyError:
             return ret_data
 
-    def get_changed_data_from_custom_screenshots(self, the_hash):
+    def get_changed_data_from_custom_screenshots(self, the_hash, evidence_shot=False,):
 
         ret_data = []
 
@@ -273,7 +273,7 @@ class ScreenShotHandler(object):
                 {
                     "sc_id": the_hash,
                     "sc_src": getB64_screenshot(the_hash),
-                    "mod_time": get_mod_time(the_hash),
+                    "mod_time": get_mod_time(the_hash, evidence_shot=evidence_shot),
                     "changed": is_changed,
                 }
             )
@@ -289,7 +289,7 @@ class ScreenShotHandler(object):
             ret_data.append(
                 {
                     "sc_id": the_hash,
-                    "mod_time": get_mod_time(the_hash),
+                    "mod_time": get_mod_time(the_hash, evidence_shot=evidence_shot),
                     "changed": is_changed,
                 }
             )

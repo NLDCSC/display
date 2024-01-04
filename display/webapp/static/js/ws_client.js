@@ -22,6 +22,29 @@ function SetAllEventListeners() {
         );
     });
 
+    let elementsCEArray = DOMRegex(/^create\_evidence\_/);
+
+    elementsCEArray.forEach(function (elem) {
+        let my_id = elem.attributes["data-id"].nodeValue;
+        let tab_hash = elem.attributes["data-tab-hash"].nodeValue;
+
+        let target_elem = $("#" + elem.id);
+        let action_elem = $("#actions_" + tab_hash + "_" + my_id);
+
+        target_elem.unbind()
+
+        target_elem.hover(
+            function () {
+                action_elem.show();
+            },
+            function () {
+                action_elem.hide();
+            }
+        );
+
+        elem.addEventListener("click", CreateCustomEvidence);
+    });
+
     let elementsCSArray = DOMRegex(/^create\_screenshot\_/);
 
     elementsCSArray.forEach(function (elem) {
@@ -317,6 +340,8 @@ function OpenTracelog() {
                         return '<span class="badge badge-statechange logging_badges">' + action + '</span>'
                     } else if (action === "OD SCREENSHOT") {
                         return '<span class="badge badge-odscreenshot logging_badges">' + action + '</span>'
+                    } else if (action === "OD EVIDENCE") {
+                        return '<span class="badge badge-odevidence logging_badges">' + action + '</span>'
                     } else if (action === "EVIDENCE") {
                         return '<span class="badge badge-evidence logging_badges">' + action + '</span>'
                     } else if (action === "TIMELINE") {
@@ -752,6 +777,17 @@ function SetTabClick(evt) {
 
     window.socket.emit("change_display_tab", {"tab_name": selected_tab, "tab_hash": tab_hash});
 
+}
+
+function CreateCustomEvidence(evt) {
+    let attrs = evt.target.attributes;
+
+    let screenshot_id = attrs["data-id"].nodeValue;
+    let tab_hash = attrs["data-tab-hash"].nodeValue;
+
+    window.socket.emit("create_custom_evidence", {"data": screenshot_id, "tab-hash": tab_hash});
+
+    showMessage("success", "Create evidence request send!");
 }
 
 function CreateCustomScreenshot(evt) {
