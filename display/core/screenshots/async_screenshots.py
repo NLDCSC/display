@@ -13,12 +13,12 @@ from pathlib import Path
 
 import aiohttp
 
-from display.core.screenshot_handler import ScreenShotHandler
-from display.core.trace_log import TraceLog
+from display.core.database_log.db_log import DbLog
+from display.core.general.constants import tracelog_action, tracelog_result
+from display.core.screenshots.screenshot_handler import ScreenShotHandler
 from display.external_apis.splash.splash_api import SplashApi
 from display.helpers.logger_class import HelperLogger
 from display.webapp.config import Config
-from display.webapp.helpers.constants.common import tracelog_action, tracelog_result
 from display.webapp.helpers.utils.sources import get_screenshot_sources
 
 logging.setLoggerClass(HelperLogger)
@@ -169,7 +169,7 @@ class AsyncScreenshots(object):
                             if v[:4] == b"\x89PNG":
                                 # picture taken; process
                                 self.store_normal_picture(k, v)
-                                TraceLog.insert(
+                                DbLog.insert(
                                     {
                                         "url": self.screenshotHandler.get_url_by_hash(
                                             k
@@ -187,7 +187,7 @@ class AsyncScreenshots(object):
                                 the_result = json.loads(v)
 
                                 if "error" in the_result:
-                                    TraceLog.insert(
+                                    DbLog.insert(
                                         {
                                             "url": self.screenshotHandler.get_url_by_hash(
                                                 k
@@ -207,7 +207,7 @@ class AsyncScreenshots(object):
                             # dict with normal and evidence keys
                             if not evidence_shot:
                                 self.store_normal_picture(k, v["normal"])
-                                TraceLog.insert(
+                                DbLog.insert(
                                     {
                                         "url": self.screenshotHandler.get_url_by_hash(
                                             k
@@ -218,9 +218,9 @@ class AsyncScreenshots(object):
                                         "status_code": 200,
                                     }
                                 )
-                            self.store_evidence_picture(k, v["evidence"])
 
-                            TraceLog.insert(
+                            self.store_evidence_picture(k, v["evidence"])
+                            DbLog.insert(
                                 {
                                     "url": self.screenshotHandler.get_url_by_hash(k),
                                     "hash": k,
@@ -233,9 +233,18 @@ class AsyncScreenshots(object):
                         else:
                             # assume it's an error for now
                             self.store_error_picture(k)
+                            DbLog.insert(
+                                {
+                                    "url": self.screenshotHandler.get_url_by_hash(k),
+                                    "hash": k,
+                                    "action": tracelog_action.SCREENSHOT,
+                                    "result": tracelog_result.NOK,
+                                    "status_code": "?",
+                                }
+                            )
 
             except Exception as err:
-                self.logger.error(f"Error processing {each}, Error produced --> {err}")
+                self.logger.error(f"Error processing {k}, Error produced --> {err}")
                 continue
 
     def store_normal_picture(self, hash, value):
@@ -274,7 +283,7 @@ class AsyncScreenshots(object):
 
         # retrieve bin data
         with open(
-            os.path.join(self.current_wd, "../webapp/static/img/noScreenShot.png"),
+            os.path.join(self.current_wd, "../../webapp/static/img/noScreenShot.png"),
             "rb",
         ) as f:
             data = f.read()
@@ -305,7 +314,7 @@ class AsyncScreenshots(object):
             self.logger.warning(
                 f"Error getting {entry['url']} data.... Error observed: {err}"
             )
-            TraceLog.insert(
+            DbLog.insert(
                 {
                     "url": entry["url"],
                     "hash": url_hash,

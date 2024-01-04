@@ -104,10 +104,35 @@
   font-size: small;
   transition: all 1.5s ease-out;
 }
-@media (min-width: 1200px) and (max-width: 1250px) {
+@media (min-width: 768px) and (max-width: 1199px) {
   .mod-time {
     font-size: 11px;
     padding-top: 3px;
+  }
+}
+@media (min-width: 1200px) and (max-width: 1600px) {
+  .mod-time {
+    font-size: 11px;
+    padding-top: 3px;
+  }
+}
+
+.sc-header {
+  font-size: 1rem;
+}
+@media (min-width: 768px) and (max-width: 1199px) {
+  .sc-header {
+    font-size: 0.8rem;
+  }
+}
+@media (min-width: 1200px) and (max-width: 1400px) {
+  .sc-header {
+    font-size: 0.8rem;
+  }
+}
+@media (min-width: 1401px) and (max-width: 1600px) {
+  .sc-header {
+    font-size: 0.9rem;
   }
 }
 
@@ -131,10 +156,10 @@
   font-size: 10px;
   margin-right: 15px;
   margin-bottom: 5px;
+  min-height: 30px;
 }
-
 @media (max-width: 768px) {
-  .con-details {
+  #tracelog {
     display: none;
   }
 
@@ -160,6 +185,11 @@
 
   #con_status {
     margin-bottom: 20px;
+  }
+}
+@media (max-width: 950px) {
+  .con-details-text {
+    display: none;
   }
 }
 
@@ -235,6 +265,7 @@ div[id^="actions_"] {
   display: none;
 }
 
+.create-evidence,
 .create-screenshot,
 .open-url,
 .download,
@@ -246,42 +277,53 @@ div[id^="actions_"] {
   border-radius: 5px;
 }
 
-.create-screenshot {
+.create-evidence {
   right: 20px;
 }
 
-.open-url {
+.create-screenshot {
   right: 52px;
 }
 
-.download {
+.open-url {
   right: 84px;
 }
 
-.timeline {
+.download {
   right: 116px;
 }
 
-@media (min-width: 1200px) and (max-width: 1250px) {
+.timeline {
+  right: 148px;
+}
+
+@media (min-width: 1200px) and (max-width: 1600px) {
+  .create-evidence,
   .create-screenshot,
   .open-url,
   .download,
   .timeline  {
     width: 23px;
   }
-  .open-url {
+
+  .create-screenshot {
     right: 46px;
   }
 
-  .download {
+  .open-url {
     right: 72px;
   }
 
-  .timeline {
+  .download {
     right: 98px;
+  }
+
+  .timeline {
+    right: 124px;
   }
 }
 
+.create-evidence:hover,
 .create-screenshot:hover,
 .open-url:hover,
 .download:hover,
@@ -497,7 +539,7 @@ div.float-right.user-details div.dropdown.show div.dropdown-menu.show {
 }
 
 #display-tracelog {
-    width: 100%;
+  width: 100%;
 }
 
 .dataTables_wrapper .dataTable thead .sorting::after {

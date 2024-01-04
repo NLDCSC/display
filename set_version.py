@@ -1,7 +1,6 @@
 import os
 import re
 import subprocess  # nosec
-from shutil import copy
 
 _PKG_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -81,11 +80,6 @@ def _version():
                 return "git-archive.dev" + sha1
             else:
                 return "unknown.version"
-    finally:
-        try:
-            copy(version_file, os.path.join(_PKG_DIR, "display", "webapp", "VERSION"))
-        except FileNotFoundError:
-            pass
 
 
 VERSION = __version__ = _version()

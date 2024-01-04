@@ -64,7 +64,7 @@ function resizeCutColumns() {
 
   let column_count = getColumnCount()
 
-  console.log(column_count)
+  //console.log(column_count)
 
   if (column_count !== 6) {
     let new_i = 6 - (6 - column_count)

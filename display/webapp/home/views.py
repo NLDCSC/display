@@ -13,6 +13,7 @@ from flask import (
 )
 from flask_login import login_required
 
+from display.core.screenshots.screenshot_handler import ScreenShotHandler
 from display.helpers.app_logger import AppLogger
 from . import home
 from ..config import Config
@@ -23,7 +24,6 @@ from ..helpers.utils.timelines import (
     get_mod_time_from_path,
 )
 from ..run import db
-from ...core.screenshot_handler import ScreenShotHandler
 from ...helpers.server_side_dt import ServerSideDataTable
 
 logging.setLoggerClass(AppLogger)
@@ -90,6 +90,12 @@ def get_screenshot(filename):
         data = send_from_directory(
             current_app.config["SCREENSHOT_LOCATION"], f"{filename}_ts.png"
         )
+        # set filename to include BT
+        filename_data = data.headers.get("Content-Disposition")
+        filename_data = filename_data.replace(
+            filename, f"{filename}_{'_'.join(sh.get_tab_by_hash(filename))}"
+        )
+        data.headers.set("Content-Disposition", filename_data)
         return data
     except Exception:
         return send_from_directory(current_app.static_folder, "img/noScreenShot.png")
@@ -123,8 +129,8 @@ def timeline(url_hash):
 
     timeline_data = get_timeline_data(url_hash=url_hash)
 
-    # cap the timeline_data to the first 1000 items
-    timeline_data = timeline_data[:1000]
+    # cap the timeline_data to the first 250 items
+    timeline_data = timeline_data[:250]
 
     return render_template("pages/timeline.html", header="Display", **locals())
 
@@ -166,7 +172,9 @@ def download_picture(url_hash, filename):
 
     # forming a Response object with Headers to return from flask
     response = make_response(data.getvalue())
-    response.headers["Content-Disposition"] = f'attachment; filename="{filename}.png"'
+    response.headers[
+        "Content-Disposition"
+    ] = f'attachment; filename="{filename}_{"_".join(sh.get_tab_by_hash(the_hash=url_hash))}.png"'
     response.mimetype = "image/png"
     # return the Response object
     return response

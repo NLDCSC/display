@@ -3,15 +3,21 @@ import time
 from flask import render_template, redirect, url_for
 from flask_login import current_user, login_user, login_required, logout_user
 
-from display.webapp.app.models import users
+from display.webapp.app.models import Users
 from . import auth
 from .forms import LoginForm
 from ..run import login_manager, config, db
+from ...core.general.constants import user_active, user_type
 
 
 @login_manager.user_loader
 def load_user(user_id):
-    user = users.query.filter_by(id=user_id).first()
+    user = (
+        Users.query.filter_by(id=user_id)
+        .filter(Users.active != user_active.DISABLED)
+        .filter(Users.system != user_type.SYSTEM)
+        .first()
+    )
 
     return user
 
@@ -27,9 +33,14 @@ def func_login():
     if form.validate_on_submit():
 
         # Check if account exists
-        account = users.query.filter_by(username=form.username.data).first()
+        account = Users.query.filter_by(username=form.username.data).first()
 
         if account and account.verify_password(form.password.data):
+            account.last_login = int(time.time())
+
+            db.session.add(account)
+            db.session.commit()
+
             login_user(account)
 
             return redirect(url_for("home.index"))
@@ -69,18 +80,17 @@ def logout():
 @auth.route("/create_api_key")
 @login_required
 def create_api_key():
-
-    this_user = users.query.filter_by(username=current_user.username).first()
+    this_user = Users.query.filter_by(username=current_user.username).first()
 
     if this_user is not None:
-
-        this_user.api_key = this_user.create_api_key()
+        the_key = this_user.create_api_key()
+        this_user.apikey = the_key
         this_user.updated = int(time.time())
 
         db.session.add(this_user)
         db.session.commit()
 
-        return render_template("partials/api-key.html", api_key=this_user.api_key)
+        return render_template("partials/api-key.html", api_key=the_key)
 
     else:
         return render_template("partials/api-key.html")

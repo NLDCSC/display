@@ -17,7 +17,7 @@ RUN ./install.sh
 
 RUN rm ./install.sh
 
-EXPOSE 5050
+COPY ./.docker/files/init_db/init.sh .
+RUN sed -i -e 's/\r$//' ./init.sh
 
-CMD ["python3", "prod_run.py"]
-
+CMD ["./init.sh"]

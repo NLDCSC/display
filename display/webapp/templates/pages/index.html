@@ -77,7 +77,7 @@
                                             <span class="mdi mdi-account-circle"></span>
                                         </button>
                                         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                            <h6 class="dropdown-header">User: {{ current_user.username }}</h6>
+                                            <h6 class="dropdown-header">{{ current_user.username }}</h6>
                                             <div class="dropdown-divider"></div>
                                             <button id="api-key-create" class="dropdown-item">(Re)create api key</button>
                                             <a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a>
@@ -86,8 +86,10 @@
                                 </div>
                                 <div id="app" class="float-right"></div>
                                 <div class="float-right con-details">
-                                    <a>Async mode: <b><span id="async_mode">{{ async_mode }}</span></b></a><br/>
-                                    <a>Average latency: <b><span id="ping_pong"></span>ms</b></a>
+                                    <span class="con-details-text">
+                                        <a>Async mode: <b><span id="async_mode">{{ async_mode }}</span></b></a><br/>
+                                        <a>Average latency: <b><span id="ping_pong"></span>ms</b></a>
+                                    </span>
                                 </div>
                             </div>
                         </div>

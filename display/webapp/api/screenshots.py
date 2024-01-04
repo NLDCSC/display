@@ -6,7 +6,7 @@ from flask_restx import Namespace, Resource, abort
 from werkzeug.exceptions import BadRequestKeyError
 
 from display.celery_app.display_daemon import create_custom_screenshot
-from display.core.screenshot_handler import ScreenShotHandler
+from display.core.screenshots.screenshot_handler import ScreenShotHandler
 from .models.general import error
 from .models.screenshots import (
     screenshot_data,
@@ -36,6 +36,10 @@ class Screenshots(Resource):
         """
         download screenshot
         This endpoint is used to retrieve the latest screenshot / evidence shot from a given url.
+
+        ```curl -i -X GET '<<base_url>>/api/screenshots?display-url=<<url_to_request>>' \
+            -H 'Access-Token: <<your_access_token>>'```
+
         """
         req = request
 
@@ -75,13 +79,21 @@ class Screenshots(Resource):
 
     @api.marshal_with(screenshot_create_data, skip_none=True)
     @api.param(
-        "display-url", description="URL to request new screenshot on", _in="formData"
+        "display-url",
+        description="URL to request new screenshot on",
+        example="https://av.baf.27.berylia.org",
+        _in="formData",
+        required=True,
     )
     @require_apikey
     def put(self):
         """
         create new screenshot
         This endpoint should be used to request the creation of a new screenshot / evidence shot to the display server.
+
+        ```curl -i -X PUT '<<base_url>>/api/screenshots?display-url=<<url_to_request>>' \
+            -H 'Access-Token: <<your_access_token>>'```
+
         """
 
         req = request

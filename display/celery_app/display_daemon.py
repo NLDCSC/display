@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 
 load_dotenv(".env")
 
+import contextlib
 import base64
 import collections
 import hashlib
@@ -27,14 +28,16 @@ from celery.app.log import TaskFormatter
 from celery.signals import task_prerun, after_setup_task_logger, after_setup_logger
 from celery.utils.log import get_task_logger
 from flask_socketio import SocketIO
+from celery.backends.database import SessionManager
 
-from display.core.trace_log import TraceLog
-from display.webapp.helpers.constants.common import tracelog_action, tracelog_result
-from display.core.screenshot_handler import ScreenShotHandler
-from display.core.dedub_files import DeduplicateFilesInFolder
+from display.core.database_log.db_log import DbLog
+from display.core.general.constants import tracelog_action, tracelog_result
+from display.webapp.app.models import Tracelog
+from display.core.screenshots.screenshot_handler import ScreenShotHandler
+from display.core.files.dedub_files import DeduplicateFilesInFolder
 from display.helpers.app_logger import AppLogger
 from display.webapp.config import Config
-from display.core.async_screenshots import AsyncScreenshots
+from display.core.screenshots.async_screenshots import AsyncScreenshots
 from display.webapp.helpers.utils.sources import (
     get_display_sources,
     get_display_source_chunk,
@@ -56,6 +59,7 @@ app = Celery(
     task_time_limit=900,
     task_default_queue="default",
     task_queues=(Queue("default"), Queue("nodes", routing_key="nodes")),
+    broker_connection_retry_on_startup=True,
     result_expires=300,
 )
 
@@ -120,6 +124,25 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(60.0, delete_duplicate_timeline_entries.s())
     sender.add_periodic_task(60.0, store_node_status.s())
     sender.add_periodic_task(1800.0, delete_old_timeline_screenshots.s())
+    sender.add_periodic_task(1800.0, delete_old_log_entries.s())
+
+
+@contextlib.contextmanager
+def get_db_session():
+    session_logger = logging.getLogger(__name__)
+
+    session_manager = SessionManager()
+    engine, Session = session_manager.create_session(config.SQLALCHEMY_DATABASE_URI)
+    session = Session()
+
+    try:
+        yield session
+    except Exception as err:
+        session_logger.warning(f"Error inserting data into database: {err}")
+        session_logger.exception(err)
+        session.rollback()
+    finally:
+        session.close()
 
 
 @app.task(
@@ -156,9 +179,8 @@ def guard_config():
 
     if former_hash != current_hash:
         logger.info("Configs are different, broadcasting client reloads...")
-        socketio.emit(
-            "config_change", {"data": "reload"}, broadcast=True, namespace="/display"
-        )
+        socketio.emit("config_change", {"data": "reload"}, namespace="/display")
+        logger.info("Broadcast send!")
     else:
         logger.info("Configs match!")
 
@@ -296,7 +318,7 @@ def make_screenshots(display_sources):
     retry_jitter=False,
     ignore_result=True,
 )
-def push_to_nodes(workload, evidence_shot=False):
+def push_to_nodes(workload, evidence_shot=False, update_timestamp=False):
     logger = get_task_logger(__name__)
 
     logger.info("Pushing screenshots to nodes...")
@@ -316,11 +338,11 @@ def push_to_nodes(workload, evidence_shot=False):
 
     logger.info(f"Task ids: {task_ids}")
 
-    monitoring_nodes_results.delay(task_ids, evidence_shot)
+    monitoring_nodes_results.delay(task_ids, evidence_shot, update_timestamp)
 
 
 @app.task()
-def monitoring_nodes_results(data, evidence_shot=False):
+def monitoring_nodes_results(data, evidence_shot=False, update_timestamp=False):
     logger = get_task_logger(__name__)
 
     logger.info(f"Starting monitoring task ids: {data}")
@@ -369,12 +391,12 @@ def monitoring_nodes_results(data, evidence_shot=False):
 
                         if len(screenshot_list) == 1:
 
-                            if not evidence_shot:
+                            if not evidence_shot or update_timestamp:
                                 sources = sh.get_tab_by_hash(url_hash)
                                 try:
                                     tab_data = (
                                         sh.get_changed_data_from_custom_screenshots(
-                                            the_hash=url_hash
+                                            the_hash=url_hash, evidence_shot=evidence_shot
                                         )
                                     )
                                     for source in sources:
@@ -389,9 +411,7 @@ def monitoring_nodes_results(data, evidence_shot=False):
                                             room=source,
                                             namespace="/display",
                                         )
-                                    handle_changes_for_timeline.delay(
-                                        data=tab_data, csc=True
-                                    )
+                                    handle_changes_for_timeline.delay(data=tab_data)
                                 except Exception as err:
                                     logger.error(
                                         f"Error processing updates.... --> Produced error: {err}"
@@ -456,151 +476,116 @@ def monitoring_nodes_results(data, evidence_shot=False):
     retry_backoff=60,
     retry_jitter=False,
 )
-def execute_on_node(entries, scroll_percent=0, evidence=True):
+def execute_on_node(entries, scroll_percent=0):
     logger = get_task_logger(__name__)
     ret_data = []
 
-    if evidence:
+    logger.info("Starting evidence / screenshot creation!")
 
-        logger.info("Starting evidence screenshot creation!")
+    try:
+        logger.info(f"Setting up smartdisplay....")
+        with SmartDisplay(visible=False, size=(1138, 854)) as display:
 
-        try:
-            logger.info(f"Setting up smartdisplay....")
-            with SmartDisplay(visible=False, size=(1138, 854)) as display:
+            logger.info(f"Setting up webdriver....")
 
-                logger.info(f"Setting up webdriver....")
+            with webdriver.Firefox() as driver:
 
-                with webdriver.Firefox() as driver:
+                for entry in entries:
+                    driver.set_page_load_timeout(int(entry["timeout"]))
 
-                    for entry in entries:
-                        driver.set_page_load_timeout(int(entry["timeout"]))
+                    logger.info(
+                        f"Driver set to timeout: {entry['timeout']} and implicit wait: {entry['wait']}"
+                    )
 
-                        logger.info(
-                            f"Driver set to timeout: {entry['timeout']} and implicit wait: {entry['wait']}"
-                        )
+                    url_hash = hashlib.md5(entry["url"].encode("utf-8")).hexdigest()[:6]
 
-                        url_hash = hashlib.md5(
-                            entry["url"].encode("utf-8")
-                        ).hexdigest()[:6]
+                    logger.info(f"Working on hash: {url_hash} ({entry['url']})...")
 
-                        logger.info(f"Working on hash: {url_hash} ({entry['url']})...")
+                    try:
 
-                        try:
+                        driver.get(entry["url"])
 
-                            driver.get(entry["url"])
-
-                            if "wait_on_id" in entry and entry["wait_on_id"] != "":
-                                try:
-                                    WebDriverWait(driver, int(entry["wait"])).until(
-                                        expected_conditions.presence_of_element_located(
-                                            (By.ID, entry["wait_on_id"])
-                                        )
-                                    )
-                                    logger.info("Page is ready!")
-                                except TimeoutException:
-                                    logger.info(
-                                        "Loading took too much time....Taking screenshot anyway...."
-                                    )
-                                    pass
-
-                            time.sleep(1.5)
-
-                            if scroll_percent > 0:
-                                driver.execute_script(
-                                    "window.scrollTo(0, document.body.scrollHeight*{0:.2f});".format(
-                                        scroll_percent
+                        if "wait_on_id" in entry and entry["wait_on_id"] != "":
+                            try:
+                                WebDriverWait(driver, int(entry["wait"])).until(
+                                    expected_conditions.presence_of_element_located(
+                                        (By.ID, entry["wait_on_id"])
                                     )
                                 )
+                                logger.info("Page is ready!")
+                            except TimeoutException:
+                                logger.info(
+                                    "Loading took too much time....Taking screenshot anyway...."
+                                )
+                                pass
 
-                            with BytesIO() as buffered:
-                                img = display.waitgrab(1)
-                                img.resize((1024, 768))
-                                img.save(buffered, format="PNG")
+                        time.sleep(1.5)
 
-                                data = base64.b64encode(buffered.getvalue())
-
-                            data_normal = driver.get_screenshot_as_base64()
-
-                            logger.info(f"Got image data (first 25 bytes): {data[:25]}")
-                            ret_data.append(
-                                {
-                                    url_hash: {
-                                        "evidence": data.decode("utf-8"),
-                                        "normal": data_normal,
-                                    }
-                                }
+                        if scroll_percent > 0:
+                            driver.execute_script(
+                                "window.scrollTo(0, document.body.scrollHeight*{0:.2f});".format(
+                                    scroll_percent
+                                )
                             )
 
-                        except Exception:
-                            ret_data.append({url_hash: "ERROR"})
+                        with BytesIO() as buffered:
+                            img = display.waitgrab(1)
+                            img.resize((1024, 768))
+                            img.save(buffered, format="PNG")
 
-                    logger.info("Done taking screenshots, returning data!")
-                    return ret_data
+                            data = base64.b64encode(buffered.getvalue())
 
-        except Exception as err:
-            logger.error(f"Error encountered while taking screenshots: {err}")
+                        data_normal = driver.get_screenshot_as_base64()
 
-    else:
-
-        logger.info("Starting repeating screenshot creation!")
-
-        try:
-            logger.info(f"Setting up smartdisplay....")
-            with SmartDisplay(visible=False, size=(1138, 854)) as display:
-
-                logger.info(f"Setting up webdriver....")
-
-                with webdriver.Firefox() as driver:
-
-                    for entry in entries:
-                        driver.set_page_load_timeout(int(entry["timeout"]))
-
-                        logger.info(
-                            f"Driver set to timeout: {entry['timeout']} and implicit wait: {entry['wait']}"
+                        logger.info(f"Got image data (first 25 bytes): {data[:25]}")
+                        ret_data.append(
+                            {
+                                url_hash: {
+                                    "evidence": data.decode("utf-8"),
+                                    "normal": data_normal,
+                                }
+                            }
                         )
 
-                        url_hash = hashlib.md5(
-                            entry["url"].encode("utf-8")
-                        ).hexdigest()[:6]
+                    except Exception:
+                        ret_data.append({url_hash: "ERROR"})
 
-                        logger.info(f"Working on hash: {url_hash} ({entry['url']})...")
+                logger.info("Done taking screenshots, returning data!")
+                return ret_data
 
-                        try:
+    except Exception as err:
+        logger.error(f"Error encountered while taking screenshots: {err}")
 
-                            driver.get(entry["url"])
 
-                            if "wait_on_id" in entry and entry["wait_on_id"] != "":
-                                try:
-                                    WebDriverWait(driver, int(entry["wait"])).until(
-                                        expected_conditions.presence_of_element_located(
-                                            (By.ID, entry["wait_on_id"])
-                                        )
-                                    )
-                                    logger.info("Page is ready!")
-                                except TimeoutException:
-                                    logger.info(
-                                        "Loading took too much time....Taking screenshot anyway...."
-                                    )
-                                    pass
+@app.task(
+    autoretry_for=(ConnectionResetError,),
+    retry_kwargs={"max_retries": 3},
+    retry_backoff=60,
+    retry_jitter=False,
+    ignore_result=True,
+)
+def create_custom_evidence(data):
+    logger = get_task_logger(__name__)
 
-                            time.sleep(1.5)
+    logger.info(f"Starting custom evidence creation on {data}!")
 
-                            driver.execute_script("scroll(0, -500);")
+    sh = ScreenShotHandler()
 
-                            data = driver.get_screenshot_as_base64()
+    url_data = [sh.get_data_by_hash(data["data"])]
 
-                            logger.info(f"Got image data (first 25 bytes): {data[:25]}")
-                            ret_data.append({url_hash: {"normal": data}})
+    DbLog.insert(
+        {
+            "url": sh.get_url_by_hash(data["data"]),
+            "hash": data["data"],
+            "action": tracelog_action.OD_EVIDENCE,
+            "result": tracelog_result.REQUESTED,
+            "reason": "User requested to create a custom evidence shot",
+        }
+    )
 
-                        except Exception as err:
-                            logger.error(f"Encountered error: {err}")
-                            ret_data.append({url_hash: "ERROR"})
+    push_to_nodes.delay(url_data, evidence_shot=True, update_timestamp=True)
 
-                    logger.info("Done taking screenshots, returning data!")
-                    return ret_data
-
-        except Exception as err:
-            logger.error(f"Error encountered while taking screenshots: {err}")
+    logger.info(f"Finished processing custom evidence shot...")
 
 
 @app.task(
@@ -621,7 +606,7 @@ def create_custom_screenshot(data):
 
     display_sources = {sh.get_tab_by_hash(data["data"])[0]: [url_data]}
 
-    TraceLog.insert(
+    DbLog.insert(
         {
             "url": sh.get_url_by_hash(data["data"]),
             "hash": data["data"],
@@ -698,10 +683,9 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
                 os.mkdir(os.path.join(config.TIMELINE_LOCATION, each["sc_id"]))
 
             # Create evidence of changed screenshot, if not already taken by display nodes....
-            target = sh.get_tab_by_hash(the_hash=each["sc_id"])[0]
-
             url_data = sh.get_data_by_hash(the_hash=each["sc_id"])
 
+            target = sh.get_tab_by_hash(the_hash=each["sc_id"])[0]
             ss = AsyncScreenshots()
 
             # check if this url is part of the selenium workload, if it isn't append to the evidence workload!
@@ -737,7 +721,7 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
                     ),
                 )
 
-            TraceLog.insert(
+            DbLog.insert(
                 {
                     "url": sh.get_url_by_hash(each["sc_id"]),
                     "hash": each["sc_id"],
@@ -789,6 +773,30 @@ def delete_duplicate_timeline_entries():
     ddf.execute()
 
     logger.info("Done with deduplication of timeline folders")
+
+
+@app.task(
+    ignore_result=True,
+)
+def delete_old_log_entries():
+    logger = get_task_logger(__name__)
+
+    logger.info("Starting check for removing old log lines from the database")
+
+    with get_db_session() as db:
+        # calculate delta in seconds;
+        time_delta = config.LOG_PURGE_TIME * 60
+
+        all_logs = (
+            db.query(Tracelog)
+            .filter(Tracelog.timestamp <= (int(time.time()) - time_delta))
+            .delete()
+        )
+        db.commit()
+
+        logger.info(f"Deleted {all_logs} log lines!")
+
+    logger.info("Done checking old log lines!")
 
 
 @app.task(

@@ -1,136 +1,91 @@
-import random
+import logging
 import time
 
 import requests
 from flask import redirect, url_for, abort
 from flask_login import login_user
 
-from display.webapp.app.models import users, groups, groupmembers
-from display.webapp.run import db, oidc
+from display.helpers.app_logger import AppLogger
+from display.webapp.app.models import Users, Groups, GroupMembers
+from display.webapp.run import db, oidc, config
 from . import auth
+from ...core.general.constants import user_active
+from ...core.general.utils import generate_random_password
+
+logging.setLoggerClass(AppLogger)
+
+logger = logging.getLogger(__name__)
 
 
 @auth.route("/oidc_login")
 @oidc.require_login
 def oidc_login():
-    this_client_secrets = oidc.client_secrets
-
-    username = oidc.user_getfield("preferred_username")
-
-    client_roles = oidc.user_getfield("resource_access")
+    try:
+        username = oidc.user_getfield("preferred_username")
+        fullname = oidc.user_getfield("name")
+    except AttributeError:
+        logger.error(
+            f"Missing 'preferred_username' and / or 'name' in access / ID token; these are required!"
+        )
+        oidc_logout()
+        abort(401)
 
     try:
-        client_roles = client_roles[this_client_secrets["client_id"]]["roles"]
-    except KeyError:
+        resources = oidc.user_getfield("resources")
+    except AttributeError:
+        logger.error("Missing resources in OIDC ID token")
         oidc_logout()
         abort(401)
 
-    kc_roles = []
+    allowed_resouces = config.ALLOWED_USER_GROUPS
 
-    try:
-        for each in client_roles:
-            kc_roles.append(each)
-    except TypeError:
+    user_allowed = False
+    for each in resources:
+        if each in allowed_resouces:
+            user_allowed = True
+            break
+
+    if not user_allowed:
         oidc_logout()
         abort(401)
 
-    if len(kc_roles) == 0:
-        oidc_logout()
-        abort(401)
-
-    account = users.query.filter_by(username=username).first()
+    account = Users.query.filter_by(username=username, fullname=fullname).first()
 
     if account:
-
-        if len(account.group_member) != 0:
-
-            group_names = account.get_user_groups()
-
-            for role in kc_roles:
-                # already member of a group; check, alter when needed and save to backend
-
-                if role not in group_names:
-                    # not yet in group; fetching group id
-                    new_group = groups.query.filter_by(name=role).first()
-                    if new_group:
-                        # existing group
-                        group_id = new_group.id
-                    else:
-                        # non-existing group
-                        new_group = groups(name=role, created=int(time.time()))
-                        db.session.add(new_group)
-                        db.session.commit()
-
-                        group_id = new_group.id
-
-                    db.session.commit()
-
-        else:
-            for role in kc_roles:
-                # not yet in group; fetching group id
-                new_group = groups.query.filter_by(name=role).first()
-                if new_group:
-                    # exsting group
-                    group_id = new_group.id
-                else:
-                    # non-existing group
-                    new_group = groups(name=role, created=int(time.time()))
-                    db.session.add(new_group)
-                    db.session.commit()
-
-                    group_id = new_group.id
-
-                db.session.add(groupmembers(groupid=group_id, userid=account.id))
-                db.session.commit()
+        # password validation is done by oidc; just log the user in
+        account.last_login = int(time.time())
 
         db.session.add(account)
         db.session.commit()
 
-        # password validation is done by oidc; just log the user in
         login_user(account)
+
         return redirect(url_for("home.index"))
     else:
         # nobody found; create user account; set keycloak rights and groups and log the user in
-        newuser = users()
+        new_user = Users()
 
-        newuser.username = username
+        new_user.username = username
+        new_user.fullname = fullname
+        new_user.active = user_active.ENABLED
 
         # this account is created from openid; generate random password...
-        chars = (
-            "abcdefghijklmnopqrstuvwxyz"
-            "ABCDEFGHIJKLMNOPQRSTUVXYZ"
-            "0123456789"
-            "#()^[]-_*%&=+/"
-        )
+        new_user.password = generate_random_password()
 
-        newuser.password = "".join(
-            [random.SystemRandom().choice(chars) for _ in range(50)]
-        )
+        new_user.created = int(time.time())
+        new_user.last_login = int(time.time())
 
-        newuser.created = int(time.time())
-
-        db.session.add(newuser)
+        db.session.add(new_user)
         db.session.commit()
 
-        for role in kc_roles:
+        # not yet in group; fetching group id
+        new_group = Groups.query.filter_by(name="user").first()
+        group_id = new_group.id
 
-            # not yet in group; fetching group id
-            new_group = groups.query.filter_by(name=role).first()
-            if new_group:
-                # existing group
-                group_id = new_group.id
-            else:
-                # non-existing group
-                new_group = groups(name=role, created=int(time.time()))
-                db.session.add(new_group)
-                db.session.commit()
+        db.session.add(GroupMembers(group=group_id, user=new_user.id))
+        db.session.commit()
 
-                group_id = new_group.id
-
-            db.session.add(groupmembers(groupid=group_id, userid=newuser.id))
-            db.session.commit()
-
-        login_user(newuser)
+        login_user(new_user)
         return redirect(url_for("home.index"))
 
 

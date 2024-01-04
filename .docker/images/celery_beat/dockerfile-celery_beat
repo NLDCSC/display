@@ -1,5 +1,5 @@
 # Use the latest Python image
-FROM python:latest
+FROM python:3.10.12
 
 # Set an environment variable with the directory
 # where we'll be running the app

@@ -1,11 +1,53 @@
 import ast
+import json
 import os
 import random
+from json import JSONDecodeError
 
 
 def getenv_bool(name: str, default: str = "False"):
     raw = os.getenv(name, default).title()
-    return ast.literal_eval(raw)
+    try:
+        the_bool = ast.literal_eval(raw)
+
+        if not isinstance(the_bool, bool):
+            raise ValueError
+    except ValueError:
+        raise
+
+    return the_bool
+
+
+def getenv_list(name: str, default: list = None):
+    if default is None:
+        default = []
+
+    raw = os.getenv(name, default)
+
+    if not isinstance(raw, list):
+        try:
+            the_list = json.loads(raw)
+            return the_list
+        except JSONDecodeError:
+            raise
+
+    return default
+
+
+def getenv_dict(name: str, default: dict = None):
+    if default is None:
+        default = {}
+
+    raw = os.getenv(name, default)
+
+    if not isinstance(raw, dict):
+        try:
+            the_dict = json.loads(raw)
+            return the_dict
+        except JSONDecodeError:
+            raise
+
+    return default
 
 
 class Config(object):
@@ -34,6 +76,7 @@ class Config(object):
     LOG_FILE_PATH = os.getenv("LOG_FILE_PATH", "/app/data/logs/")
     LOG_FILE_NAME = os.getenv("LOG_FILE_NAME", "display.log")
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+    LOG_PURGE_TIME = int(os.getenv("LOG_PURGE_TIME", 120))  # in minutes
 
     SYSLOG_ENABLE = getenv_bool("SYSLOG_ENABLE", "False")
     SYSLOG_SERVER = os.getenv("SYSLOG_SERVER", "172.16.1.1")
@@ -79,8 +122,8 @@ class Config(object):
     OIDC_COOKIE_SECURE = getenv_bool("OIDC_COOKIE_SECURE", "True")
     OIDC_REQUIRE_VERIFIED_EMAIL = getenv_bool("OIDC_REQUIRE_VERIFIED_EMAIL", "False")
     OIDC_USER_INFO_ENABLED = getenv_bool("OIDC_USER_INFO_ENABLED", "True")
-    OIDC_OPENID_REALM = os.getenv("OIDC_OPENID_REALM", "display")
-    OIDC_SCOPES = os.getenv("OIDC_SCOPES", ["openid", "profile", "roles"])
+    OIDC_OPENID_REALM = os.getenv("OIDC_OPENID_REALM", "CR14")
+    OIDC_SCOPES = os.getenv("OIDC_SCOPES", ["openid", "resources"])
     OIDC_INTROSPECTION_AUTH_METHOD = os.getenv(
         "OIDC_INTROSPECTION_AUTH_METHOD", "client_secret_post"
     )
@@ -91,3 +134,5 @@ class Config(object):
     OIDC_ID_TOKEN_COOKIE_NAME = os.getenv(
         "OIDC_ID_TOKEN_COOKIE_NAME", "display_oidc_cookie"
     )
+
+    ALLOWED_USER_GROUPS = getenv_list("ALLOWED_USER_GROUPS", [])
