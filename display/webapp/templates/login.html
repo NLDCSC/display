@@ -22,9 +22,7 @@
         <h2 class="sr-only">Login</h2>
         {% if openid %}
             <div class="text-center mt-2 mb-3">
-                <a href="{{ url_for('auth.oidc_login') }}" class="btn btn-block btn-danger">
-                    <i class="fab fa-openid mr-2"></i> Log in using CR14
-                </a>
+                <a href="{{ url_for('auth.oidc_login') }}" class="btn btn-block btn-danger">Log in using CR14</a>
             </div>
         {% endif %}
         <div class="illustration"><img src="{{ url_for('static', filename='img/display.png') }}"></div>
