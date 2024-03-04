@@ -277,28 +277,12 @@ class ScreenShotHandler(object):
                     "changed": is_changed,
                 }
             )
-            DbLog.insert(
-                {
-                    "url": self.get_url_by_hash(the_hash),
-                    "hash": the_hash,
-                    "action": tracelog_action.STATE_CHANGE,
-                    "result": tracelog_result.CHANGED,
-                }
-            )
         else:
             ret_data.append(
                 {
                     "sc_id": the_hash,
                     "mod_time": get_mod_time(the_hash, evidence_shot=evidence_shot),
                     "changed": is_changed,
-                }
-            )
-            DbLog.insert(
-                {
-                    "url": self.get_url_by_hash(the_hash),
-                    "hash": the_hash,
-                    "action": tracelog_action.STATE_CHANGE,
-                    "result": tracelog_result.NOT_CHANGED,
                 }
             )
 
