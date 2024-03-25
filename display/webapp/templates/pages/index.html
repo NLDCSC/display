@@ -33,8 +33,8 @@
     <div class="row full-height">
         <div class="col-12">
             <div class="card content-card">
-                <div class="card-body">
-                    <div class="row margin_bottom">
+                <div id="header-content-card" class="card-body">
+                    <div id="display-header-row" class="row margin_bottom">
                         <div class="col-12">
                             <h4 class="card-title pos-abs">DISPLAY WALL
                                 <button id="display-filter" type="button" class="btn btn-outline" title="Filter settings">
@@ -60,6 +60,9 @@
                                 </button>
                                 <button id="tracelog" type="button" class="btn btn-outline" title="Show Display Logging">
                                     <span class="mdi mdi-card-bulleted-settings-outline"></span>
+                                </button>
+                                <button id="dashboard-mode" type="button" class="btn btn-outline" title="Enable dashboard mode">
+                                    <span class="mdi mdi-fullscreen"></span>
                                 </button>
                                 <button id="tab-rotate" type="button" class="btn btn-outline btn-outline-success btn-outline-danger" title="Enable/disable tab rotation on visible tabs">
                                     <img src="{{ url_for('static', filename='img/tab_rotate.png') }}" alt="tab_rotate">
@@ -117,6 +120,7 @@
 {% block body_scripts %}
     <script>
         $(window).ready(function () {
+            window.FULL_SCREEN = false
 
             ReEnableDisplayFilter();
 
