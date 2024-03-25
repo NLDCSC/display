@@ -105,7 +105,7 @@ def oidc_logout():
             }
 
             session.post(
-                url=f"{oidc.client_secrets.get('issuer')}/protocol/openid-connect/logout",
+                url=f"{oidc.client_secrets.get('end_session_endpoint')}",
                 data=data,
                 headers=headers,
                 verify=False,

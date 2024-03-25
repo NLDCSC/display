@@ -140,7 +140,7 @@ cython_debug/
 .idea
 /dev_data/
 /docker_data/
-/client_secrets.json
+/client_secrets.*
 *.pem
 /dev_data/flask/config/config_test.json
 run
