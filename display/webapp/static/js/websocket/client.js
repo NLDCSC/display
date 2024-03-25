@@ -155,6 +155,10 @@ $(document).ready(function () {
 
                 $("#tab_change_loading").hide()
                 tab_content.removeClass("grey_out")
+
+                if (window.FULL_SCREEN === true) {
+                    AdjustLayoutFullscreen();
+                }
             }
 
         }

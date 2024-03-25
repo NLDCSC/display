@@ -192,6 +192,8 @@ function SetAllEventListeners() {
 }
 
 function EnableFullScreen(){
+    window.FULL_SCREEN = true
+
     let display_header = $("#display-header-row")
     let header_content = $("#header-content-card")
 
@@ -200,14 +202,26 @@ function EnableFullScreen(){
     DestroyScrollingTabs();
     InitScrollingTabs();
 
-    let all_content_rows = $(".row.content-row:visible")
+    AdjustLayoutFullscreen();
+}
 
-    let content_row_height = 20 - all_content_rows.length + 1
+function AdjustLayoutFullscreen() {
 
-    $(".content-row").css("height", content_row_height + "vh")
+    if ($("#myTabContent").height() > window.innerHeight){
+        let all_content_rows = $(".row.content-row:visible")
+
+        let content_row_height = 20 - all_content_rows.length + 1
+
+        $(".content-row").css("height", content_row_height + "vh")
+    } else {
+        $(".content-row").css("height", "20vh")
+    }
+
 }
 
 function DisableFullScreen() {
+    window.FULL_SCREEN = false
+
     let display_header = $("#display-header-row")
     let header_content = $("#header-content-card")
 
@@ -216,7 +230,7 @@ function DisableFullScreen() {
     DestroyScrollingTabs();
     InitScrollingTabs();
 
-    $(".content-row").css("height", "20vh")
+    AdjustLayoutFullscreen();
 }
 
 function SetDisplayFilter() {
