@@ -159,6 +159,10 @@
   min-height: 30px;
 }
 @media (max-width: 768px) {
+  #dashboard-mode {
+    display: none;
+  }
+
   #tracelog {
     display: none;
   }
@@ -371,7 +375,7 @@ div[id^="actions_"] {
 
 #tab-selector{
   position: absolute;
-  left: 505px;
+  left: 545px;
 }
 
 div.dropdown-multicol2{
@@ -438,7 +442,7 @@ div#pills-tabContent.tab-content {
 
 #tab-rotate {
   position: absolute;
-  left: 425px;
+  left: 465px;
   top: -2px;
 }
 
