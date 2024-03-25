@@ -167,6 +167,8 @@ function SetAllEventListeners() {
 
     $("#tracelog")[0].addEventListener("click", OpenTracelog)
 
+    $("#dashboard-mode")[0].addEventListener("click", EnableFullScreen)
+
     $("#api-key-create")[0].addEventListener("click", OpenApiKeyCreate)
 
     let CheckBoxes = DOMRegex(/^cb\_/)
@@ -187,6 +189,48 @@ function SetAllEventListeners() {
         elem.addEventListener("click", SelectTabClick);
     });
 
+}
+
+function EnableFullScreen(){
+    window.FULL_SCREEN = true
+
+    let display_header = $("#display-header-row")
+    let header_content = $("#header-content-card")
+
+    display_header.hide()
+    header_content.css("padding", "0.25rem")
+    DestroyScrollingTabs();
+    InitScrollingTabs();
+
+    AdjustLayoutFullscreen();
+}
+
+function AdjustLayoutFullscreen() {
+
+    if ($("#myTabContent").height() > window.innerHeight){
+        let all_content_rows = $(".row.content-row:visible")
+
+        let content_row_height = 20 - all_content_rows.length + 1
+
+        $(".content-row").css("height", content_row_height + "vh")
+    } else {
+        $(".content-row").css("height", "20vh")
+    }
+
+}
+
+function DisableFullScreen() {
+    window.FULL_SCREEN = false
+
+    let display_header = $("#display-header-row")
+    let header_content = $("#header-content-card")
+
+    display_header.show()
+    header_content.css("padding", "1.25rem")
+    DestroyScrollingTabs();
+    InitScrollingTabs();
+
+    AdjustLayoutFullscreen();
 }
 
 function SetDisplayFilter() {
@@ -719,6 +763,8 @@ function SetKeyDownEvents() {
             let popup_sel = $('#popup-filter')
             let popup_stat = $('#popup-node')
             let popup_trace = $('#popup-tracelog')
+            let display_header = $("#display-header-row")
+
             if (modal_sel.is(":visible")) {
                 modal_sel.hide();
             }
@@ -730,6 +776,9 @@ function SetKeyDownEvents() {
             }
             if (popup_trace.is(":visible")) {
                 CloseTracelog();
+            }
+            if (display_header.is(":hidden")) {
+                DisableFullScreen();
             }
         }
     });

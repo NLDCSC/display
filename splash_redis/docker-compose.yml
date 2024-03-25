@@ -63,13 +63,13 @@ services:
       - "../docker_data/mysql_data:/var/lib/mysql"
     networks:
       backend:
-        ipv4_address: 172.26.1.5
+        ipv4_address: 172.26.100.5
 
 networks:
   frontend:
   backend:
     driver_opts:
-      com.docker.network.bridge.host_binding_ipv4: "172.26.1.1"
+      com.docker.network.bridge.host_binding_ipv4: "172.26.100.1"
     ipam:
       config:
-        - subnet: 172.26.1.0/24
+        - subnet: 172.26.100.0/24
