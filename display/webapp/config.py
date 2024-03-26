@@ -88,7 +88,7 @@ class Config(object):
         "SCREENSHOT_SOURCE_CONFIG_FILE", "screenshot_config.json"
     )
 
-    SPLASH_HOST = os.getenv("SPLASH_HOST", "ha_proxy")
+    SPLASH_HOST = os.getenv("SPLASH_HOST", "ha-proxy")
     SPLASH_PORT = int(os.getenv("SPLASH_PORT", 8050))
 
     REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/")
