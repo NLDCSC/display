@@ -18,7 +18,7 @@ class AppDefaultModel(db.Model):
 class Users(UserMixin, AppDefaultModel):
     __tablename__ = "users"
     id = db.Column("id", db.Integer, primary_key=True)
-    username = db.Column("username", db.String(30), index=True, unique=True)
+    username = db.Column("username", db.String(128), index=True, unique=True)
     fullname = db.Column("fullname", db.String(128), default="NA")
     email = db.Column("email", db.String(256), index=True, unique=True)
     pw_hash = db.Column("pw_hash", db.String(512))
