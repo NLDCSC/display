@@ -30,3 +30,4 @@ mysqlclient==2.1.1
 SQLAlchemy==2.0.8
 WTForms==3.0.1
 alembic==1.10.2
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
