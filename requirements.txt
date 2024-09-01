@@ -13,7 +13,7 @@ Flask-restx==1.1.0
 itsdangerous==2.0.1
 ansicolors==1.1.8
 python-dotenv==1.0.0
-Jinja2==3.1.2
+Jinja2==3.1.4
 requests==2.32.0
 aiohttp==3.10.2
 celery[redis]==5.3.6
