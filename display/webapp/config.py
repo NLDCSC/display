@@ -45,7 +45,7 @@ class Config(object):
     LOG_FILE_PATH: str = os.getenv("LOG_FILE_PATH", "/app/data/logs/")
     LOG_FILE_NAME: str = os.getenv("LOG_FILE_NAME", "certexmon.log")
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
-    LOGS_PURGE_TIME: int = int(os.getenv("LOGS_PURGE_TIME", 730))  # in days
+    LOG_PURGE_TIME: int = int(os.getenv("LOG_PURGE_TIME", 730))  # in days
 
     SYSLOG_ENABLE: bool = getenv_bool("SYSLOG_ENABLE", "False")
     GELF_SYSLOG: bool = getenv_bool("GELF_SYSLOG", "True")

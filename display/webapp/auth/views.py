@@ -2,6 +2,7 @@ import time
 
 from flask import render_template, redirect, url_for
 from flask_login import current_user, login_user, login_required, logout_user
+from sqlalchemy import select
 
 from display.webapp.app.models import Users
 from . import auth
@@ -12,11 +13,12 @@ from ...core.general.constants import user_active, user_type
 
 @login_manager.user_loader
 def load_user(user_id):
-    user = (
-        Users.query.filter_by(id=user_id)
-        .filter(Users.active != user_active.DISABLED)
-        .filter(Users.system != user_type.SYSTEM)
-        .first()
+    user = db.session.scalar(
+        select(Users).filter(
+            Users.active != user_active.DISABLED,
+            Users.system != user_type.SYSTEM,
+            Users.id == user_id,
+        )
     )
 
     return user
@@ -33,7 +35,9 @@ def func_login():
     if form.validate_on_submit():
 
         # Check if account exists
-        account = Users.query.filter_by(username=form.username.data).first()
+        account = db.session.scalar(
+            select(Users).filter(Users.username == form.username.data)
+        )
 
         if account and account.verify_password(form.password.data):
             account.last_login = int(time.time())
@@ -75,7 +79,9 @@ def logout():
 @auth.route("/create_api_key")
 @login_required
 def create_api_key():
-    this_user = Users.query.filter_by(username=current_user.username).first()
+    this_user = db.session.scalar(
+        select(Users).filter(Users.username == current_user.username)
+    )
 
     if this_user is not None:
         the_key = this_user.create_api_key()

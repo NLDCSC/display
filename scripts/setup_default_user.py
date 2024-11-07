@@ -1,6 +1,8 @@
 import secrets
 import string
 
+from sqlalchemy import select
+
 from app import app
 from display.core.general.constants import user_active
 from display.webapp.app.models import (
@@ -65,12 +67,21 @@ with app.app_context():
     db.session.commit()
 
     # setting default permission values
-    all_groups = (
-        Groups.query.filter(~Groups.name.in_(["admin", "superuser"]))
-        .order_by(Groups.name)
+    all_groups: list = (
+        db.session.execute(
+            select(Groups).filter(~Groups.name.in_(["admin", "superuser"]))
+        )
+        .unique()
+        .scalars()
         .all()
     )
-    all_permissions = Permissions.query.order_by(Permissions.id).all()
+
+    all_permissions: list[Permissions] = (
+        db.session.execute(select(Permissions).order_by(Permissions.id))
+        .unique()  # Permissions is joined -> requires unique()
+        .scalars()
+        .all()
+    )
 
     for the_group in all_groups:
         for perm in all_permissions:
@@ -98,7 +109,11 @@ with app.app_context():
     db.session.add(admin_user)
     db.session.commit()
 
-    admin_group_id = Groups.query.filter_by(name="admin").first()
+    admin_group_id = (
+        db.session.execute(select(Groups).filter(Groups.name == "admin").limit(1))
+        .unique()
+        .scalar_one()
+    )
 
     print("Adding admin user as a groupmember of admin group")
     admin_group = GroupMembers()

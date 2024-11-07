@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from nldcsc.loggers.app_logger import AppLogger
+from sqlalchemy import delete
 
 load_dotenv(".env")
 
@@ -789,11 +790,11 @@ def delete_old_log_entries():
         # calculate delta in seconds;
         time_delta = config.LOG_PURGE_TIME * 60
 
-        all_logs = (
-            db.query(Tracelog)
-            .filter(Tracelog.timestamp <= (int(time.time()) - time_delta))
-            .delete()
-        )
+        all_logs = db.execute(
+            delete(Tracelog).filter(
+                Tracelog.timestamp <= (int(time.time()) - time_delta)
+            )
+        ).rowcount
         db.commit()
 
         logger.info(f"Deleted {all_logs} log lines!")
