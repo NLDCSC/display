@@ -5,9 +5,9 @@ import signal
 import sys
 import time
 
-from display.helpers.logger_class import HelperLogger
+from nldcsc.loggers.app_logger import AppLogger
 
-logging.setLoggerClass(HelperLogger)
+logging.setLoggerClass(AppLogger)
 
 
 class LinuxDaemon(object):

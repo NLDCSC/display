@@ -1,4 +1,5 @@
 from dotenv import load_dotenv
+from nldcsc.loggers.app_logger import AppLogger
 
 load_dotenv(".env")
 
@@ -35,7 +36,6 @@ from display.core.general.constants import tracelog_action, tracelog_result
 from display.webapp.app.models import Tracelog
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
 from display.core.files.dedub_files import DeduplicateFilesInFolder
-from display.helpers.app_logger import AppLogger
 from display.webapp.config import Config
 from display.core.screenshots.async_screenshots import AsyncScreenshots
 from display.webapp.helpers.utils.sources import (
@@ -161,6 +161,7 @@ def guard_config():
         logger.error(f"Unhandled error --> {err}")
         return
 
+    # noinspection InsecureHash
     current_hash = hashlib.md5(json.dumps(display_sources).encode()).hexdigest()
 
     logger.info(f"Current config hash: {current_hash}")
@@ -373,13 +374,13 @@ def monitoring_nodes_results(data, evidence_shot=False, update_timestamp=False):
                                         ret_screenshot_data[k] = v
                                     else:
                                         if "evidence" in v:
-                                            ret_screenshot_data[k][
-                                                "evidence"
-                                            ] = base64.b64decode(v["evidence"])
+                                            ret_screenshot_data[k]["evidence"] = (
+                                                base64.b64decode(v["evidence"])
+                                            )
                                         if "normal" in v:
-                                            ret_screenshot_data[k][
-                                                "normal"
-                                            ] = base64.b64decode(v["normal"])
+                                            ret_screenshot_data[k]["normal"] = (
+                                                base64.b64decode(v["normal"])
+                                            )
 
                             ss = AsyncScreenshots()
                             ss.process_async(
@@ -396,7 +397,8 @@ def monitoring_nodes_results(data, evidence_shot=False, update_timestamp=False):
                                 try:
                                     tab_data = (
                                         sh.get_changed_data_from_custom_screenshots(
-                                            the_hash=url_hash, evidence_shot=evidence_shot
+                                            the_hash=url_hash,
+                                            evidence_shot=evidence_shot,
                                         )
                                     )
                                     for source in sources:
@@ -497,7 +499,7 @@ def execute_on_node(entries, scroll_percent=0):
                         f"Driver set to timeout: {entry['timeout']} and implicit wait: {entry['wait']}"
                     )
 
-                    url_hash = hashlib.md5(entry["url"].encode("utf-8")).hexdigest()[:6]
+                    url_hash = ScreenShotHandler.get_hash(entry["url"].encode("utf-8"))
 
                     logger.info(f"Working on hash: {url_hash} ({entry['url']})...")
 

@@ -51,28 +51,23 @@ def func_login():
                 header=header,
                 form=form,
                 msg=msg,
-                openid=config.OPENID_LOGIN,
+                openid=config.SSO_LOGIN_ENABLE,
             )
 
     return render_template(
-        "login.html", header=header, form=form, openid=config.OPENID_LOGIN
+        "login.html", header=header, form=form, openid=config.SSO_LOGIN_ENABLE
     )
 
 
 @auth.route("/logout")
 @login_required
 def logout():
+    if config.SSO_LOGIN_ENABLE:
+        from display.webapp.run import sso
+
+        sso.logout()
+
     logout_user()
-
-    if config.OPENID_LOGIN:
-        try:
-            from .openid_login import oidc_logout
-
-            oidc_logout()
-        except ImportError:
-            pass
-        except TypeError:
-            pass
 
     return redirect(url_for("auth.func_login"))
 

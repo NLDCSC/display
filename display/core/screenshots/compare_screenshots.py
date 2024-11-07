@@ -2,11 +2,10 @@ import logging
 
 import cv2
 import numpy as np
+from nldcsc.loggers.app_logger import AppLogger
 from skimage.metrics import structural_similarity as ssim
 
-from display.helpers.logger_class import HelperLogger
-
-logging.setLoggerClass(HelperLogger)
+logging.setLoggerClass(AppLogger)
 
 
 class CompareScreenshots(object):

@@ -1,5 +1,5 @@
-from display.helpers.errors import DisplayClientTypeError
-from display.objects.client_connection import ClientConnection
+from display.core.connections.client_connection import ClientConnection
+from display.errors.display_errors import DisplayClientTypeError
 
 
 class ClientPool(object):

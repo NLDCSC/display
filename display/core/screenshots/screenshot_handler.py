@@ -52,21 +52,22 @@ class ScreenShotHandler(object):
 
         self.current_wd = os.path.dirname(os.path.abspath(__file__))
 
+    @staticmethod
+    def get_hash(hash_input: bytes) -> str:
+        # noinspection InsecureHash
+        return hashlib.md5(hash_input).hexdigest()[:6]
+
     def set_tabname_to_tabhash(self):
 
         for each in self.display_sources:
-            self.tabname_to_tabhash[each] = hashlib.md5(
-                each.encode("utf-8")
-            ).hexdigest()[:6]
+            self.tabname_to_tabhash[each] = self.get_hash(each.encode("utf-8"))
 
         self.tabname_to_tabhash = dict(self.tabname_to_tabhash)
 
     def set_tabhash_to_tabname(self):
 
         for each in self.display_sources:
-            self.tabhash_to_tabname[
-                hashlib.md5(each.encode("utf-8")).hexdigest()[:6]
-            ] = each
+            self.tabhash_to_tabname[self.get_hash(each.encode("utf-8"))] = each
 
         self.tabhash_to_tabname = dict(self.tabhash_to_tabname)
 
@@ -74,9 +75,9 @@ class ScreenShotHandler(object):
 
         for key, value in self.display_sources.items():
             for item in value:
-                self.hash_to_tab_mapping[
-                    hashlib.md5(item["url"].encode("utf-8")).hexdigest()[:6]
-                ] = key
+                self.hash_to_tab_mapping[self.get_hash(item["url"].encode("utf-8"))] = (
+                    key
+                )
 
         if self.config.SCREENSHOT_HEADER_TABS:
             for key, value in self.hash_to_header_mapping.items():
@@ -91,7 +92,7 @@ class ScreenShotHandler(object):
             for item in value:
                 if item["header"] == key:
                     self.hash_to_header_mapping[
-                        hashlib.md5(item["url"].encode("utf-8")).hexdigest()[:6]
+                        self.get_hash(item["url"].encode("utf-8"))
                     ] = key
 
         self.hash_to_header_mapping = dict(self.hash_to_header_mapping)
@@ -100,9 +101,9 @@ class ScreenShotHandler(object):
 
         for key, value in self.display_sources.items():
             for item in value:
-                self.hash_to_url_mapping[
-                    hashlib.md5(item["url"].encode("utf-8")).hexdigest()[:6]
-                ] = item["url"]
+                self.hash_to_url_mapping[self.get_hash(item["url"].encode("utf-8"))] = (
+                    item["url"]
+                )
 
         self.hash_to_url_mapping = dict(self.hash_to_url_mapping)
 
@@ -111,7 +112,7 @@ class ScreenShotHandler(object):
         for key, value in self.display_sources.items():
             for item in value:
                 self.hash_to_data_mapping[
-                    hashlib.md5(item["url"].encode("utf-8")).hexdigest()[:6]
+                    self.get_hash(item["url"].encode("utf-8"))
                 ] = {
                     "url": item["url"],
                     "wait": item["wait"],
@@ -176,7 +177,7 @@ class ScreenShotHandler(object):
 
     def get_hash_by_url(self, the_url):
 
-        the_hash = hashlib.md5(the_url.encode("utf-8")).hexdigest()[:6]
+        the_hash = self.get_hash(the_url.encode("utf-8"))
 
         if the_hash in self.hash_to_url_mapping:
             return the_hash
@@ -205,7 +206,8 @@ class ScreenShotHandler(object):
         except KeyError:
             return ret_data
 
-    def get_hash_screenshot(self, url_hash):
+    @staticmethod
+    def get_hash_screenshot(url_hash):
 
         ret_data = {
             "sc_id": url_hash,
@@ -262,7 +264,11 @@ class ScreenShotHandler(object):
         except KeyError:
             return ret_data
 
-    def get_changed_data_from_custom_screenshots(self, the_hash, evidence_shot=False,):
+    @staticmethod
+    def get_changed_data_from_custom_screenshots(
+        the_hash,
+        evidence_shot=False,
+    ):
 
         ret_data = []
 

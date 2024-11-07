@@ -12,10 +12,12 @@ from flask import (
     request,
 )
 from flask_login import login_required
+from nldcsc.datatables.server_side_dt_sql import SQLServerSideDataTable
+from nldcsc.loggers.app_logger import AppLogger
 
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
-from display.helpers.app_logger import AppLogger
 from . import home
+from ..app.models import Tracelog
 from ..config import Config
 from ..helpers.utils.screenshots import get_mod_time
 from ..helpers.utils.sources import get_display_sources
@@ -24,7 +26,6 @@ from ..helpers.utils.timelines import (
     get_mod_time_from_path,
 )
 from ..run import db
-from ...helpers.server_side_dt import ServerSideDataTable
 
 logging.setLoggerClass(AppLogger)
 
@@ -172,9 +173,9 @@ def download_picture(url_hash, filename):
 
     # forming a Response object with Headers to return from flask
     response = make_response(data.getvalue())
-    response.headers[
-        "Content-Disposition"
-    ] = f'attachment; filename="{filename}_{"_".join(sh.get_tab_by_hash(the_hash=url_hash))}.png"'
+    response.headers["Content-Disposition"] = (
+        f'attachment; filename="{filename}_{"_".join(sh.get_tab_by_hash(the_hash=url_hash))}.png"'
+    )
     response.mimetype = "image/png"
     # return the Response object
     return response
@@ -183,10 +184,11 @@ def download_picture(url_hash, filename):
 @home.post("/fetch_log_data")
 @login_required
 def fetch_nodes_data():
-    ssd = ServerSideDataTable(
+    ssd = SQLServerSideDataTable(
         request=request,
         backend=db,
         target_model="tracelog",
+        model_mapping={"tracelog": Tracelog},
     )
 
     return_data = ssd.output_result()

@@ -4,10 +4,11 @@ import os
 from collections import defaultdict
 from multiprocessing.pool import ThreadPool
 
-from display.helpers.logger_class import HelperLogger
+from nldcsc.loggers.app_logger import AppLogger
+
 from display.webapp.config import Config
 
-logging.setLoggerClass(HelperLogger)
+logging.setLoggerClass(AppLogger)
 
 
 class DeduplicateFilesInFolder(object):

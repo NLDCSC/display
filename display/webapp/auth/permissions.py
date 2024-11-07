@@ -3,9 +3,9 @@ from functools import wraps
 
 from flask import abort, request
 from flask_login import current_user
+from nldcsc.loggers.app_logger import AppLogger
 
 from display.core.general.constants import user_active
-from display.helpers.app_logger import AppLogger
 from display.webapp.app.models import Users
 
 logging.setLoggerClass(AppLogger)

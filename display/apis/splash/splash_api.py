@@ -1,13 +1,9 @@
-"""
-splash_api.py
-=============
-"""
 from urllib.parse import quote
 
-from display.external_apis.generic_api import GenericApi
+from nldcsc.http_apis.base_class.api_base_class import ApiBaseClass
 
 
-class SplashApi(GenericApi):
+class SplashApi(ApiBaseClass):
     def __init__(
         self,
         address,

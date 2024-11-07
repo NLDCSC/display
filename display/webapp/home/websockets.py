@@ -4,19 +4,22 @@ import logging
 from flask import copy_current_request_context, request, render_template
 from flask_login import login_required
 from flask_socketio import emit, disconnect, join_room, leave_room, call
+from nldcsc.loggers.app_logger import AppLogger
 from socketio.exceptions import TimeoutError as SocketIOTimeOutError
 
-from display.celery_app.display_daemon import create_custom_screenshot, create_custom_evidence
+from display.celery_app.display_daemon import (
+    create_custom_screenshot,
+    create_custom_evidence,
+)
+from display.core.connections.client_connection import ClientConnection
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
 from display.helpers.client_pool import ClientPool
-from display.helpers.logger_class import HelperLogger
-from display.objects.client_connection import ClientConnection
 from display.webapp.helpers.utils.screenshots import getB64_screenshot
 from display.webapp.helpers.utils.sources import get_display_sources
 from display.webapp.home.views import config
 from display.webapp.run import socketio
 
-logging.setLoggerClass(HelperLogger)
+logging.setLoggerClass(AppLogger)
 
 logging.getLogger("socketio.server").setLevel("ERROR")
 logging.getLogger("geventwebsocket.handler").setLevel("ERROR")
@@ -169,6 +172,7 @@ def do_change_display_tab(data):
     # using call here to wait for the callback of the client; timeout error is raised is callback is not received in
     # time; retrying the second time with the emit event
     try:
+        # noinspection InsecureHash
         call(
             "push_all_screenshots",
             {
@@ -183,6 +187,7 @@ def do_change_display_tab(data):
         logger.info(f"Client {req_client.sid} received data on tab: {data['tab_name']}")
     except SocketIOTimeOutError:
         logger.warning(f"Timeout error on client: {req_client}; retrying!")
+        # noinspection InsecureHash
         emit(
             "push_all_screenshots",
             {
@@ -273,11 +278,12 @@ def do_rebuild_request():
 
     logger.info(f"Client: {req_client.sid} is rebuilding page...")
 
+    # noinspection InsecureHash
     emit(
         "rebuild_page",
         {
             "data": {"content": html_data, "tab_selector": selector_data},
-            "tab": hashlib.md5(req_client.current_tab.encode("utf-8")).hexdigest()[:6],
+            "tab": ScreenShotHandler.get_hash(req_client.current_tab.encode("utf-8")),
         },
         room=request.sid,
     )

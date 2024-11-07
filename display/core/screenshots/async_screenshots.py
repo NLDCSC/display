@@ -2,8 +2,8 @@
 async_header_collector.py
 =========================
 """
+
 import asyncio
-import hashlib
 import json
 import logging
 import os
@@ -12,16 +12,16 @@ from collections import defaultdict
 from pathlib import Path
 
 import aiohttp
+from display.external_apis.splash.splash_api import SplashApi
+from nldcsc.loggers.app_logger import AppLogger
 
 from display.core.database_log.db_log import DbLog
 from display.core.general.constants import tracelog_action, tracelog_result
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
-from display.external_apis.splash.splash_api import SplashApi
-from display.helpers.logger_class import HelperLogger
 from display.webapp.config import Config
 from display.webapp.helpers.utils.sources import get_screenshot_sources
 
-logging.setLoggerClass(HelperLogger)
+logging.setLoggerClass(AppLogger)
 
 
 class AsyncScreenshots(object):
@@ -301,7 +301,7 @@ class AsyncScreenshots(object):
         self.screenshotHandler.limit_img_size(hash)
 
     async def fetch(self, session, entry):
-        url_hash = hashlib.md5(entry["url"].encode("utf-8")).hexdigest()[:6]
+        url_hash = self.screenshotHandler.get_hash(entry["url"].encode("utf-8"))
         try:
             async with session.get(
                 self.splash_api.get_render_url(

@@ -14,6 +14,7 @@ config = Config()
 @pass_eval_context
 @home.app_template_filter()
 def md5(eval_ctx, value):
+    # noinspection InsecureHash
     return hashlib.md5(value.encode("utf-8")).hexdigest()[:6]
 
 
