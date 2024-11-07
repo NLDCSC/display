@@ -137,10 +137,9 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
 .idea
-/dev_data/
-/docker_data/
+/docker-data/
 /client_secrets.*
 *.pem
-/dev_data/flask/config/config_test.json
-run
+local
