@@ -133,7 +133,7 @@ class Users(UserMixin, ModelDefault):
     def get_user_group(self) -> list:
         return self.get_user_groups()[0]
 
-    def get_user_group_object(self) -> list:
+    def get_user_group_object(self) -> "Groups":
         return self.group_member[0].groups
 
     def get_group_permissions_by_permission_id(self, the_id) -> int:
