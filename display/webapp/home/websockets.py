@@ -212,7 +212,7 @@ def do_get_hash_screenshot(url_hash, tab_hash, last_element: bool = False):
         def cfm_received(client_id, data):
             cfm_received_data(client_id=client_id, data=data)
 
-        # using call here to wait for the callback of the client; timeout error is raised is callback is not received in
+        # using call here to wait for the callback of the client; timeout error is raised if callback is not received in
         # time; retrying the second time with the emit event
         try:
             call(
