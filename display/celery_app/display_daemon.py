@@ -1,5 +1,7 @@
 from dotenv import load_dotenv
 
+from display.core.database_logging.trace_log import TraceLogEntry
+
 load_dotenv(".env")
 
 import contextlib
@@ -40,13 +42,10 @@ from celery.utils.log import get_task_logger
 from flask_socketio import SocketIO
 from celery.backends.database import SessionManager
 
-from display.core.database_log.db_log import DbLog
 from display.core.general.constants import (
     tracelog_action,
     tracelog_result,
     task_result,
-    timeline_log_action,
-    status_code,
 )
 from display.webapp.app.models import Tracelog
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
@@ -61,7 +60,6 @@ from display.webapp.helpers.utils.sources import (
 from display.core.tasks.custom_encoder import custom_dumps, custom_loads
 from display.core.tasks.periodic_tasks import PeriodicTasks
 from display.core.tasks.task_result import TaskResult
-from display.core.timelinelog_entry.timelinelog_entry import TimeLineLogEntry
 from display.core.redis_utils.redis_utils_class import RedisUtils
 from pyvirtualdisplay.smartdisplay import SmartDisplay
 from nldcsc.loggers.app_logger import AppLogger
@@ -154,14 +152,7 @@ def general_task_post_run_config(task_id, task, retval, state, *args, **kwargs):
 
     if not task.ignore_result:
         if isinstance(retval, Exception) or retval is None:
-            TimeLineLogEntry(
-                url="NONE",
-                hash="NONE",
-                user="DAEMON",
-                action=timeline_log_action.TASK_COMPLETED,
-                result=f"Completed {task.name} [{task_id}]",
-                status_code=status_code.ERROR,
-            ).save()
+            logger.info(f"Completed {task.name} [{task_id}]")
 
             task.backend.client.set(
                 f"runresult_{task_slug}",
@@ -198,24 +189,12 @@ def general_task_post_run_config(task_id, task, retval, state, *args, **kwargs):
             task.backend.client.set(f"runresult_{task_slug}", retval.status, ex=86400)
             if retval.status == task_result.SUCCESS:
                 task.backend.client.hincrby(f"counter_{task_slug}", "success", 1)
-                TimeLineLogEntry(
-                    url="NONE",
-                    hash="NONE",
-                    user="DAEMON",
-                    action=timeline_log_action.TASK_COMPLETED,
-                    result=f"Completed {task.name} [{task_id}]",
-                    status_code=status_code.OK,
-                ).save()
+                logger.info(f"Completed {task.name} [{task_id}]")
             else:
                 task.backend.client.hincrby(f"counter_{task_slug}", "failed", 1)
-                TimeLineLogEntry(
-                    url="NONE",
-                    hash="NONE",
-                    user="DAEMON",
-                    action=timeline_log_action.TASK_COMPLETED,
-                    result=f"Completed {task.name} [{task_id}]",
-                    status_code=status_code.ERROR,
-                ).save()
+                logger.warning(
+                    f"Completed {task.name} [{task_id}]; execution failed..."
+                )
 
             insert_time = int(time.time())
             task.backend.client.zadd(
@@ -346,14 +325,9 @@ def ping() -> None:
     """
     This function just writes a ping entry into the database logging.
     """
-    TimeLineLogEntry(
-        url="NONE",
-        hash="NONE",
-        user="DAEMON",
-        action=timeline_log_action.DAEMON_PING,
-        result="Still alive!",
-        status_code=status_code.OK,
-    ).save()
+    logger = get_task_logger(__name__)
+
+    logger.info("Still alive!")
 
 
 @app.task(
@@ -776,15 +750,13 @@ def create_custom_evidence(data):
 
     url_data = [sh.get_data_by_hash(data["data"])]
 
-    DbLog.insert(
-        {
-            "url": sh.get_url_by_hash(data["data"]),
-            "hash": data["data"],
-            "action": tracelog_action.OD_EVIDENCE,
-            "result": tracelog_result.REQUESTED,
-            "reason": "User requested to create a custom evidence shot",
-        }
-    )
+    TraceLogEntry(
+        url=sh.get_url_by_hash(data["data"]),
+        hash=data["data"],
+        action=tracelog_action.OD_EVIDENCE,
+        result=tracelog_result.REQUESTED,
+        reason="User requested to create a custom evidence shot",
+    ).save()
 
     push_to_nodes.delay(url_data, evidence_shot=True, update_timestamp=True)
 
@@ -809,15 +781,13 @@ def create_custom_screenshot(data):
 
     display_sources = {sh.get_tab_by_hash(data["data"])[0]: [url_data]}
 
-    DbLog.insert(
-        {
-            "url": sh.get_url_by_hash(data["data"]),
-            "hash": data["data"],
-            "action": tracelog_action.OD_SCREENSHOT,
-            "result": tracelog_result.REQUESTED,
-            "reason": "User requested to create a custom screenshot",
-        }
-    )
+    TraceLogEntry(
+        url=sh.get_url_by_hash(data["data"]),
+        hash=data["data"],
+        action=tracelog_action.OD_SCREENSHOT,
+        result=tracelog_result.REQUESTED,
+        reason="User requested to create a custom screenshot",
+    ).save()
 
     logger.info(f"Hash mapped to url: {display_sources}!")
 
@@ -924,15 +894,13 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
                     ),
                 )
 
-            DbLog.insert(
-                {
-                    "url": sh.get_url_by_hash(each["sc_id"]),
-                    "hash": each["sc_id"],
-                    "action": tracelog_action.TIMELINE,
-                    "result": tracelog_result.OK,
-                    "reason": "Previous state screenshots moved to timeline!",
-                }
-            )
+            TraceLogEntry(
+                url=sh.get_url_by_hash(each["sc_id"]),
+                hash=each["sc_id"],
+                action=tracelog_action.TIMELINE,
+                result=tracelog_result.OK,
+                reason="Previous state screenshots moved to timeline!",
+            ).save()
 
     if len(evidence_workload) != 0:
         logger.info(

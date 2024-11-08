@@ -29,30 +29,25 @@ Session = sessionmaker(engine)
 
 @dataclass_json
 @dataclass
-class TimeLineLogEntry(Validations):
+class TraceLogEntry(Validations):
     url: str
     hash: str
     user: str
     action: str
+    reason: str
     result: Optional[str] = field(
         metadata=json_config(exclude=exclude_optional_dict), default=None
     )
-    status_code: Optional[int] = field(
+    status_code: Optional[int | str] = field(
         metadata=json_config(exclude=exclude_optional_dict), default=1337
-    )
-    reason: Optional[str] = field(
-        metadata=json_config(exclude=exclude_optional_dict), default=None
-    )
-
-    add_to_log: Optional[bool] = field(
-        metadata=json_config(exclude=exclude_optional_dict), default=True
     )
 
     def save(self):
         with Session.begin() as session:
             try:
                 timeline_entry = dataclasses.asdict(self)
-                new_log_entry = Tracelog(**timeline_entry, timestamp=int(time.time()))
-                session.add(new_log_entry)
+                timeline_entry.pop("add_to_log", None)
+                trace_log_entry = Tracelog(**timeline_entry, timestamp=int(time.time()))
+                session.add(trace_log_entry)
             except Exception:
                 raise

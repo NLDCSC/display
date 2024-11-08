@@ -15,7 +15,7 @@ import aiohttp
 from nldcsc.loggers.app_logger import AppLogger
 
 from display.apis.splash.splash_api import SplashApi
-from display.core.database_log.db_log import DbLog
+from display.core.database_logging.trace_log import TraceLogEntry
 from display.core.general.constants import tracelog_action, tracelog_result
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
 from display.webapp.config import Config
@@ -169,17 +169,13 @@ class AsyncScreenshots(object):
                             if v[:4] == b"\x89PNG":
                                 # picture taken; process
                                 self.store_normal_picture(k, v)
-                                DbLog.insert(
-                                    {
-                                        "url": self.screenshotHandler.get_url_by_hash(
-                                            k
-                                        ),
-                                        "hash": k,
-                                        "action": tracelog_action.SCREENSHOT,
-                                        "result": tracelog_result.OK,
-                                        "status_code": 200,
-                                    }
-                                )
+                                TraceLogEntry(
+                                    url=self.screenshotHandler.get_url_by_hash(k),
+                                    hash=k,
+                                    action=tracelog_action.SCREENSHOT,
+                                    result=tracelog_result.OK,
+                                    status_code=200,
+                                ).save()
                             else:
                                 # no picture assume uncatched error for now!
                                 self.store_error_picture(k)
@@ -187,18 +183,14 @@ class AsyncScreenshots(object):
                                 the_result = json.loads(v)
 
                                 if "error" in the_result:
-                                    DbLog.insert(
-                                        {
-                                            "url": self.screenshotHandler.get_url_by_hash(
-                                                k
-                                            ),
-                                            "hash": k,
-                                            "action": tracelog_action.SCREENSHOT,
-                                            "result": tracelog_result.NOK,
-                                            "status_code": the_result["error"],
-                                            "reason": the_result["description"],
-                                        }
-                                    )
+                                    TraceLogEntry(
+                                        url=self.screenshotHandler.get_url_by_hash(k),
+                                        hash=k,
+                                        action=tracelog_action.SCREENSHOT,
+                                        result=tracelog_result.NOK,
+                                        status_code=the_result["error"],
+                                        reason=the_result["description"],
+                                    ).save()
                         elif isinstance(v, str):
                             if v == "ERROR":
                                 # set to error pic
@@ -207,41 +199,33 @@ class AsyncScreenshots(object):
                             # dict with normal and evidence keys
                             if not evidence_shot:
                                 self.store_normal_picture(k, v["normal"])
-                                DbLog.insert(
-                                    {
-                                        "url": self.screenshotHandler.get_url_by_hash(
-                                            k
-                                        ),
-                                        "hash": k,
-                                        "action": tracelog_action.SCREENSHOT,
-                                        "result": tracelog_result.OK,
-                                        "status_code": 200,
-                                    }
-                                )
+                                TraceLogEntry(
+                                    url=self.screenshotHandler.get_url_by_hash(k),
+                                    hash=k,
+                                    action=tracelog_action.SCREENSHOT,
+                                    result=tracelog_result.OK,
+                                    status_code=200,
+                                ).save()
 
                             self.store_evidence_picture(k, v["evidence"])
-                            DbLog.insert(
-                                {
-                                    "url": self.screenshotHandler.get_url_by_hash(k),
-                                    "hash": k,
-                                    "action": tracelog_action.EVIDENCE,
-                                    "result": tracelog_result.OK,
-                                    "status_code": 200,
-                                }
-                            )
+                            TraceLogEntry(
+                                url=self.screenshotHandler.get_url_by_hash(k),
+                                hash=k,
+                                action=tracelog_action.EVIDENCE,
+                                result=tracelog_result.OK,
+                                status_code=200,
+                            ).save()
 
                         else:
                             # assume it's an error for now
                             self.store_error_picture(k)
-                            DbLog.insert(
-                                {
-                                    "url": self.screenshotHandler.get_url_by_hash(k),
-                                    "hash": k,
-                                    "action": tracelog_action.SCREENSHOT,
-                                    "result": tracelog_result.NOK,
-                                    "status_code": "?",
-                                }
-                            )
+                            TraceLogEntry(
+                                url=self.screenshotHandler.get_url_by_hash(k),
+                                hash=k,
+                                action=tracelog_action.SCREENSHOT,
+                                result=tracelog_result.NOK,
+                                status_code="?",
+                            ).save()
 
             except Exception as err:
                 self.logger.error(f"Error processing {k}, Error produced --> {err}")
@@ -314,15 +298,13 @@ class AsyncScreenshots(object):
             self.logger.warning(
                 f"Error getting {entry['url']} data.... Error observed: {err}"
             )
-            DbLog.insert(
-                {
-                    "url": entry["url"],
-                    "hash": url_hash,
-                    "action": tracelog_action.SCREENSHOT,
-                    "result": tracelog_result.UNK,
-                    "reason": err,
-                }
-            )
+            TraceLogEntry(
+                url=entry["url"],
+                hash=url_hash,
+                action=tracelog_action.SCREENSHOT,
+                result=tracelog_result.UNK,
+                reason=err,
+            ).save()
             return {url_hash: "ERROR"}
 
     async def fetch_all(self, loop):

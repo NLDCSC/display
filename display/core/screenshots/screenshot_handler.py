@@ -8,7 +8,7 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
-from display.core.database_log.db_log import DbLog
+from display.core.database_logging.trace_log import TraceLogEntry
 from display.core.general.constants import tracelog_action, tracelog_result
 from display.webapp.config import Config
 from display.webapp.helpers.utils.screenshots import (
@@ -236,14 +236,12 @@ class ScreenShotHandler(object):
                                 "changed": is_changed,
                             }
                         )
-                        DbLog.insert(
-                            {
-                                "url": self.get_url_by_hash(each),
-                                "hash": each,
-                                "action": tracelog_action.STATE_CHANGE,
-                                "result": tracelog_result.CHANGED,
-                            }
-                        )
+                        TraceLogEntry(
+                            url=self.get_url_by_hash(each),
+                            hash=each,
+                            action=tracelog_action.STATE_CHANGE,
+                            result=tracelog_result.CHANGED,
+                        ).save()
                     else:
                         ret_data.append(
                             {
@@ -252,14 +250,12 @@ class ScreenShotHandler(object):
                                 "changed": is_changed,
                             }
                         )
-                        DbLog.insert(
-                            {
-                                "url": self.get_url_by_hash(each),
-                                "hash": each,
-                                "action": tracelog_action.STATE_CHANGE,
-                                "result": tracelog_result.NOT_CHANGED,
-                            }
-                        )
+                        TraceLogEntry(
+                            url=self.get_url_by_hash(each),
+                            hash=each,
+                            action=tracelog_action.STATE_CHANGE,
+                            result=tracelog_result.NOT_CHANGED,
+                        ).save()
                 return ret_data
         except KeyError:
             return ret_data

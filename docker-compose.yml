@@ -3,27 +3,16 @@ name: 'Display'
 
 services:
 
-  flask_lb:
-    image: display-flask_lb
-    build:
-      context: .
-      dockerfile: .docker/images/flask_lb/nginx
-    hostname: flask_lb
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "127.0.0.1:8000:80"
-    networks:
-      - frontend
-      - backend
-
   flask_web:
     image: display-flask_web
     build:
       context: .
       dockerfile: .docker/images/flask/dockerfile-flask
     depends_on:
+      redis:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
       init_db:
         condition: service_completed_successfully
     deploy:
@@ -37,6 +26,12 @@ services:
       - "./docker_data/flask:/app/data"
     networks:
       - backend
+    healthcheck:
+      test: curl --fail http://localhost:5050 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 1
+      start_period: 30s
 
   flask_ws:
     image: display-flask_ws
@@ -44,6 +39,10 @@ services:
       context: .
       dockerfile: .docker/images/flask/dockerfile-flask
     depends_on:
+      redis:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
       init_db:
         condition: service_completed_successfully
     deploy:
@@ -57,6 +56,12 @@ services:
       - "./docker_data/flask:/app/data"
     networks:
       - backend
+    healthcheck:
+      test: curl --fail http://localhost:5050 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 1
+      start_period: 30s
 
   ha_proxy:
     image: display-splash-ha_proxy
@@ -65,6 +70,9 @@ services:
       dockerfile: .docker/images/haproxy/ha_proxy
     hostname: haproxy
     restart: always
+    depends_on:
+      splash:
+        condition: service_healthy
     env_file:
       - .env
     ports:
@@ -72,6 +80,13 @@ services:
     networks:
       - frontend
       - backend
+    healthcheck:
+      test: |
+        bash -c 'exec 3<>/dev/tcp/127.0.0.1/80; echo -e "GET / HTTP/1.1\nConnection: close\n" >&3; cat <&3 | grep -q "200 OK"'
+      interval: 30s
+      timeout: 5s
+      retries: 1
+      start_period: 30s
 
   splash:
     image: display-splash
@@ -93,16 +108,63 @@ services:
       retries: 1
       start_period: 20s
 
-  autoheal:
-    image: willfarrell/autoheal:latest
-    hostname: autoheal
+  celery_daemon:
+    image: display-celery_daemon
+    build:
+      context: .
+      dockerfile: .docker/images/celery_daemon/dockerfile-celery_daemon
+    depends_on:
+      redis:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      init_db:
+        condition: service_completed_successfully
+    deploy:
+      replicas: 2
     restart: always
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+    env_file:
+      - .env
     environment:
-      - AUTOHEAL_CONTAINER_LABEL=all
+      - PYTHONUNBUFFERED=TRUE
+    volumes:
+      - "./docker_data/flask:/app/data"
     networks:
       - backend
+    healthcheck:
+      test: poetry run celery -A display.celery_app.display_daemon inspect ping --destination celery@$$HOSTNAME
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  celery_beat:
+    image: display-celery_beat
+    build:
+      context: .
+      dockerfile: .docker/images/celery_beat/dockerfile-celery_beat
+    depends_on:
+      redis:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      init_db:
+        condition: service_completed_successfully
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=TRUE
+    volumes:
+      - "./docker_data/flask:/app/data"
+    networks:
+      - backend
+    healthcheck:
+      test: '[ "$$(find /tmp/beat_live -mmin -1 | wc -l)" != "" ] || false'
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   redis:
     image: display-redis
@@ -117,42 +179,12 @@ services:
       - 6379
     networks:
       - backend
-
-  celery_daemon:
-    image: display-celery_daemon
-    build:
-      context: .
-      dockerfile: .docker/images/celery_daemon/dockerfile-celery_daemon
-    depends_on:
-      - redis
-    deploy:
-      replicas: 2
-    restart: always
-    env_file:
-      - .env
-    environment:
-      - PYTHONUNBUFFERED=TRUE
-    volumes:
-      - "./docker_data/flask:/app/data"
-    networks:
-      - backend
-
-  celery_beat:
-    image: display-celery_beat
-    build:
-      context: .
-      dockerfile: .docker/images/celery_beat/dockerfile-celery_beat
-    depends_on:
-      - redis
-    restart: always
-    env_file:
-      - .env
-    environment:
-      - PYTHONUNBUFFERED=TRUE
-    volumes:
-      - "./docker_data/flask:/app/data"
-    networks:
-      - backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 1
+      start_period: 5s
 
   mysql:
     image: display-mysql
@@ -169,10 +201,11 @@ services:
     volumes:
       - "./docker_data/mysql_data:/var/lib/mysql"
     healthcheck:
-      test: ["CMD", 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p$$MYSQL_ROOT_PASSWORD' ]
-      timeout: 20s
-      retries: 10
-
+      test: ["CMD", 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p$$MYSQL_ROOT_PASSWORD']
+      interval: 30s
+      timeout: 5s
+      retries: 1
+      start_period: 5s
 
   init_db:
     image: display-init_db
@@ -191,6 +224,22 @@ services:
     networks:
       - backend
 
+  autoheal:
+    image: willfarrell/autoheal:latest
+    hostname: autoheal
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=all
+    networks:
+      - backend
+
 networks:
   frontend:
   backend:
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "172.26.1.1"
+    ipam:
+      config:
+        - subnet: 172.26.1.0/24

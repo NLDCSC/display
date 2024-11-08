@@ -20,8 +20,10 @@ services:
           ignore:
             - celery_app/
     depends_on:
-      - mysql
-      - redis
+      redis:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
     restart: always
     expose:
       - 5050
@@ -34,6 +36,12 @@ services:
     networks:
       backend:
         ipv4_address: 172.16.30.7
+    healthcheck:
+      test: curl --fail http://localhost:5050 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 1
+      start_period: 30s
 
   ha_proxy:
     image: display-splash-ha_proxy
@@ -42,13 +50,22 @@ services:
       dockerfile: .docker/images/haproxy/ha_proxy
     hostname: haproxy
     restart: always
+    depends_on:
+      splash:
+        condition: service_healthy
     env_file:
       - .env
     ports:
-      - "127.0.0.1:8050:8050"
+      - "8050:8050"
     networks:
-      backend:
-        ipv4_address: 172.16.30.6
+      - backend
+    healthcheck:
+      test: |
+        bash -c 'exec 3<>/dev/tcp/127.0.0.1/80; echo -e "GET / HTTP/1.1\nConnection: close\n" >&3; cat <&3 | grep -q "200 OK"'
+      interval: 30s
+      timeout: 5s
+      retries: 1
+      start_period: 30s
 
   splash:
     image: display-splash
@@ -58,6 +75,9 @@ services:
       dockerfile: .docker/images/splash/splash_screen
     deploy:
       replicas: 15
+    depends_on:
+      flask_web:
+        condition: service_healthy
     restart: always
     env_file:
       - .env
@@ -90,8 +110,10 @@ services:
             - webapp/auth/
             - webapp/admin/
     depends_on:
-      - redis
-      - mysql
+      redis:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
     restart: always
     security_opt:
       - seccomp:unconfined
@@ -102,8 +124,7 @@ services:
     volumes:
       - "./docker-data/flask:/app/data"
     networks:
-      backend:
-        ipv4_address: 172.16.30.11
+      - backend
 
   celery_beat:
     image: display-dev-celery_beat
@@ -125,8 +146,10 @@ services:
             - webapp/auth/
             - webapp/admin/
     depends_on:
-      - redis
-      - mysql
+      redis:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
     restart: always
     security_opt:
       - seccomp:unconfined
@@ -153,6 +176,12 @@ services:
     networks:
       backend:
         ipv4_address: 172.16.30.4
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 1
+      start_period: 5s
 
   mysql:
     image: display-dev-mysql
@@ -172,6 +201,12 @@ services:
     networks:
       backend:
         ipv4_address: 172.16.30.5
+    healthcheck:
+      test: ["CMD", 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p$$MYSQL_ROOT_PASSWORD']
+      interval: 30s
+      timeout: 5s
+      retries: 1
+      start_period: 5s
 
 networks:
   backend:

@@ -67,7 +67,7 @@ class Config(object):
     )
 
     SPLASH_HOST: str = os.getenv("SPLASH_HOST", "ha-proxy")
-    SPLASH_PORT: int = int(os.getenv("SPLASH_PORT", 8050))
+    SPLASH_PORT: int = int(os.getenv("SPLASH_PORT", 8055))
 
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://redis:6379/")
     REDIS_CACHE_DB: int = int(os.getenv("REDIS_CACHE_DB", 0))
