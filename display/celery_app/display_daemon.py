@@ -118,6 +118,8 @@ def general_task_pre_run_config(task_id, task, *args, **kwargs):
     if not task.ignore_result:
         logger = get_task_logger(__name__)
 
+        execution_times[task_id] = time.time()
+
         task.update_state(state="STARTED")
 
         logger.info("Task: {}, started!".format(task_id))
