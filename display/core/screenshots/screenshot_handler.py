@@ -1,7 +1,6 @@
 import hashlib
 import logging
 import os
-from collections import defaultdict
 from io import BytesIO
 from typing import List, Any
 
@@ -19,7 +18,6 @@ from display.webapp.helpers.utils.screenshots import (
     get_mod_time,
     get_compare_image,
 )
-from display.webapp.helpers.utils.sources import get_display_sources
 
 logging.setLoggerClass(AppLogger)
 
