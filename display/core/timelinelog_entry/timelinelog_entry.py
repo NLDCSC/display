@@ -4,17 +4,16 @@ import time
 from dataclasses import dataclass, field
 from typing import Optional
 
-from dataclasses_json import config as json_config
-from dataclasses_json import dataclass_json
-from nldcsc.loggers.app_logger import AppLogger
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
 from certexmon.core.general.constants import timeline_log_action
 from certexmon.core.general.data_class_validations import Validations
 from certexmon.core.general.utils import exclude_optional_dict
 from certexmon.webapp.app.definitions.core import Logs, Timeline
 from certexmon.webapp.config import Config
+from dataclasses_json import config as json_config
+from dataclasses_json import dataclass_json
+from nldcsc.loggers.app_logger import AppLogger
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 logging.setLoggerClass(AppLogger)
 

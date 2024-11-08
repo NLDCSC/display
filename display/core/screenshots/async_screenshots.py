@@ -12,9 +12,9 @@ from collections import defaultdict
 from pathlib import Path
 
 import aiohttp
-from display.apis.splash.splash_api import SplashApi
 from nldcsc.loggers.app_logger import AppLogger
 
+from display.apis.splash.splash_api import SplashApi
 from display.core.database_log.db_log import DbLog
 from display.core.general.constants import tracelog_action, tracelog_result
 from display.core.screenshots.screenshot_handler import ScreenShotHandler

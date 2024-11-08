@@ -1,7 +1,5 @@
 from dotenv import load_dotenv
 
-from display.core.redis_utils.redis_utils_class import RedisUtils
-
 load_dotenv(".env")
 
 import contextlib
@@ -63,6 +61,7 @@ from display.core.tasks.custom_encoder import custom_dumps, custom_loads
 from display.core.tasks.periodic_tasks import PeriodicTasks
 from display.core.tasks.task_result import TaskResult
 from display.core.timelinelog_entry.timelinelog_entry import TimeLineLogEntry
+from display.core.redis_utils.redis_utils_class import RedisUtils
 from pyvirtualdisplay.smartdisplay import SmartDisplay
 from nldcsc.loggers.app_logger import AppLogger
 from nldcsc.flask_plugins.flask_redis import FlaskRedis
