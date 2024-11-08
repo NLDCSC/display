@@ -1,7 +1,5 @@
 from dotenv import load_dotenv
 
-from display.core.database_logging.trace_log import TraceLogEntry
-
 load_dotenv(".env")
 
 import contextlib
@@ -23,7 +21,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from kombu import Queue
-from kombu.serialization import register
 from celery import Celery
 from sqlalchemy import delete
 from selenium import webdriver
@@ -57,8 +54,7 @@ from display.webapp.helpers.utils.sources import (
     get_display_source_chunk,
     chunks,
 )
-from display.core.tasks.custom_encoder import custom_dumps, custom_loads
-from display.core.tasks.periodic_tasks import PeriodicTasks
+from display.core.database_logging.trace_log import TraceLogEntry
 from display.core.tasks.task_result import TaskResult
 from display.core.redis_utils.redis_utils_class import RedisUtils
 from pyvirtualdisplay.smartdisplay import SmartDisplay
@@ -72,14 +68,6 @@ config = Config()
 READINESS_FILE = Path("/tmp/beat_ready")
 HEARTBEAT_FILE = Path("/tmp/beat_live")
 
-register(
-    "customjson",
-    custom_dumps,
-    custom_loads,
-    content_type="application/x-customjson",
-    content_encoding="utf-8",
-)
-
 app = Celery(
     "display",
     broker=f"{config.REDIS_URL}{config.REDIS_BROKER_DB}",
@@ -90,9 +78,6 @@ app = Celery(
     task_default_queue="default",
     task_queues=(Queue("default"), Queue("nodes", routing_key="nodes")),
     broker_connection_retry_on_startup=True,
-    accept_content=["customjson"],
-    result_serializer="customjson",
-    task_serializer="customjson",
     result_expires=config.CELERY_RESULT_EXPIRES,
 )
 
@@ -115,14 +100,13 @@ def setup_logging(logger, *args, **kwargs):
 
 @task_prerun.connect
 def general_task_pre_run_config(task_id, task, *args, **kwargs):
-    if not task.ignore_result:
-        logger = get_task_logger(__name__)
+    logger = get_task_logger(__name__)
 
-        execution_times[task_id] = time.time()
+    execution_times[task_id] = time.time()
 
-        task.update_state(state="STARTED")
+    task.update_state(state="STARTED")
 
-        logger.info("Task: {}, started!".format(task_id))
+    logger.info("Task: {}, started!".format(task_id))
 
 
 @task_retry.connect
@@ -258,26 +242,16 @@ def general_task_failure_config(task_id, exception, traceback, einfo, *args, **k
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    """
-    Schedule tasks every xx seconds or via crontab schedule
-    """
-
-    all_tasks = {
-        PeriodicTasks(30.0, "ping"),
-        PeriodicTasks(30.0, "guard_config"),
-        PeriodicTasks(60.0, "store_node_status"),
-        PeriodicTasks(60.0, "delete_duplicate_timeline_entries"),
-        PeriodicTasks(1800.0, "delete_old_timeline_screenshots"),
-        PeriodicTasks(1800.0, "delete_old_log_entries"),
-        PeriodicTasks(float(config.SCREENSHOT_REFRESH), "balance_screenshot_workload"),
-    }
-
-    for task_entry in all_tasks:
-        if task_entry.enabled:
-            sender.add_periodic_task(
-                task_entry.schedule,
-                app.signature(task_entry.task),
-            )
+    # Create screenshots every xx seconds
+    sender.add_periodic_task(
+        float(config.SCREENSHOT_REFRESH), balance_screenshot_workload.s()
+    )
+    sender.add_periodic_task(30.0, guard_config.s())
+    sender.add_periodic_task(30.0, ping.s())
+    sender.add_periodic_task(60.0, delete_duplicate_timeline_entries.s())
+    sender.add_periodic_task(60.0, store_node_status.s())
+    sender.add_periodic_task(1800.0, delete_old_timeline_screenshots.s())
+    sender.add_periodic_task(1800.0, delete_old_log_entries.s())
 
 
 @beat_init.connect
@@ -754,6 +728,7 @@ def create_custom_evidence(data):
 
     TraceLogEntry(
         url=sh.get_url_by_hash(data["data"]),
+        user="DAEMON",
         hash=data["data"],
         action=tracelog_action.OD_EVIDENCE,
         result=tracelog_result.REQUESTED,
@@ -785,6 +760,7 @@ def create_custom_screenshot(data):
 
     TraceLogEntry(
         url=sh.get_url_by_hash(data["data"]),
+        user="DAEMON",
         hash=data["data"],
         action=tracelog_action.OD_SCREENSHOT,
         result=tracelog_result.REQUESTED,
@@ -898,6 +874,7 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
 
             TraceLogEntry(
                 url=sh.get_url_by_hash(each["sc_id"]),
+                user="DAEMON",
                 hash=each["sc_id"],
                 action=tracelog_action.TIMELINE,
                 result=tracelog_result.OK,

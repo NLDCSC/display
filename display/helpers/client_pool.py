@@ -1,3 +1,5 @@
+from typing import List
+
 from display.core.connections.client_connection import ClientConnection
 from display.errors.display_errors import DisplayClientTypeError
 
@@ -6,7 +8,7 @@ class ClientPool(object):
     def __init__(self):
         self.pool = {}
 
-    def add(self, client):
+    def add(self, client: ClientConnection):
         if not isinstance(client, ClientConnection):
             raise DisplayClientTypeError(
                 "Provided argument is not of type ClientConnection, but of type {}".format(
@@ -18,18 +20,18 @@ class ClientPool(object):
 
         return
 
-    def remove(self, client_sid):
+    def remove(self, client_sid: str) -> ClientConnection:
         self.pool.pop(client_sid)
         return
 
-    def get(self, client_sid):
+    def get(self, client_sid: str) -> ClientConnection:
         return self.pool[client_sid]
 
-    def fetch_client_details(self):
+    def fetch_client_details(self) -> None:
         return {key: value.client_details() for (key, value) in self.pool.items()}
 
-    def fetch_clients(self):
+    def fetch_clients(self) -> List[ClientConnection]:
         return [client for client in self.pool.values()]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<< ClientPool >>"

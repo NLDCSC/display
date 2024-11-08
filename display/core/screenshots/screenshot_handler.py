@@ -3,6 +3,7 @@ import logging
 import os
 from collections import defaultdict
 from io import BytesIO
+from typing import List, Any
 
 from PIL import Image
 from PIL import ImageDraw
@@ -57,21 +58,21 @@ class ScreenShotHandler(object):
         # noinspection InsecureHash
         return hashlib.md5(hash_input).hexdigest()[:6]
 
-    def set_tabname_to_tabhash(self):
+    def set_tabname_to_tabhash(self) -> dict[str, str]:
 
         for each in self.display_sources:
             self.tabname_to_tabhash[each] = self.get_hash(each.encode("utf-8"))
 
         self.tabname_to_tabhash = dict(self.tabname_to_tabhash)
 
-    def set_tabhash_to_tabname(self):
+    def set_tabhash_to_tabname(self) -> dict[str, str]:
 
         for each in self.display_sources:
             self.tabhash_to_tabname[self.get_hash(each.encode("utf-8"))] = each
 
         self.tabhash_to_tabname = dict(self.tabhash_to_tabname)
 
-    def set_hash_to_tab_mapping(self):
+    def set_hash_to_tab_mapping(self) -> dict[str, str]:
 
         for key, value in self.display_sources.items():
             for item in value:
@@ -86,7 +87,7 @@ class ScreenShotHandler(object):
 
         self.hash_to_tab_mapping = dict(self.hash_to_tab_mapping)
 
-    def set_hash_to_header_mapping(self):
+    def set_hash_to_header_mapping(self) -> dict[str, str]:
 
         for key, value in self.display_sources.items():
             for item in value:
@@ -97,7 +98,7 @@ class ScreenShotHandler(object):
 
         self.hash_to_header_mapping = dict(self.hash_to_header_mapping)
 
-    def set_hash_to_url_mapping(self):
+    def set_hash_to_url_mapping(self) -> dict[str, str]:
 
         for key, value in self.display_sources.items():
             for item in value:
@@ -107,7 +108,7 @@ class ScreenShotHandler(object):
 
         self.hash_to_url_mapping = dict(self.hash_to_url_mapping)
 
-    def set_hash_to_data_mapping(self):
+    def set_hash_to_data_mapping(self) -> dict[str, dict[str, str | int]]:
 
         for key, value in self.display_sources.items():
             for item in value:
@@ -122,7 +123,7 @@ class ScreenShotHandler(object):
 
         self.hash_to_data_mapping = dict(self.hash_to_data_mapping)
 
-    def set_tab_to_hash_list(self):
+    def set_tab_to_hash_list(self) -> dict[str, list]:
 
         for key, value in self.hash_to_tab_mapping.items():
             if isinstance(value, list):
@@ -133,49 +134,49 @@ class ScreenShotHandler(object):
 
         self.tab_to_hash_list = dict(self.tab_to_hash_list)
 
-    def get_tab_by_hash(self, the_hash):
+    def get_tab_by_hash(self, the_hash: str) -> str:
 
         try:
             return self.hash_to_tab_mapping[the_hash]
         except KeyError:
             return False
 
-    def get_url_by_hash(self, the_hash):
+    def get_url_by_hash(self, the_hash: str) -> str:
 
         try:
             return self.hash_to_url_mapping[the_hash]
         except KeyError:
             return False
 
-    def get_data_by_hash(self, the_hash):
+    def get_data_by_hash(self, the_hash: str) -> str:
 
         try:
             return self.hash_to_data_mapping[the_hash]
         except KeyError:
             return False
 
-    def get_hashes_by_tab_name(self, tab_name):
+    def get_hashes_by_tab_name(self, tab_name: str) -> list:
 
         try:
             return self.tab_to_hash_list[tab_name]
         except KeyError:
             return False
 
-    def get_tabhash_by_tabname(self, tab_name):
+    def get_tabhash_by_tabname(self, tab_name: str) -> str:
 
         try:
             return self.tabname_to_tabhash[tab_name]
         except KeyError:
             return False
 
-    def get_tabname_by_tabhash(self, the_hash):
+    def get_tabname_by_tabhash(self, the_hash: str) -> str:
 
         try:
             return self.tabhash_to_tabname[the_hash]
         except KeyError:
             return False
 
-    def get_hash_by_url(self, the_url):
+    def get_hash_by_url(self, the_url: str) -> str:
 
         the_hash = self.get_hash(the_url.encode("utf-8"))
 
@@ -186,7 +187,7 @@ class ScreenShotHandler(object):
                 "The requested url hash is not a part of the urls in the configuration!"
             )
 
-    def get_all_screenshots(self, tab_name):
+    def get_all_screenshots(self, tab_name: str) -> List[dict[str, Any]]:
 
         ret_data = []
 
@@ -207,7 +208,7 @@ class ScreenShotHandler(object):
             return ret_data
 
     @staticmethod
-    def get_hash_screenshot(url_hash):
+    def get_hash_screenshot(url_hash: str) -> dict[str, Any]:
 
         ret_data = {
             "sc_id": url_hash,
@@ -218,7 +219,7 @@ class ScreenShotHandler(object):
 
         return ret_data
 
-    def get_changed_screenshots_per_tab(self, tab_name):
+    def get_changed_screenshots_per_tab(self, tab_name: str) -> List[dict[str, Any]]:
 
         ret_data = []
 
@@ -262,8 +263,8 @@ class ScreenShotHandler(object):
 
     @staticmethod
     def get_changed_data_from_custom_screenshots(
-        the_hash,
-        evidence_shot=False,
+        the_hash: str,
+        evidence_shot: bool = False,
     ):
 
         ret_data = []
@@ -292,11 +293,11 @@ class ScreenShotHandler(object):
 
     def set_timestamp_to_picture(
         self,
-        filename,
+        filename: str,
         filename_is_full_path: bool = False,
         url_hash: str = None,
         send_buffer: bool = False,
-    ):
+    ) -> None | BytesIO:
 
         if not filename_is_full_path:
             normal_path = os.path.join(
@@ -328,19 +329,35 @@ class ScreenShotHandler(object):
 
         if not filename_is_full_path:
             if os.path.exists(evidence_path):
-                text = f"    {get_mod_time(filename, False, filename_is_full_path, True)}  -  {self.get_tab_by_hash(the_hash=url_hash)[-1]}    "
+                text = (
+                    f"    {get_mod_time(filename, False, filename_is_full_path, True)}  -  "
+                    f"{self.get_tab_by_hash(the_hash=url_hash)[-1]}    "
+                )
             else:
-                text = f"    {self.get_url_by_hash(the_hash=url_hash)} @ {get_mod_time(filename, False, filename_is_full_path, False)}    "
+                text = (
+                    f"    {self.get_url_by_hash(the_hash=url_hash)} @ "
+                    f"{get_mod_time(filename, False, filename_is_full_path, False)}    "
+                )
         elif filename_is_full_path:
             if os.path.basename(filename)[:4] == "eve-":
-                text = f"    {get_mod_time(filename, False, filename_is_full_path, True)}  -  {self.get_tab_by_hash(the_hash=url_hash)[-1]}    "
+                text = (
+                    f"    {get_mod_time(filename, False, filename_is_full_path, True)}  -  "
+                    f"{self.get_tab_by_hash(the_hash=url_hash)[-1]}    "
+                )
             else:
-                text = f"    {self.get_url_by_hash(the_hash=url_hash)} @ {get_mod_time(filename, False, filename_is_full_path, False)}    "
+                text = (
+                    f"    {self.get_url_by_hash(the_hash=url_hash)} @ "
+                    f"{get_mod_time(filename, False, filename_is_full_path, False)}    "
+                )
         else:
-            text = f"    {self.get_url_by_hash(the_hash=url_hash)} @ {get_mod_time(filename, False, filename_is_full_path, False)}    "
+            text = (
+                f"    {self.get_url_by_hash(the_hash=url_hash)} @ "
+                f"{get_mod_time(filename, False, filename_is_full_path, False)}    "
+            )
 
         # get text width and height
-        text_w, text_h = drawing.textsize(text, font)
+        text_w = int(drawing.textlength(text, font))
+        text_h = int(font.size)
 
         pos = 0, 0
 
@@ -364,7 +381,7 @@ class ScreenShotHandler(object):
 
     def limit_img_size(
         self, filename: str, target_filesize: int = 100000, tolerance: int = 5
-    ):
+    ) -> None:
         """
         Limiting input file to a maximum of approximately (give or take the tolerance) of 100 kb
         """

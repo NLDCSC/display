@@ -10,6 +10,7 @@ import os
 import shutil
 from collections import defaultdict
 from pathlib import Path
+from typing import List
 
 import aiohttp
 from nldcsc.loggers.app_logger import AppLogger
@@ -32,12 +33,9 @@ class AsyncScreenshots(object):
 
     :param incoming_workload: Dict containing at minimal a key with a value and a list with urls which shall be used to
                               take the screenshots
-    :type incoming_workload: dict
-    :param user_agent: The user agent to use when retrieving the data
-    :type user_agent: str
     """
 
-    def __init__(self, incoming_workload=None):
+    def __init__(self, incoming_workload: dict[str, List[str]] = None):
 
         self.config = Config()
 
@@ -86,8 +84,7 @@ class AsyncScreenshots(object):
         self.headers = self.__default_headers
 
         self.splash_api = SplashApi(
-            (self.config.SPLASH_HOST, self.config.SPLASH_PORT),
-            protocol="http",
+            baseurl=f"{self.config.SPLASH_PROTOCOL}://{self.config.SPLASH_HOST}:{self.config.SPLASH_PORT}",
             user_agent=self.config.USER_AGENT,
         )
 

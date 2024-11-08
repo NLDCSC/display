@@ -3,6 +3,25 @@ name: 'Display'
 
 services:
 
+  flask_lb:
+    image: display-dev-flask_lb
+    build:
+      context: .
+      dockerfile: .docker/images/flask_lb/nginx
+    hostname: flask_lb
+    restart: always
+    depends_on:
+      flask_web:
+        condition: service_healthy
+      flask_ws:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:8000:80"
+    networks:
+      - backend
+
   flask_web:
     image: display-dev-flask_web
     build:
@@ -36,6 +55,36 @@ services:
     networks:
       backend:
         ipv4_address: 172.16.30.7
+    healthcheck:
+      test: curl --fail http://localhost:5050 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 1
+      start_period: 30s
+
+  flask_ws:
+    image: display-dev-flask_ws
+    build:
+      context: .
+      dockerfile: .docker/images/flask/dockerfile-flask
+      args:
+        PORT: 5050
+        UID: ${HOST_UID:-1000}
+        GID: ${HOST_GID:-1000}
+    depends_on:
+      flask_web:
+        condition: service_healthy
+    restart: always
+    expose:
+      - 5050
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=TRUE
+    volumes:
+      - "./docker-data/flask:/app/data"
+    networks:
+      - backend
     healthcheck:
       test: curl --fail http://localhost:5050 || exit 1
       interval: 30s

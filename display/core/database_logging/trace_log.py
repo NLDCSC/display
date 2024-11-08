@@ -32,9 +32,13 @@ Session = sessionmaker(engine)
 class TraceLogEntry(Validations):
     url: str
     hash: str
-    user: str
     action: str
-    reason: str
+    user: Optional[str] = field(
+        metadata=json_config(exclude=exclude_optional_dict), default="DAEMON"
+    )
+    reason: Optional[str] = field(
+        metadata=json_config(exclude=exclude_optional_dict), default="NA"
+    )
     result: Optional[str] = field(
         metadata=json_config(exclude=exclude_optional_dict), default=None
     )

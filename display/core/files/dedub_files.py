@@ -18,6 +18,9 @@ class DeduplicateFilesInFolder(object):
 
         self.top_level_path = top_level_path
 
+        if not os.path.exists(self.config.TIMELINE_LOCATION):
+            os.makedirs(self.config.TIMELINE_LOCATION)
+
         if self.top_level_path is None:
             self.dir_workload = [
                 f"{os.path.join(self.config.TIMELINE_LOCATION, x)}"
