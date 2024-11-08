@@ -2,7 +2,7 @@
     <h2>Display node status:</h2>
     <button class="popup-close" id="btn_close2">&times;</button>
     <hr class="ruler">
-    {% if node_status is defined %}
+    {% if node_status|length > 0 %}
         {% set count = namespace(value=0) %}
         {% for entry in node_status.data %}
             {% if node_status.data[entry].status == "OK" %}
