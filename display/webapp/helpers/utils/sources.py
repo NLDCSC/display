@@ -14,7 +14,7 @@ config = Config()
 logger = logging.getLogger(__name__)
 
 
-def get_display_sources(add_header_tabs: bool = False):
+def get_display_sources(add_header_tabs: bool = False) -> dict:
 
     if not os.path.exists(config.CONFIG_PATH):
         os.mkdir(config.CONFIG_PATH)

@@ -36,6 +36,8 @@ config = Config()
 @home.route("/")
 @login_required
 def index():
+
+    # TODO do further testing with new config parser as full replacement for get_display_sources
     display_sources = get_display_sources(config.SCREENSHOT_HEADER_TABS)
 
     all_display_sources = display_sources
