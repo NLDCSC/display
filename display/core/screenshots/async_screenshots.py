@@ -12,7 +12,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import aiohttp
-from display.external_apis.splash.splash_api import SplashApi
+from display.apis.splash.splash_api import SplashApi
 from nldcsc.loggers.app_logger import AppLogger
 
 from display.core.database_log.db_log import DbLog

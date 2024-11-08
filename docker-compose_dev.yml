@@ -47,8 +47,8 @@ services:
     ports:
       - "127.0.0.1:8050:8050"
     networks:
-      - frontend
-      - backend
+      backend:
+        ipv4_address: 172.16.30.6
 
   splash:
     image: display-splash

@@ -4,6 +4,7 @@ package-mode = false
 [tool.poetry.dependencies]
 python = "^3.10"
 celery = {version = ">=5.4.0", extras = ["redis"]}
+celery-redbeat = ">=2.2.0"
 nldcsc = {version = ">=0.2.47", extras = ["flask_managers", "flask_middleware", "loggers", "http_apis", "sso"]}
 flask = "3.0.3"
 flask-migrate = "4.0.7"

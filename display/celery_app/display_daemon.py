@@ -1,6 +1,4 @@
 from dotenv import load_dotenv
-from nldcsc.loggers.app_logger import AppLogger
-from sqlalchemy import delete
 
 load_dotenv(".env")
 
@@ -25,6 +23,8 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from kombu import Queue
 from celery import Celery
+from sqlalchemy import delete
+from selenium import webdriver
 from celery.result import AsyncResult, allow_join_result
 from celery.app.log import TaskFormatter
 from celery.signals import task_prerun, after_setup_task_logger, after_setup_logger
@@ -45,7 +45,7 @@ from display.webapp.helpers.utils.sources import (
     chunks,
 )
 from pyvirtualdisplay.smartdisplay import SmartDisplay
-from selenium import webdriver
+from nldcsc.loggers.app_logger import AppLogger
 
 logging.setLoggerClass(AppLogger)
 
