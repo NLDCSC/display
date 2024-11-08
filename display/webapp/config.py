@@ -108,3 +108,17 @@ class Config(object):
     SSO_SCOPES: List[str] = getenv_list("SSO_SCOPES", ["openid", "profile", "email"])
 
     ALLOWED_USER_GROUPS: List[str] = getenv_list("ALLOWED_USER_GROUPS", [])
+
+    # DAEMON TASK STORAGE SETTINGS
+    CELERY_TASK_FAILED_ERROR_CODE: int = int(
+        os.getenv("CELERY_TASK_FAILED_ERROR_CODE", 1337)
+    )
+    CELERY_KEEP_TASK_RESULT: int = int(
+        os.getenv("CELERY_KEEP_TASK_RESULT", 7)
+    )  # in days
+    CELERY_TASK_TIME_LIMIT: int = int(
+        os.getenv("CELERY_TASK_TIME_LIMIT", 900)
+    )  # in seconds
+    CELERY_RESULT_EXPIRES: int = int(
+        os.getenv("CELERY_RESULT_EXPIRES", 300)
+    )  # in seconds

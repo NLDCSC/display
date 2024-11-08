@@ -1,5 +1,7 @@
 from dotenv import load_dotenv
 
+from display.core.redis_utils.redis_utils_class import RedisUtils
+
 load_dotenv(".env")
 
 import contextlib
@@ -13,27 +15,40 @@ import os
 import shutil
 import time
 import uuid
-import redis
 
 from io import BytesIO
-
+from pathlib import Path
 from selenium.common import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from kombu import Queue
+from kombu.serialization import register
 from celery import Celery
 from sqlalchemy import delete
 from selenium import webdriver
 from celery.result import AsyncResult, allow_join_result
-from celery.app.log import TaskFormatter
-from celery.signals import task_prerun, after_setup_task_logger, after_setup_logger
+from celery.signals import (
+    task_prerun,
+    worker_process_init,
+    setup_logging,
+    task_failure,
+    task_postrun,
+    task_retry,
+    after_task_publish,
+    beat_init,
+)
 from celery.utils.log import get_task_logger
 from flask_socketio import SocketIO
 from celery.backends.database import SessionManager
 
 from display.core.database_log.db_log import DbLog
-from display.core.general.constants import tracelog_action, tracelog_result
+from display.core.general.constants import (
+    tracelog_action,
+    tracelog_result,
+    task_result,
+    timeline_log_action,
+)
 from display.webapp.app.models import Tracelog
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
 from display.core.files.dedub_files import DeduplicateFilesInFolder
@@ -44,12 +59,28 @@ from display.webapp.helpers.utils.sources import (
     get_display_source_chunk,
     chunks,
 )
+from display.core.tasks.custom_encoder import custom_dumps, custom_loads
+from display.core.tasks.periodic_tasks import PeriodicTasks
+from display.core.tasks.task_result import TaskResult
+from display.core.timelinelog_entry.timelinelog_entry import TimeLineLogEntry
 from pyvirtualdisplay.smartdisplay import SmartDisplay
 from nldcsc.loggers.app_logger import AppLogger
+from nldcsc.flask_plugins.flask_redis import FlaskRedis
 
 logging.setLoggerClass(AppLogger)
 
 config = Config()
+
+READINESS_FILE = Path("/tmp/beat_ready")
+HEARTBEAT_FILE = Path("/tmp/beat_live")
+
+register(
+    "customjson",
+    custom_dumps,
+    custom_loads,
+    content_type="application/x-customjson",
+    content_encoding="utf-8",
+)
 
 app = Celery(
     "display",
@@ -57,52 +88,31 @@ app = Celery(
     backend=f"{config.REDIS_URL}{config.REDIS_BACKEND_DB}",
     result_extended=True,
     include=["display.celery_app.display_daemon"],
-    task_time_limit=900,
+    task_time_limit=config.CELERY_TASK_TIME_LIMIT,
     task_default_queue="default",
     task_queues=(Queue("default"), Queue("nodes", routing_key="nodes")),
     broker_connection_retry_on_startup=True,
-    result_expires=300,
+    accept_content=["customjson"],
+    result_serializer="customjson",
+    task_serializer="customjson",
+    result_expires=config.CELERY_RESULT_EXPIRES,
 )
 
 socketio = SocketIO(message_queue=config.REDIS_URL)
+redis_client = FlaskRedis(init_standalone=True).redis_client
+
+execution_times = {}
 
 
-@after_setup_logger.connect
-def setup_loggers(logger, *args, **kwargs):
-    """
-    This function will setup the custom loggers for the workers.
-
-    :param logger: Reference to the default celery logger
-    :type logger: logger
-    :param args: Positional Arguments
-    :type args: list
-    :param kwargs: Keyword arguments
-    :type kwargs: list
-    """
-    for handler in logger.handlers:
-        handler.setFormatter(
-            TaskFormatter("%(asctime)s - %(name)-8s - %(levelname)-8s - %(message)s")
-        )
+@worker_process_init.connect
+def worker_proc_init(**kwargs):
+    pass
 
 
-@after_setup_task_logger.connect
-def setup_task_logger(logger, *args, **kwargs):
-    """
-    This function will setup the custom loggers for the tasks.
-
-    :param logger: Reference to the default celery logger
-    :type logger: logger
-    :param args: Positional Arguments
-    :type args: list
-    :param kwargs: Keyword arguments
-    :type kwargs: list
-    """
-    for handler in logger.handlers:
-        handler.setFormatter(
-            TaskFormatter(
-                "%(asctime)s - %(task_name)s[%(task_id)s] - %(levelname)-8s - %(message)s"
-            )
-        )
+@setup_logging.connect
+def setup_logging(logger, *args, **kwargs):
+    # Disregard all celery processing on loggers and let the generic loggerClass handle the configuration of the loggers
+    pass
 
 
 @task_prerun.connect
@@ -115,17 +125,200 @@ def general_task_pre_run_config(task_id, task, *args, **kwargs):
         logger.info("Task: {}, started!".format(task_id))
 
 
+@task_retry.connect
+def general_task_retry_config(request, reason, einfo, *args, **kwargs):
+    logger = get_task_logger(__name__)
+
+    logger.warning(f"Task retry initiated reason: {reason}")
+
+
+@task_postrun.connect
+def general_task_post_run_config(task_id, task, retval, state, *args, **kwargs):
+    logger = get_task_logger(__name__)
+
+    try:
+        cost = time.time() - execution_times.pop(task_id)
+    except KeyError:
+        cost = -1
+
+    logger.info(
+        f"Task post run cost: {cost}, State: {state}, Task: {task}, RetVal: {retval}"
+    )
+
+    task.request.update(task_execution_time=cost)
+
+    if "task_slug" in task.request.kwargs:
+        task_slug = task.request.kwargs["task_slug"]
+    else:
+        task_slug = task.name
+
+    if not task.ignore_result:
+        if isinstance(retval, Exception) or retval is None:
+            TimeLineLogEntry(
+                user="DAEMON",
+                ip_addr="SYSTEM",
+                action=timeline_log_action.TASK_COMPLETED,
+                message=f"Completed {task.name} [{task_id}]",
+                result=task_result.FAILURE,
+                add_to_log=False,
+            ).save()
+
+            task.backend.client.set(
+                f"runresult_{task_slug}",
+                config.CELERY_TASK_FAILED_ERROR_CODE,
+                ex=86400,
+            )
+            task.backend.client.hincrby(f"counter_{task_slug}", "failed", 1)
+
+            insert_time = int(time.time())
+            task.backend.client.zadd(
+                f"sortresults_{task_slug}", {f"{task_slug}_{task_id}": insert_time}
+            )
+            task.backend.client.hset(
+                f"{task_slug}_{task_id}",
+                mapping={
+                    "state": "FAILURE",
+                    "status": config.CELERY_TASK_FAILED_ERROR_CODE,
+                    "cost": cost,
+                    "messages": json.dumps(
+                        [
+                            {"data": f"{type(retval)}"},
+                        ]
+                    ),
+                    "errors": json.dumps([]),
+                    "inserted": insert_time,
+                    "task_id": task_id,
+                },
+            )
+            task.backend.client.expire(
+                name=f"{task_slug}_{task_id}",
+                time=config.CELERY_KEEP_TASK_RESULT * 60 * 60 * 24,
+            )
+        elif isinstance(retval, TaskResult):
+            task.backend.client.set(f"runresult_{task_slug}", retval.status, ex=86400)
+            if retval.status == task_result.SUCCESS:
+                task.backend.client.hincrby(f"counter_{task_slug}", "success", 1)
+                TimeLineLogEntry(
+                    user="DAEMON",
+                    ip_addr="SYSTEM",
+                    action=timeline_log_action.TASK_COMPLETED,
+                    message=f"Completed {task.name} [{task_id}]",
+                    result=task_result.SUCCESS,
+                    add_to_log=False,
+                ).save()
+            else:
+                task.backend.client.hincrby(f"counter_{task_slug}", "failed", 1)
+                TimeLineLogEntry(
+                    user="DAEMON",
+                    ip_addr="SYSTEM",
+                    action=timeline_log_action.TASK_COMPLETED,
+                    message=f"Completed {task.name} [{task_id}]",
+                    result=task_result.FAILURE,
+                    add_to_log=False,
+                ).save()
+
+            insert_time = int(time.time())
+            task.backend.client.zadd(
+                f"sortresults_{task_slug}", {f"{task_slug}_{task_id}": insert_time}
+            )
+            task.backend.client.hset(
+                f"{task_slug}_{task_id}",
+                mapping={
+                    "state": state,
+                    "status": retval.status,
+                    "cost": cost,
+                    "messages": json.dumps(retval.messages),
+                    "errors": json.dumps(retval.errors),
+                    "inserted": insert_time,
+                    "task_id": task_id,
+                },
+            )
+            task.backend.client.expire(
+                name=f"{task_slug}_{task_id}",
+                time=config.CELERY_KEEP_TASK_RESULT * 60 * 60 * 24,
+            )
+
+        else:
+            task.backend.client.set(
+                f"runresult_{task_slug}", retval["status"], ex=86400
+            )
+            task.backend.client.hincrby(f"counter_{task_slug}", "success", 1)
+
+            insert_time = int(time.time())
+            task.backend.client.zadd(
+                f"sortresults_{task_slug}", {f"{task_slug}_{task_id}": insert_time}
+            )
+            task.backend.client.hset(
+                f"{task_slug}_{task_id}",
+                mapping={
+                    "state": state,
+                    "status": retval["status"],
+                    "cost": cost,
+                    "messages": json.dumps(retval),
+                    "errors": json.dumps([]),
+                    "inserted": insert_time,
+                    "task_id": task_id,
+                },
+            )
+            task.backend.client.expire(
+                name=f"{task_slug}_{task_id}",
+                time=config.CELERY_KEEP_TASK_RESULT * 60 * 60 * 24,
+            )
+
+    logger.info("Task execution completed!")
+
+
+@task_failure.connect
+def general_task_failure_config(task_id, exception, traceback, einfo, *args, **kwargs):
+    logger = get_task_logger(__name__)
+
+    logger.exception(exception)
+
+
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    # Create screenshots every xx seconds
-    sender.add_periodic_task(
-        float(config.SCREENSHOT_REFRESH), balance_screenshot_workload.s()
-    )
-    sender.add_periodic_task(30.0, guard_config.s())
-    sender.add_periodic_task(60.0, delete_duplicate_timeline_entries.s())
-    sender.add_periodic_task(60.0, store_node_status.s())
-    sender.add_periodic_task(1800.0, delete_old_timeline_screenshots.s())
-    sender.add_periodic_task(1800.0, delete_old_log_entries.s())
+    """
+    Schedule tasks every xx seconds or via crontab schedule
+    """
+
+    all_tasks = {
+        PeriodicTasks(30.0, "ping"),
+        PeriodicTasks(30.0, "guard_config"),
+        PeriodicTasks(60.0, "store_node_status"),
+        PeriodicTasks(60.0, "delete_duplicate_timeline_entries"),
+        PeriodicTasks(1800.0, "delete_old_timeline_screenshots"),
+        PeriodicTasks(1800.0, "delete_old_log_entries"),
+        PeriodicTasks(float(config.SCREENSHOT_REFRESH), "balance_screenshot_workload"),
+    }
+
+    for task_entry in all_tasks:
+        if task_entry.enabled:
+            sender.add_periodic_task(
+                task_entry.schedule,
+                app.signature(task_entry.task),
+            )
+
+
+@beat_init.connect
+def startup_tasks(sender, **kwargs):
+    """
+    Tasks that should be run when beat starts, if two task share the same index they are chained.
+        1. Ping that the daemon is alive is nice to have.
+        2. Fire guard_config.
+    """
+    logger = get_task_logger(__name__)
+
+    logger.info("Running startup tasks")
+    logger.info(f"sending task {ping.delay()} (ping)")
+    logger.info(f"sending task {guard_config.delay()} (guard_config)")
+    # touching file is needed as a check possibility
+    READINESS_FILE.touch()
+
+
+@after_task_publish.connect()
+def task_published(**_):
+    # touching file is needed as a heartbeat check possibility
+    HEARTBEAT_FILE.touch()
 
 
 @contextlib.contextmanager
@@ -149,6 +342,21 @@ def get_db_session():
 @app.task(
     ignore_result=True,
 )
+def ping() -> None:
+    """
+    This function just writes a ping entry into the database logging.
+    """
+    TimeLineLogEntry(
+        user="DAEMON",
+        ip_addr="SYSTEM",
+        action=timeline_log_action.DAEMON_PING,
+        result="Still alive!",
+    ).save()
+
+
+@app.task(
+    ignore_result=True,
+)
 def guard_config():
     logger = get_task_logger(__name__)
 
@@ -167,15 +375,9 @@ def guard_config():
 
     logger.info(f"Current config hash: {current_hash}")
 
-    host, port = config.REDIS_URL.split("//")[1][:-1].split(":")
+    former_hash = RedisUtils.decode_redis_output(redis_client.get("config_hash"))
 
-    with redis.Redis(host=host, port=port, db=7) as conn:
-        former_hash = conn.get("config_hash")
-
-        if former_hash is not None:
-            former_hash = former_hash.decode("utf-8")
-
-        conn.set("config_hash", current_hash)
+    redis_client.set("config_hash", current_hash)
 
     logger.info(f"Current_hash: {current_hash} -- Former_hash: {former_hash}")
 
@@ -215,26 +417,22 @@ def balance_screenshot_workload():
 
     logger.info(f"Total needed chunks calculated: {total_chunks_needed}")
 
-    # check last run chunk number in redis
-    host, port = config.REDIS_URL.split("//")[1][:-1].split(":")
+    last_run_number = RedisUtils.decode_redis_output(
+        redis_client.get("last_run_number")
+    )
 
-    with redis.Redis(host=host, port=port, db=7) as conn:
-        last_run_number = conn.get("last_run_number")
+    if last_run_number is not None:
 
-        if last_run_number is not None:
-
-            last_run_number = int(last_run_number.decode("utf-8"))
-
-            if last_run_number < total_chunks_needed:
-                conn.set("last_run_number", last_run_number + 1)
-            else:
-                # Reset last_run_number to 0 and set 1 for the next run to prevent 0 from running twice
-                conn.set("last_run_number", 1)
-                last_run_number = 0
+        if last_run_number < total_chunks_needed:
+            redis_client.set("last_run_number", last_run_number + 1)
         else:
-            # never run before, storing 0
-            conn.set("last_run_number", 0)
+            # Reset last_run_number to 0 and set 1 for the next run to prevent 0 from running twice
+            redis_client.set("last_run_number", 1)
             last_run_number = 0
+    else:
+        # never run before, storing 0
+        redis_client.set("last_run_number", 0)
+        last_run_number = 0
 
     logger.info(f"Getting display source with number: {last_run_number}")
 
@@ -836,9 +1034,6 @@ def store_node_status():
 
     store_dict = {"timestamp": int(time.time()), "data": dict(status_dict)}
 
-    host, port = config.REDIS_URL.split("//")[1][:-1].split(":")
-
-    with redis.Redis(host=host, port=port, db=7) as conn:
-        conn.set("node_status", json.dumps(store_dict))
+    redis_client.set("node_status", json.dumps(store_dict))
 
     logger.info("Done storing node status")
