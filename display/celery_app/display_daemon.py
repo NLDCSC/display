@@ -46,6 +46,7 @@ from display.core.general.constants import (
     tracelog_result,
     task_result,
     timeline_log_action,
+    status_code,
 )
 from display.webapp.app.models import Tracelog
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
@@ -154,12 +155,12 @@ def general_task_post_run_config(task_id, task, retval, state, *args, **kwargs):
     if not task.ignore_result:
         if isinstance(retval, Exception) or retval is None:
             TimeLineLogEntry(
+                url="NONE",
+                hash="NONE",
                 user="DAEMON",
-                ip_addr="SYSTEM",
                 action=timeline_log_action.TASK_COMPLETED,
-                message=f"Completed {task.name} [{task_id}]",
-                result=task_result.FAILURE,
-                add_to_log=False,
+                result=f"Completed {task.name} [{task_id}]",
+                status_code=status_code.ERROR,
             ).save()
 
             task.backend.client.set(
@@ -198,22 +199,22 @@ def general_task_post_run_config(task_id, task, retval, state, *args, **kwargs):
             if retval.status == task_result.SUCCESS:
                 task.backend.client.hincrby(f"counter_{task_slug}", "success", 1)
                 TimeLineLogEntry(
+                    url="NONE",
+                    hash="NONE",
                     user="DAEMON",
-                    ip_addr="SYSTEM",
                     action=timeline_log_action.TASK_COMPLETED,
-                    message=f"Completed {task.name} [{task_id}]",
-                    result=task_result.SUCCESS,
-                    add_to_log=False,
+                    result=f"Completed {task.name} [{task_id}]",
+                    status_code=status_code.OK,
                 ).save()
             else:
                 task.backend.client.hincrby(f"counter_{task_slug}", "failed", 1)
                 TimeLineLogEntry(
+                    url="NONE",
+                    hash="NONE",
                     user="DAEMON",
-                    ip_addr="SYSTEM",
                     action=timeline_log_action.TASK_COMPLETED,
-                    message=f"Completed {task.name} [{task_id}]",
-                    result=task_result.FAILURE,
-                    add_to_log=False,
+                    result=f"Completed {task.name} [{task_id}]",
+                    status_code=status_code.ERROR,
                 ).save()
 
             insert_time = int(time.time())
@@ -346,10 +347,12 @@ def ping() -> None:
     This function just writes a ping entry into the database logging.
     """
     TimeLineLogEntry(
+        url="NONE",
+        hash="NONE",
         user="DAEMON",
-        ip_addr="SYSTEM",
         action=timeline_log_action.DAEMON_PING,
         result="Still alive!",
+        status_code=status_code.OK,
     ).save()
 
 

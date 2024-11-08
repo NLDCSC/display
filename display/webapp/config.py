@@ -33,8 +33,8 @@ class Config(object):
 
     DB_HOST: str = os.getenv("DB_HOST", "mysql")
 
-    MYSQL_DATABASE: str = os.getenv("MYSQL_DATABASE", "certexmon")
-    MYSQL_USER: str = os.getenv("MYSQL_USER", "certexmon")
+    MYSQL_DATABASE: str = os.getenv("MYSQL_DATABASE", "display")
+    MYSQL_USER: str = os.getenv("MYSQL_USER", "display")
     MYSQL_PASSWORD: str = os.getenv("MYSQL_PASSWORD", "SomethingSuperSecret")
 
     SQLALCHEMY_DATABASE_URI: str = os.getenv(

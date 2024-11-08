@@ -8,6 +8,8 @@ user_type = namedtuple("user_type", "NORMAL SYSTEM")(0, 1)
 
 msg_cats = namedtuple("msg_cats", "OK NOK")("success", "error")
 
+status_code = namedtuple("status_code", ["OK", "ERROR"])(0, 1)
+
 user_permissions = namedtuple("user_permissions", "NONE READ WRITE")(0, 1, 2)
 
 tracelog_result = namedtuple(
