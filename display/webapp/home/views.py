@@ -3,7 +3,6 @@ import json
 import logging
 import os
 
-import redis
 from flask import (
     render_template,
     send_from_directory,
@@ -25,7 +24,7 @@ from ..helpers.utils.timelines import (
     get_mtime_sorted_timeline_dir_from_hash,
     get_mod_time_from_path,
 )
-from ..run import db
+from ..run import db, rediswrap
 
 logging.setLoggerClass(AppLogger)
 
@@ -40,18 +39,20 @@ def index():
     display_sources = get_display_sources(config.SCREENSHOT_HEADER_TABS)
 
     all_display_sources = display_sources
+    try:
+        header_tabs = [
+            header
+            for header in all_display_sources
+            if all_display_sources[header][0]["header"] == header
+        ]
 
-    header_tabs = [
-        header
-        for header in all_display_sources
-        if all_display_sources[header][0]["header"] == header
-    ]
-
-    normal_tabs = [
-        header
-        for header in all_display_sources
-        if all_display_sources[header][0]["header"] != header
-    ]
+        normal_tabs = [
+            header
+            for header in all_display_sources
+            if all_display_sources[header][0]["header"] != header
+        ]
+    except KeyError:
+        pass
 
     display_sources = {}
 
@@ -64,10 +65,7 @@ def index():
 @login_required
 def get_status_nodes():
 
-    host, port = config.REDIS_URL.split("//")[1][:-1].split(":")
-
-    with redis.Redis(host=host, port=port, db=7) as conn:
-        node_status = conn.get("node_status")
+    node_status = rediswrap.get("node_status")
 
     if node_status is not None:
         node_status = json.loads(node_status)

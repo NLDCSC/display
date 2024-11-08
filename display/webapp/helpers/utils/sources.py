@@ -1,14 +1,24 @@
 import collections
 import json
+import logging
 import os
 from operator import itemgetter
 
+from nldcsc.loggers.app_logger import AppLogger
+
 from display.webapp.config import Config
 
+logging.setLoggerClass(AppLogger)
 config = Config()
+
+logger = logging.getLogger(__name__)
 
 
 def get_display_sources(add_header_tabs: bool = False):
+
+    if not os.path.exists(config.CONFIG_PATH):
+        os.mkdir(config.CONFIG_PATH)
+
     try:
         with open(os.path.join(config.CONFIG_PATH, config.CONFIG_FILE), "r") as f:
             config_json = json.loads(f.read())
@@ -20,26 +30,32 @@ def get_display_sources(add_header_tabs: bool = False):
             f.write(json.dumps({"none": [{}]}))
 
         display_sources = {"none": [{}]}
+        return display_sources
 
-    # sort entries in display source
-    for key, values in display_sources.items():
-        display_sources[key] = sorted(values, key=itemgetter("header"))
+    try:
+        # sort entries in display source
+        for key, values in display_sources.items():
+            display_sources[key] = sorted(values, key=itemgetter("header"))
 
-    if add_header_tabs:
-        header_display_sources = add_header_tabs_from_sources(display_sources)
+        if add_header_tabs:
+            header_display_sources = add_header_tabs_from_sources(display_sources)
 
-        for key, values in header_display_sources.items():
-            header_display_sources[key] = sorted(values, key=itemgetter("alt_header"))
+            for key, values in header_display_sources.items():
+                header_display_sources[key] = sorted(
+                    values, key=itemgetter("alt_header")
+                )
 
-        display_sources = {**display_sources, **header_display_sources}
+            display_sources = {**display_sources, **header_display_sources}
 
-    # let's order the entries....
-    ordered_dict = collections.OrderedDict()
+        # let's order the entries....
+        ordered_dict = collections.OrderedDict()
 
-    for each in sorted(list(display_sources.keys())):
-        ordered_dict[each] = display_sources[each]
+        for each in sorted(list(display_sources.keys())):
+            ordered_dict[each] = display_sources[each]
 
-    display_sources = dict(ordered_dict)
+        display_sources = dict(ordered_dict)
+    except KeyError:
+        logger.info(f"Missing configuration settings or settings are not complete...")
 
     return display_sources
 

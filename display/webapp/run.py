@@ -7,6 +7,7 @@ from flask_migrate import Migrate
 from flask_socketio import SocketIO
 from nldcsc.flask_midddleware.debug_logging import DebugLoggingMiddleware
 from nldcsc.flask_midddleware.middleware_manager import MiddlewareManager
+from nldcsc.flask_plugins.flask_redis import FlaskRedis
 from nldcsc.flask_plugins.flask_sqlalchemy import FlaskSQLAlchemy
 from nldcsc.loggers.app_logger import AppLogger
 
@@ -21,6 +22,7 @@ db = FlaskSQLAlchemy()
 migrate = Migrate(compare_type=True)
 socketio = SocketIO()
 mwm = MiddlewareManager()
+rediswrap = FlaskRedis()
 
 if config.SSO_LOGIN_ENABLE:
     from nldcsc.sso.flask_sso import SSOConnection
@@ -55,6 +57,7 @@ def create_app(version):
 
     db.init_app(app)
     migrate.init_app(app, db)
+    rediswrap.init_app(app)
 
     if config.SSO_LOGIN_ENABLE:
         sso.init_app(app)
