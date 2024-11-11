@@ -176,6 +176,41 @@ class DisplayConfig:
         return ret_data
 
 
+@cache.cache(ttl=config.CACHE_DEFAULT_TIMEOUT)
+def read_from_file(
+    config_location: str = None,
+) -> dict[str, List[dict[str, str | int]]]:
+    return read_direct_from_file(config_location=config_location)
+
+
+def read_direct_from_file(
+    config_location: str = None,
+) -> dict[str, List[dict[str, str | int]]]:
+    if config_location is None:
+        if not os.path.exists(config.CONFIG_PATH):
+            os.mkdir(config.CONFIG_PATH)
+
+        try:
+            with open(os.path.join(config.CONFIG_PATH, config.CONFIG_FILE), "r") as f:
+                config_json = json.loads(f.read())
+
+            return config_json
+        except FileNotFoundError:
+            with open(os.path.join(config.CONFIG_PATH, config.CONFIG_FILE), "w") as f:
+                f.write(json.dumps({"none": [{}]}))
+
+            display_sources = {"none": [{}]}
+            return display_sources
+    else:
+        try:
+            with open(config_location, "r") as f:
+                config_json = json.loads(f.read())
+
+            return config_json
+        except FileNotFoundError:
+            raise
+
+
 class DisplayConfigParser(object):
 
     def __init__(self, config_dict: dict = None, config_location: Path = None):
@@ -188,11 +223,9 @@ class DisplayConfigParser(object):
         if self.config_dict is None:
             try:
                 if force:
-                    data = self.read_direct_from_file(
-                        config_location=self.config_location
-                    )
+                    data = read_direct_from_file(config_location=self.config_location)
                 else:
-                    data = self.read_from_file(config_location=self.config_location)
+                    data = read_from_file(config_location=self.config_location)
             except FileNotFoundError:
                 self.logger.warning(f"The provided config location does not exist!")
                 raise
@@ -222,48 +255,7 @@ class DisplayConfigParser(object):
         return DisplayConfig(target_group_list)
 
     def invalidate_config_file_cache(self) -> None:
-        self.read_direct_from_file.invalidate(config_location=self.config_location)
-
-    @staticmethod
-    @cache.cache(ttl=config.CACHE_DEFAULT_TIMEOUT)
-    def read_from_file(
-        config_location: str = None,
-    ) -> dict[str, List[dict[str, str | int]]]:
-        return DisplayConfigParser.read_direct_from_file(
-            config_location=config_location
-        )
-
-    @staticmethod
-    def read_direct_from_file(
-        config_location: str = None,
-    ) -> dict[str, List[dict[str, str | int]]]:
-        if config_location is None:
-            if not os.path.exists(config.CONFIG_PATH):
-                os.mkdir(config.CONFIG_PATH)
-
-            try:
-                with open(
-                    os.path.join(config.CONFIG_PATH, config.CONFIG_FILE), "r"
-                ) as f:
-                    config_json = json.loads(f.read())
-
-                return config_json
-            except FileNotFoundError:
-                with open(
-                    os.path.join(config.CONFIG_PATH, config.CONFIG_FILE), "w"
-                ) as f:
-                    f.write(json.dumps({"none": [{}]}))
-
-                display_sources = {"none": [{}]}
-                return display_sources
-        else:
-            try:
-                with open(config_location, "r") as f:
-                    config_json = json.loads(f.read())
-
-                return config_json
-            except FileNotFoundError:
-                raise
+        read_from_file.invalidate()
 
     def __repr__(self):
         return f"<< DisplayConfigParser >>"

@@ -33,13 +33,13 @@ logger = logging.getLogger(__name__)
 config = Config()
 
 display_config_parser = DisplayConfigParser()
-display_config = display_config_parser.get_display_config_obj()
 
 
 @home.route("/")
 @login_required
 def index():
 
+    display_config = display_config_parser.get_display_config_obj()
     display_sources = display_config.display_sources()
 
     all_display_sources = display_sources

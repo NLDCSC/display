@@ -29,7 +29,6 @@ logger = logging.getLogger(__name__)
 clients = ClientPool()
 
 display_config_parser = DisplayConfigParser()
-display_config = display_config_parser.get_display_config_obj()
 
 
 @socketio.on("disconnect_request", namespace="/display")
@@ -143,6 +142,8 @@ def do_disconnect():
 def do_change_display_tab(data):
     global clients
 
+    sh = ScreenShotHandler()
+
     req_client = clients.get(request.sid)
 
     if req_client.current_tab is not None:
@@ -157,6 +158,7 @@ def do_change_display_tab(data):
         f"Client: {req_client.sid} is changing room from {old_tab} to {data['tab_name']}"
     )
 
+    display_config = display_config_parser.get_display_config_obj()
     display_sources = display_config.display_sources()
 
     display_sources = {data["tab_name"]: display_sources[data["tab_name"]]}
@@ -174,14 +176,11 @@ def do_change_display_tab(data):
     # using call here to wait for the callback of the client; timeout error is raised is callback is not received in
     # time; retrying the second time with the emit event
     try:
-        # noinspection InsecureHash
         call(
             "push_all_screenshots",
             {
                 "html_data": html_data,
-                "tab_hash": hashlib.md5(data["tab_name"].encode("utf-8")).hexdigest()[
-                    :6
-                ],
+                "tab_hash": sh.get_hash(data["tab_name"].encode("utf-8")),
             },
             to=req_client.sid,
             timeout=10,
@@ -189,14 +188,11 @@ def do_change_display_tab(data):
         logger.info(f"Client {req_client.sid} received data on tab: {data['tab_name']}")
     except SocketIOTimeOutError:
         logger.warning(f"Timeout error on client: {req_client}; retrying!")
-        # noinspection InsecureHash
         emit(
             "push_all_screenshots",
             {
                 "html_data": html_data,
-                "tab_hash": hashlib.md5(data["tab_name"].encode("utf-8")).hexdigest()[
-                    :6
-                ],
+                "tab_hash": sh.get_hash(data["tab_name"].encode("utf-8")),
             },
         )
 
@@ -256,6 +252,7 @@ def do_rebuild_request():
 
     req_client = clients.get(request.sid)
 
+    display_config = display_config_parser.get_display_config_obj()
     display_sources = display_config.display_sources()
 
     all_display_sources = display_sources
@@ -280,7 +277,6 @@ def do_rebuild_request():
 
     logger.info(f"Client: {req_client.sid} is rebuilding page...")
 
-    # noinspection InsecureHash
     emit(
         "rebuild_page",
         {

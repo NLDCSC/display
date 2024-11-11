@@ -10,7 +10,7 @@ config = Config()
 redis_client = FlaskRedis(init_standalone=True).redis_client
 cache = RedisCache(
     redis_client=redis_client,
-    prefix="display_cache",
+    prefix=f"{config.CACHE_KEY_PREFIX}",
     serializer=dumps,
     deserializer=loads,
     key_serializer=None,

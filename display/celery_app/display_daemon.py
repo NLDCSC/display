@@ -81,7 +81,6 @@ socketio = SocketIO(message_queue=config.REDIS_URL)
 redis_client = FlaskRedis(init_standalone=True).redis_client
 
 display_config_parser = DisplayConfigParser()
-display_config = display_config_parser.get_display_config_obj()
 
 execution_times = {}
 
@@ -356,6 +355,7 @@ def balance_screenshot_workload():
     logger.info("Creating balanced workload!")
 
     try:
+        display_config = display_config_parser.get_display_config_obj()
         display_sources = display_config.display_sources()
     except Exception as err:
         logger.error(f"Unhandled error --> {err}")

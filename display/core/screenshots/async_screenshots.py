@@ -1,8 +1,3 @@
-"""
-async_header_collector.py
-=========================
-"""
-
 import asyncio
 import json
 import logging
@@ -27,6 +22,29 @@ logging.setLoggerClass(AppLogger)
 config = Config()
 
 
+@cache.cache(ttl=config.CACHE_DEFAULT_TIMEOUT)
+def get_screenshot_sources():
+    try:
+        with open(
+            os.path.join(config.CONFIG_PATH, config.SCREENSHOT_SOURCE_CONFIG_FILE),
+            "r",
+        ) as f:
+            screenshot_config_json = json.loads(f.read())
+
+        screenshot_sources = screenshot_config_json
+
+    except FileNotFoundError:
+        with open(
+            os.path.join(config.CONFIG_PATH, config.SCREENSHOT_SOURCE_CONFIG_FILE),
+            "w",
+        ) as f:
+            f.write(json.dumps({"none": ["none"]}))
+
+        screenshot_sources = {"none": ["none"]}
+
+    return screenshot_sources
+
+
 class AsyncScreenshots(object):
     """
     The AsyncScreenshots is a class which will take screenshots passing the requests asynchronously to the splash API .
@@ -41,7 +59,7 @@ class AsyncScreenshots(object):
 
         self.logger = logging.getLogger(__name__)
 
-        self._screen_shot_sources = self.get_screenshot_sources()
+        self._screen_shot_sources = get_screenshot_sources()
 
         self.tab_to_screenshotsource_mapping = defaultdict()
         self.set_tab_to_screenshotsource_mapping()
@@ -110,28 +128,8 @@ class AsyncScreenshots(object):
             "User-Agent": f"{self.user_agent}",
         }
 
-    @staticmethod
-    @cache.cache(ttl=config.CACHE_DEFAULT_TIMEOUT)
-    def get_screenshot_sources():
-        try:
-            with open(
-                os.path.join(config.CONFIG_PATH, config.SCREENSHOT_SOURCE_CONFIG_FILE),
-                "r",
-            ) as f:
-                screenshot_config_json = json.loads(f.read())
-
-            screenshot_sources = screenshot_config_json
-
-        except FileNotFoundError:
-            with open(
-                os.path.join(config.CONFIG_PATH, config.SCREENSHOT_SOURCE_CONFIG_FILE),
-                "w",
-            ) as f:
-                f.write(json.dumps({"none": ["none"]}))
-
-            screenshot_sources = {"none": ["none"]}
-
-        return screenshot_sources
+    def invalidate_config_file_cache(self) -> None:
+        cache.delete(self.get_screenshot_sources)
 
     def set_tab_to_screenshotsource_mapping(self):
 

@@ -77,6 +77,7 @@ class Config(object):
     REDIS_BACKEND_DB: int = int(os.getenv("REDIS_BACKEND_DB", 6))
 
     # CACHE_SETTINGS
+    CACHE_KEY_PREFIX: str = os.getenv("CACHE_KEY_PREFIX", "display_cache")
     CACHE_DEFAULT_TIMEOUT: int = int(os.getenv("CACHE_DEFAULT_TIMEOUT", 1800))
 
     SCREENSHOT_LOCATION: str = os.getenv(
