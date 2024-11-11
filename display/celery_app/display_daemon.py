@@ -1,5 +1,9 @@
 from dotenv import load_dotenv
 
+from display.core.parsers.screenshot_source_config_parser import (
+    ScreenshotSourceConfigParser,
+)
+
 load_dotenv(".env")
 
 import contextlib
@@ -49,7 +53,7 @@ from display.core.files.dedub_files import DeduplicateFilesInFolder
 from display.webapp.config import Config
 from display.core.screenshots.async_screenshots import AsyncScreenshots
 from display.core.general.utils import chunks
-from display.core.parsers.config_parser import DisplayConfigParser
+from display.core.parsers.display_config_parser import DisplayConfigParser
 from display.core.database_logging.trace_log import TraceLogEntry
 from display.core.tasks.task_result import TaskResult
 from display.core.redis_utils.redis_utils_class import RedisUtils
@@ -81,6 +85,7 @@ socketio = SocketIO(message_queue=config.REDIS_URL)
 redis_client = FlaskRedis(init_standalone=True).redis_client
 
 display_config_parser = DisplayConfigParser()
+screenshot_source_config_parser = ScreenshotSourceConfigParser()
 
 execution_times = {}
 
@@ -338,6 +343,37 @@ def guard_config():
         logger.info("Broadcast send!")
     else:
         logger.info("Configs match!")
+
+    logger.info("Getting screenshot source config hash")
+
+    try:
+        current_source_config = (
+            screenshot_source_config_parser.get_screenshot_source_config_obj(force=True)
+        )
+    except Exception as err:
+        logger.error(f"Unhandled error --> {err}")
+        return
+
+    logger.info(
+        f"Current screenshot source config hash: {current_source_config.config_hash}"
+    )
+
+    former_hash = RedisUtils.decode_redis_output(
+        redis_client.get("screenshot_config_hash")
+    )
+
+    redis_client.set("screenshot_config_hash", current_source_config.config_hash)
+
+    logger.info(
+        f"Current_hash: {current_source_config.config_hash} -- Former_hash: {former_hash}"
+    )
+
+    if former_hash != current_display_config.config_hash:
+        logger.info("Configs are different; invalidating cache")
+        screenshot_source_config_parser.invalidate_config_file_cache()
+        logger.info("Cache invalidated!")
+    else:
+        logger.info("Screenshot source configs match!")
 
     logger.info("Done with guard config")
 

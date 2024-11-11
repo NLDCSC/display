@@ -23,7 +23,7 @@ from . import home
 from ..app.models import Tracelog
 from ..config import Config
 from ..run import db, rediswrap
-from ...core.parsers.config_parser import DisplayConfigParser
+from ...core.parsers.display_config_parser import DisplayConfigParser
 from ...core.screenshots.utils import get_mod_time
 
 logging.setLoggerClass(AppLogger)

@@ -177,13 +177,13 @@ class DisplayConfig:
 
 
 @cache.cache(ttl=config.CACHE_DEFAULT_TIMEOUT)
-def read_from_file(
+def get_display_config_file(
     config_location: str = None,
 ) -> dict[str, List[dict[str, str | int]]]:
-    return read_direct_from_file(config_location=config_location)
+    return get_direct_display_config_file(config_location=config_location)
 
 
-def read_direct_from_file(
+def get_direct_display_config_file(
     config_location: str = None,
 ) -> dict[str, List[dict[str, str | int]]]:
     if config_location is None:
@@ -223,9 +223,11 @@ class DisplayConfigParser(object):
         if self.config_dict is None:
             try:
                 if force:
-                    data = read_direct_from_file(config_location=self.config_location)
+                    data = get_direct_display_config_file(
+                        config_location=self.config_location
+                    )
                 else:
-                    data = read_from_file(config_location=self.config_location)
+                    data = get_display_config_file(config_location=self.config_location)
             except FileNotFoundError:
                 self.logger.warning(f"The provided config location does not exist!")
                 raise
@@ -238,7 +240,11 @@ class DisplayConfigParser(object):
             target_list = []
             for target in value:
                 target_list.append(Target(**target))
-            target_group_list.append(TargetGroup(name=key, targets=target_list))
+            target_group_list.append(
+                TargetGroup(
+                    name=key, targets=sorted(target_list, key=lambda x: x.header)
+                )
+            )
 
         if config.SCREENSHOT_HEADER_TABS:
             ret_dict = collections.defaultdict(list)
@@ -249,13 +255,18 @@ class DisplayConfigParser(object):
 
             for key, value in ret_dict.items():
                 target_group_list.append(
-                    TargetGroup(name=key, targets=value, from_headers=True)
+                    TargetGroup(
+                        name=key,
+                        targets=sorted(value, key=lambda x: x.header),
+                        from_headers=True,
+                    )
                 )
 
-        return DisplayConfig(target_group_list)
+        return DisplayConfig(sorted(target_group_list, key=lambda x: x.name))
 
-    def invalidate_config_file_cache(self) -> None:
-        read_from_file.invalidate()
+    @staticmethod
+    def invalidate_config_file_cache() -> None:
+        get_display_config_file.invalidate()
 
     def __repr__(self):
         return f"<< DisplayConfigParser >>"

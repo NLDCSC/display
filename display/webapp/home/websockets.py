@@ -13,7 +13,7 @@ from display.celery_app.display_daemon import (
 )
 from display.core.clients.client_pool import ClientPool
 from display.core.connections.client_connection import ClientConnection
-from display.core.parsers.config_parser import DisplayConfigParser
+from display.core.parsers.display_config_parser import DisplayConfigParser
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
 from display.core.screenshots.utils import getB64_screenshot
 from display.webapp.run import socketio

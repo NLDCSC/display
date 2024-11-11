@@ -14,35 +14,15 @@ from display.apis.splash.splash_api import SplashApi
 from display.core.cache.display_cache import cache
 from display.core.database_logging.trace_log import TraceLogEntry
 from display.core.general.constants import tracelog_action, tracelog_result
+from display.core.parsers.screenshot_source_config_parser import (
+    ScreenshotSourceConfigParser,
+)
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
 from display.webapp.config import Config
 
 logging.setLoggerClass(AppLogger)
 
 config = Config()
-
-
-@cache.cache(ttl=config.CACHE_DEFAULT_TIMEOUT)
-def get_screenshot_sources():
-    try:
-        with open(
-            os.path.join(config.CONFIG_PATH, config.SCREENSHOT_SOURCE_CONFIG_FILE),
-            "r",
-        ) as f:
-            screenshot_config_json = json.loads(f.read())
-
-        screenshot_sources = screenshot_config_json
-
-    except FileNotFoundError:
-        with open(
-            os.path.join(config.CONFIG_PATH, config.SCREENSHOT_SOURCE_CONFIG_FILE),
-            "w",
-        ) as f:
-            f.write(json.dumps({"none": ["none"]}))
-
-        screenshot_sources = {"none": ["none"]}
-
-    return screenshot_sources
 
 
 class AsyncScreenshots(object):
@@ -59,7 +39,11 @@ class AsyncScreenshots(object):
 
         self.logger = logging.getLogger(__name__)
 
-        self._screen_shot_sources = get_screenshot_sources()
+        self.screenshot_source_parser = ScreenshotSourceConfigParser()
+        self.screenshot_config = (
+            self.screenshot_source_parser.get_screenshot_source_config_obj()
+        )
+        self._screen_shot_sources = self.screenshot_config.screenshot_sources()
 
         self.tab_to_screenshotsource_mapping = defaultdict()
         self.set_tab_to_screenshotsource_mapping()
@@ -127,9 +111,6 @@ class AsyncScreenshots(object):
             "Content-Type": "application/json",
             "User-Agent": f"{self.user_agent}",
         }
-
-    def invalidate_config_file_cache(self) -> None:
-        cache.delete(self.get_screenshot_sources)
 
     def set_tab_to_screenshotsource_mapping(self):
 
