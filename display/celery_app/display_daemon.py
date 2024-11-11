@@ -753,7 +753,7 @@ def execute_on_node(entries, scroll_percent=0):
     retry_jitter=False,
     ignore_result=True,
 )
-def create_custom_evidence(data):
+def create_custom_evidence(data: dict):
     logger = get_task_logger(__name__)
 
     logger.info(f"Starting custom evidence creation on {data}!")
@@ -783,7 +783,7 @@ def create_custom_evidence(data):
     retry_jitter=False,
     ignore_result=True,
 )
-def create_custom_screenshot(data):
+def create_custom_screenshot(data: dict):
     logger = get_task_logger(__name__)
 
     logger.info(f"Starting custom screenshot creation on {data}!")
