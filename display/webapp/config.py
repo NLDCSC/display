@@ -76,6 +76,9 @@ class Config(object):
     REDIS_BROKER_DB: int = int(os.getenv("REDIS_BROKER_DB", 5))
     REDIS_BACKEND_DB: int = int(os.getenv("REDIS_BACKEND_DB", 6))
 
+    # CACHE_SETTINGS
+    CACHE_DEFAULT_TIMEOUT: int = int(os.getenv("CACHE_DEFAULT_TIMEOUT", 1800))
+
     SCREENSHOT_LOCATION: str = os.getenv(
         "SCREENSHOT_LOCATION", "/app/data/screenshots/"
     )

@@ -11,12 +11,11 @@ from display.celery_app.display_daemon import (
     create_custom_screenshot,
     create_custom_evidence,
 )
+from display.core.clients.client_pool import ClientPool
 from display.core.connections.client_connection import ClientConnection
+from display.core.parsers.config_parser import DisplayConfigParser
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
-from display.helpers.client_pool import ClientPool
-from display.webapp.helpers.utils.screenshots import getB64_screenshot
-from display.webapp.helpers.utils.sources import get_display_sources
-from display.webapp.home.views import config
+from display.core.screenshots.utils import getB64_screenshot
 from display.webapp.run import socketio
 
 logging.setLoggerClass(AppLogger)
@@ -28,6 +27,9 @@ logging.getLogger("engineio.server").setLevel("ERROR")
 logger = logging.getLogger(__name__)
 
 clients = ClientPool()
+
+display_config_parser = DisplayConfigParser()
+display_config = display_config_parser.get_display_config_obj()
 
 
 @socketio.on("disconnect_request", namespace="/display")
@@ -155,7 +157,7 @@ def do_change_display_tab(data):
         f"Client: {req_client.sid} is changing room from {old_tab} to {data['tab_name']}"
     )
 
-    display_sources = get_display_sources(config.SCREENSHOT_HEADER_TABS)
+    display_sources = display_config.display_sources()
 
     display_sources = {data["tab_name"]: display_sources[data["tab_name"]]}
 
@@ -254,7 +256,7 @@ def do_rebuild_request():
 
     req_client = clients.get(request.sid)
 
-    display_sources = get_display_sources(config.SCREENSHOT_HEADER_TABS)
+    display_sources = display_config.display_sources()
 
     all_display_sources = display_sources
 

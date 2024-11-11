@@ -12,7 +12,6 @@ from nldcsc.flask_plugins.flask_sqlalchemy import FlaskSQLAlchemy
 from nldcsc.loggers.app_logger import AppLogger
 
 from display.webapp.config import Config
-from display.webapp.helpers.utils.times import timestampTOdatetimestring
 
 logging.setLoggerClass(AppLogger)
 config = Config()
@@ -99,13 +98,6 @@ def create_app(version):
             return app.config["version"]
 
         return dict(get_version=get_version)
-
-    @app.context_processor
-    def TSToDatetime():
-        def TSToDatetime(ts):
-            return timestampTOdatetimestring(ts)
-
-        return dict(TSToDatetime=TSToDatetime)
 
     @app.errorhandler(403)
     def page_not_found(error):

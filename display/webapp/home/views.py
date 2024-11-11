@@ -15,16 +15,16 @@ from nldcsc.datatables.server_side_dt_sql import SQLServerSideDataTable
 from nldcsc.loggers.app_logger import AppLogger
 
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
-from . import home
-from ..app.models import Tracelog
-from ..config import Config
-from ..helpers.utils.screenshots import get_mod_time
-from ..helpers.utils.sources import get_display_sources
-from ..helpers.utils.timelines import (
+from display.core.timelines.utils import (
     get_mtime_sorted_timeline_dir_from_hash,
     get_mod_time_from_path,
 )
+from . import home
+from ..app.models import Tracelog
+from ..config import Config
 from ..run import db, rediswrap
+from ...core.parsers.config_parser import DisplayConfigParser
+from ...core.screenshots.utils import get_mod_time
 
 logging.setLoggerClass(AppLogger)
 
@@ -32,13 +32,15 @@ logger = logging.getLogger(__name__)
 
 config = Config()
 
+display_config_parser = DisplayConfigParser()
+display_config = display_config_parser.get_display_config_obj()
+
 
 @home.route("/")
 @login_required
 def index():
 
-    # TODO do further testing with new config parser as full replacement for get_display_sources
-    display_sources = get_display_sources(config.SCREENSHOT_HEADER_TABS)
+    display_sources = display_config.display_sources()
 
     all_display_sources = display_sources
     try:
@@ -105,7 +107,8 @@ def get_screenshot(filename):
 def get_timeline_data(url_hash):
     ret_data = []
 
-    path_list = get_mtime_sorted_timeline_dir_from_hash(url_hash=url_hash)
+    # cap the timeline_data to the first 250 items
+    path_list = get_mtime_sorted_timeline_dir_from_hash(url_hash=url_hash)[:250]
 
     for each in path_list:
         ret_data.append(
@@ -128,10 +131,10 @@ def timeline(url_hash):
 
     last_screenshot_time = get_mod_time(filename=url_hash)
 
-    timeline_data = get_timeline_data(url_hash=url_hash)
-
-    # cap the timeline_data to the first 250 items
-    timeline_data = timeline_data[:250]
+    try:
+        timeline_data = get_timeline_data(url_hash=url_hash)
+    except FileNotFoundError:
+        timeline_data = []
 
     return render_template("pages/timeline.html", header="Display", **locals())
 

@@ -12,12 +12,12 @@ from nldcsc.loggers.app_logger import AppLogger
 from display.core.database_logging.trace_log import TraceLogEntry
 from display.core.general.constants import tracelog_action, tracelog_result
 from display.core.parsers.config_parser import DisplayConfigParser
-from display.webapp.config import Config
-from display.webapp.helpers.utils.screenshots import (
-    getB64_screenshot,
+from display.core.screenshots.utils import (
     get_mod_time,
     get_compare_image,
+    getB64_screenshot,
 )
+from display.webapp.config import Config
 
 logging.setLoggerClass(AppLogger)
 

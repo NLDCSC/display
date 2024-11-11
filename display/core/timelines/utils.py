@@ -1,8 +1,9 @@
 import os
 from pathlib import Path
 
+from nldcsc.generic.times import timestampTOdatetimestring
+
 from display.webapp.config import Config
-from display.webapp.helpers.utils.times import timestampTOdatetimestring
 
 config = Config()
 

@@ -5,7 +5,6 @@ load_dotenv(".env")
 import contextlib
 import base64
 import collections
-import hashlib
 import json
 import logging
 import math
@@ -49,11 +48,8 @@ from display.core.screenshots.screenshot_handler import ScreenShotHandler
 from display.core.files.dedub_files import DeduplicateFilesInFolder
 from display.webapp.config import Config
 from display.core.screenshots.async_screenshots import AsyncScreenshots
-from display.webapp.helpers.utils.sources import (
-    get_display_sources,
-    get_display_source_chunk,
-    chunks,
-)
+from display.core.general.utils import chunks
+from display.core.parsers.config_parser import DisplayConfigParser
 from display.core.database_logging.trace_log import TraceLogEntry
 from display.core.tasks.task_result import TaskResult
 from display.core.redis_utils.redis_utils_class import RedisUtils
@@ -83,6 +79,9 @@ app = Celery(
 
 socketio = SocketIO(message_queue=config.REDIS_URL)
 redis_client = FlaskRedis(init_standalone=True).redis_client
+
+display_config_parser = DisplayConfigParser()
+display_config = display_config_parser.get_display_config_obj()
 
 execution_times = {}
 
@@ -315,26 +314,27 @@ def guard_config():
     logger.info("Starting guard config..")
 
     try:
-
-        display_sources = get_display_sources()
-
+        current_display_config = display_config_parser.get_display_config_obj(
+            force=True
+        )
     except Exception as err:
         logger.error(f"Unhandled error --> {err}")
         return
 
-    # noinspection InsecureHash
-    current_hash = hashlib.md5(json.dumps(display_sources).encode()).hexdigest()
-
-    logger.info(f"Current config hash: {current_hash}")
+    logger.info(f"Current config hash: {current_display_config.config_hash}")
 
     former_hash = RedisUtils.decode_redis_output(redis_client.get("config_hash"))
 
-    redis_client.set("config_hash", current_hash)
+    redis_client.set("config_hash", current_display_config.config_hash)
 
-    logger.info(f"Current_hash: {current_hash} -- Former_hash: {former_hash}")
+    logger.info(
+        f"Current_hash: {current_display_config.config_hash} -- Former_hash: {former_hash}"
+    )
 
-    if former_hash != current_hash:
+    if former_hash != current_display_config.config_hash:
         logger.info("Configs are different, broadcasting client reloads...")
+        # invalidating cache
+        display_config_parser.invalidate_config_file_cache()
         socketio.emit("config_change", {"data": "reload"}, namespace="/display")
         logger.info("Broadcast send!")
     else:
@@ -356,7 +356,7 @@ def balance_screenshot_workload():
     logger.info("Creating balanced workload!")
 
     try:
-        display_sources = get_display_sources()
+        display_sources = display_config.display_sources()
     except Exception as err:
         logger.error(f"Unhandled error --> {err}")
         return
@@ -388,7 +388,7 @@ def balance_screenshot_workload():
 
     logger.info(f"Getting display source with number: {last_run_number}")
 
-    display_sources_chunk = get_display_source_chunk(
+    display_sources_chunk = display_config.get_display_source_chunk(
         number=last_run_number, chunk_size=total_chunks_needed
     )
 

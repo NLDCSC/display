@@ -14,12 +14,12 @@ from nldcsc.flask_plugins.flask_sqlalchemy import (
     big_int_pk,
     str_30,
 )
+from nldcsc.generic.times import timestampTOdatetimestring
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from display.core.general.constants import user_permissions
-from display.webapp.helpers.utils.times import timestampTOdatetimestring
 from display.webapp.run import db
 
 

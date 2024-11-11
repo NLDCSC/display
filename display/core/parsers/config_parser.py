@@ -12,8 +12,9 @@ from dataclasses_json import config as json_config
 from dataclasses_json import dataclass_json
 from nldcsc.loggers.app_logger import AppLogger
 
+from display.core.cache.display_cache import cache
 from display.core.general.data_class_validations import Validations
-from display.core.general.utils import exclude_optional_dict
+from display.core.general.utils import exclude_optional_dict, chunks
 from display.webapp.config import Config
 
 logging.setLoggerClass(AppLogger)
@@ -88,7 +89,7 @@ class TargetGroup:
 @dataclass_json
 @dataclass
 class DisplayConfig:
-    config: List[TargetGroup]
+    target_groups: List[TargetGroup]
 
     @property
     def hash_to_url(self) -> dict[str, str]:
@@ -140,13 +141,18 @@ class DisplayConfig:
         return ret_dict
 
     def iterate_primary_only(self) -> TargetGroup:
-        for x in self.config:
+        for x in self.target_groups:
             if not x.from_headers:
                 yield x
 
     def iterate_all(self) -> TargetGroup:
-        for x in self.config:
+        for x in self.target_groups:
             yield x
+
+    @property
+    def config_hash(self):
+        # noinspection InsecureHash
+        return hashlib.md5(json.dumps(self.display_sources()).encode()).hexdigest()
 
     def display_sources(self) -> dict[str, dict[str, List[str]]]:
         ret_dict = {}
@@ -154,20 +160,42 @@ class DisplayConfig:
             ret_dict.update(target_group.serialize())
         return ret_dict
 
+    def get_display_source_chunk(self, number=0, chunk_size=1):
+        ds = self.display_sources()
+
+        chunk_list = list(chunks(list(ds.keys()), chunk_size))
+
+        ret_data = {}
+
+        if number >= len(chunk_list):
+            number = len(chunk_list) - 1
+
+        for each in chunk_list[number]:
+            ret_data[each] = ds[each]
+
+        return ret_data
+
 
 class DisplayConfigParser(object):
 
     def __init__(self, config_dict: dict = None, config_location: Path = None):
-        self.config = Config()
-
         self.logger = logging.getLogger(__name__)
 
         self.config_dict = config_dict
         self.config_location = config_location
 
-    def get_display_config_obj(self) -> DisplayConfig:
+    def get_display_config_obj(self, force: bool = False) -> DisplayConfig:
         if self.config_dict is None:
-            data = self.read_from_file()
+            try:
+                if force:
+                    data = self.read_direct_from_file(
+                        config_location=self.config_location
+                    )
+                else:
+                    data = self.read_from_file(config_location=self.config_location)
+            except FileNotFoundError:
+                self.logger.warning(f"The provided config location does not exist!")
+                raise
         else:
             data = self.config_dict
 
@@ -179,7 +207,7 @@ class DisplayConfigParser(object):
                 target_list.append(Target(**target))
             target_group_list.append(TargetGroup(name=key, targets=target_list))
 
-        if self.config.SCREENSHOT_HEADER_TABS:
+        if config.SCREENSHOT_HEADER_TABS:
             ret_dict = collections.defaultdict(list)
             for target, urls in data.items():
                 for url_entry in urls:
@@ -193,21 +221,36 @@ class DisplayConfigParser(object):
 
         return DisplayConfig(target_group_list)
 
-    def read_from_file(self) -> dict:
-        if self.config_location is None:
-            if not os.path.exists(self.config.CONFIG_PATH):
-                os.mkdir(self.config.CONFIG_PATH)
+    def invalidate_config_file_cache(self) -> None:
+        self.read_direct_from_file.invalidate(config_location=self.config_location)
+
+    @staticmethod
+    @cache.cache(ttl=config.CACHE_DEFAULT_TIMEOUT)
+    def read_from_file(
+        config_location: str = None,
+    ) -> dict[str, List[dict[str, str | int]]]:
+        return DisplayConfigParser.read_direct_from_file(
+            config_location=config_location
+        )
+
+    @staticmethod
+    def read_direct_from_file(
+        config_location: str = None,
+    ) -> dict[str, List[dict[str, str | int]]]:
+        if config_location is None:
+            if not os.path.exists(config.CONFIG_PATH):
+                os.mkdir(config.CONFIG_PATH)
 
             try:
                 with open(
-                    os.path.join(self.config.CONFIG_PATH, self.config.CONFIG_FILE), "r"
+                    os.path.join(config.CONFIG_PATH, config.CONFIG_FILE), "r"
                 ) as f:
                     config_json = json.loads(f.read())
 
                 return config_json
             except FileNotFoundError:
                 with open(
-                    os.path.join(self.config.CONFIG_PATH, self.config.CONFIG_FILE), "w"
+                    os.path.join(config.CONFIG_PATH, config.CONFIG_FILE), "w"
                 ) as f:
                     f.write(json.dumps({"none": [{}]}))
 
@@ -215,12 +258,12 @@ class DisplayConfigParser(object):
                 return display_sources
         else:
             try:
-                with open(self.config_location, "r") as f:
+                with open(config_location, "r") as f:
                     config_json = json.loads(f.read())
 
                 return config_json
             except FileNotFoundError:
-                self.logger.warning(f"The provided path does not exist!")
+                raise
 
     def __repr__(self):
         return f"<< DisplayConfigParser >>"

@@ -16,13 +16,15 @@ import aiohttp
 from nldcsc.loggers.app_logger import AppLogger
 
 from display.apis.splash.splash_api import SplashApi
+from display.core.cache.display_cache import cache
 from display.core.database_logging.trace_log import TraceLogEntry
 from display.core.general.constants import tracelog_action, tracelog_result
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
 from display.webapp.config import Config
-from display.webapp.helpers.utils.sources import get_screenshot_sources
 
 logging.setLoggerClass(AppLogger)
+
+config = Config()
 
 
 class AsyncScreenshots(object):
@@ -37,11 +39,9 @@ class AsyncScreenshots(object):
 
     def __init__(self, incoming_workload: dict[str, List[str]] = None):
 
-        self.config = Config()
-
         self.logger = logging.getLogger(__name__)
 
-        self.screen_shot_sources = get_screenshot_sources()
+        self._screen_shot_sources = self.get_screenshot_sources()
 
         self.tab_to_screenshotsource_mapping = defaultdict()
         self.set_tab_to_screenshotsource_mapping()
@@ -79,18 +79,22 @@ class AsyncScreenshots(object):
         else:
             raise TypeError(f"Expecting dict; got: {type(incoming_workload)}")
 
-        self.user_agent = self.config.USER_AGENT
+        self.user_agent = config.USER_AGENT
 
         self.headers = self.__default_headers
 
         self.splash_api = SplashApi(
-            baseurl=f"{self.config.SPLASH_PROTOCOL}://{self.config.SPLASH_HOST}:{self.config.SPLASH_PORT}",
-            user_agent=self.config.USER_AGENT,
+            baseurl=f"{config.SPLASH_PROTOCOL}://{config.SPLASH_HOST}:{config.SPLASH_PORT}",
+            user_agent=config.USER_AGENT,
         )
 
         self.screenshotHandler = ScreenShotHandler()
 
         self.current_wd = os.path.dirname(os.path.abspath(__file__))
+
+    @property
+    def screen_shot_sources(self):
+        return self._screen_shot_sources
 
     @property
     def __default_headers(self):
@@ -105,6 +109,29 @@ class AsyncScreenshots(object):
             "Content-Type": "application/json",
             "User-Agent": f"{self.user_agent}",
         }
+
+    @staticmethod
+    @cache.cache(ttl=config.CACHE_DEFAULT_TIMEOUT)
+    def get_screenshot_sources():
+        try:
+            with open(
+                os.path.join(config.CONFIG_PATH, config.SCREENSHOT_SOURCE_CONFIG_FILE),
+                "r",
+            ) as f:
+                screenshot_config_json = json.loads(f.read())
+
+            screenshot_sources = screenshot_config_json
+
+        except FileNotFoundError:
+            with open(
+                os.path.join(config.CONFIG_PATH, config.SCREENSHOT_SOURCE_CONFIG_FILE),
+                "w",
+            ) as f:
+                f.write(json.dumps({"none": ["none"]}))
+
+            screenshot_sources = {"none": ["none"]}
+
+        return screenshot_sources
 
     def set_tab_to_screenshotsource_mapping(self):
 
@@ -138,28 +165,22 @@ class AsyncScreenshots(object):
                     for k, v in each.items():
                         self.logger.info(f"Processing: {k}")
 
-                        if not os.path.exists(self.config.SCREENSHOT_LOCATION):
-                            self.logger.info(
-                                f"Creating {self.config.SCREENSHOT_LOCATION}"
-                            )
-                            os.mkdir(self.config.SCREENSHOT_LOCATION)
+                        if not os.path.exists(config.SCREENSHOT_LOCATION):
+                            self.logger.info(f"Creating {config.SCREENSHOT_LOCATION}")
+                            os.mkdir(config.SCREENSHOT_LOCATION)
 
-                        if not os.path.exists(self.config.TIMELINE_LOCATION):
-                            self.logger.info(
-                                f"Creating {self.config.TIMELINE_LOCATION}"
-                            )
-                            os.mkdir(self.config.TIMELINE_LOCATION)
+                        if not os.path.exists(config.TIMELINE_LOCATION):
+                            self.logger.info(f"Creating {config.TIMELINE_LOCATION}")
+                            os.mkdir(config.TIMELINE_LOCATION)
 
                         if not os.path.exists(
-                            os.path.join(self.config.SCREENSHOT_LOCATION, f"{k}.png")
+                            os.path.join(config.SCREENSHOT_LOCATION, f"{k}.png")
                         ):
                             self.logger.info(
-                                f"Creating {os.path.join(self.config.SCREENSHOT_LOCATION, f'{k}.png')}"
+                                f"Creating {os.path.join(config.SCREENSHOT_LOCATION, f'{k}.png')}"
                             )
                             Path(
-                                os.path.join(
-                                    self.config.SCREENSHOT_LOCATION, f"{k}.png"
-                                )
+                                os.path.join(config.SCREENSHOT_LOCATION, f"{k}.png")
                             ).touch()
 
                         if isinstance(v, bytes):
@@ -232,13 +253,13 @@ class AsyncScreenshots(object):
 
         # First create a copy of the current file and rename to _old
         shutil.copy2(
-            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}.png"),
-            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}_old.png"),
+            os.path.join(config.SCREENSHOT_LOCATION, f"{hash}.png"),
+            os.path.join(config.SCREENSHOT_LOCATION, f"{hash}_old.png"),
         )
 
         self.logger.info(f"Setting screenshot picture for {hash}")
         with open(
-            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}.png"),
+            os.path.join(config.SCREENSHOT_LOCATION, f"{hash}.png"),
             "wb",
         ) as f:
             f.write(value)
@@ -249,7 +270,7 @@ class AsyncScreenshots(object):
 
         self.logger.info(f"Setting evidence picture for {hash}")
         with open(
-            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}_eve.png"),
+            os.path.join(config.SCREENSHOT_LOCATION, f"{hash}_eve.png"),
             "wb",
         ) as f:
             f.write(value)
@@ -258,8 +279,8 @@ class AsyncScreenshots(object):
 
         # First create a copy of the current file and rename to _old
         shutil.copy2(
-            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}.png"),
-            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}_old.png"),
+            os.path.join(config.SCREENSHOT_LOCATION, f"{hash}.png"),
+            os.path.join(config.SCREENSHOT_LOCATION, f"{hash}_old.png"),
         )
 
         # retrieve bin data
@@ -271,7 +292,7 @@ class AsyncScreenshots(object):
 
         self.logger.debug(f"Setting error picture for {hash}")
         with open(
-            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}.png"),
+            os.path.join(config.SCREENSHOT_LOCATION, f"{hash}.png"),
             "wb",
         ) as f:
             f.write(data)
