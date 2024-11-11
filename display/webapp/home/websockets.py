@@ -1,4 +1,3 @@
-import hashlib
 import logging
 
 from flask import copy_current_request_context, request, render_template
@@ -31,6 +30,7 @@ clients = ClientPool()
 display_config_parser = DisplayConfigParser()
 
 
+# noinspection PyUnresolvedReferences
 @socketio.on("disconnect_request", namespace="/display")
 @login_required
 def disconnect_request():
@@ -39,22 +39,23 @@ def disconnect_request():
         disconnect()
 
     # for this emit we use a callback function
-    # when the callback function is invoked we know that the message has been
-    # received and it is safe to disconnect
+    # when the callback function is invoked we know that the message has been received, and it is safe to disconnect
     emit(
         "server_disconnect",
         {"data": "Disconnected!"},
         callback=can_disconnect,
-        room=request.sid,
+        to=request.sid,
     )
 
 
+# noinspection PyUnresolvedReferences
 @socketio.on("my_ping", namespace="/display")
 @login_required
 def ping_pong():
-    emit("my_pong", room=request.sid)
+    emit("my_pong", to=request.sid)
 
 
+# noinspection PyUnresolvedReferences
 @socketio.on("async_mode", namespace="/display")
 @login_required
 def get_async_mode():
@@ -67,7 +68,7 @@ def get_async_mode():
     emit(
         "async_request",
         {"data": socketio.async_mode},
-        room=request.sid,
+        to=request.sid,
         callback=cfm_received(
             client_id=request.sid, data={"async_mode": socketio.async_mode}
         ),
@@ -78,6 +79,7 @@ def cfm_received_data(client_id, data):
     logger.info(f"Client {client_id} received data: {data}")
 
 
+# noinspection PyUnresolvedReferences
 @socketio.on("connect", namespace="/display")
 @login_required
 def connect():
@@ -93,7 +95,7 @@ def connect():
     def can_connect():
         active_connect()
 
-    emit("con_request", {"data": "Connected"}, callback=can_connect, room=request.sid)
+    emit("con_request", {"data": "Connected"}, callback=can_connect, to=request.sid)
 
     this_client = clients.get(request.sid)
 
@@ -102,6 +104,7 @@ def connect():
     logger.info(f"Client details: {clients.fetch_client_details()}")
 
 
+# noinspection PyUnresolvedReferences
 @socketio.on("active_connect", namespace="/display")
 @login_required
 def active_connect():
@@ -118,6 +121,7 @@ def active_connect():
     logger.info(f"Client details: {clients.fetch_client_details()}")
 
 
+# noinspection PyUnresolvedReferences
 @socketio.on("disconnect", namespace="/display")
 @login_required
 def do_disconnect():
@@ -137,6 +141,7 @@ def do_disconnect():
     logger.info(f"Client details: {clients.fetch_client_details()}")
 
 
+# noinspection PyUnresolvedReferences
 @socketio.on("change_display_tab", namespace="/display")
 @login_required
 def do_change_display_tab(data):
@@ -170,8 +175,8 @@ def do_change_display_tab(data):
     )
 
     @copy_current_request_context
-    def cfm_received(client_id, data):
-        cfm_received_data(client_id=client_id, data=data)
+    def cfm_received(client_id, recv_data):
+        cfm_received_data(client_id=client_id, data=recv_data)
 
     # using call here to wait for the callback of the client; timeout error is raised is callback is not received in
     # time; retrying the second time with the emit event
@@ -199,6 +204,7 @@ def do_change_display_tab(data):
     logger.info(f"Client details: {req_client.client_details()}")
 
 
+# noinspection PyUnresolvedReferences
 @socketio.on("get_hash_screenshot", namespace="/display")
 @login_required
 def do_get_hash_screenshot(url_hash, tab_hash, last_element: bool = False):
@@ -245,6 +251,7 @@ def do_get_hash_screenshot(url_hash, tab_hash, last_element: bool = False):
         logger.warning(f"Client {req_client.sid} has changed tabs; disregarding...")
 
 
+# noinspection PyUnresolvedReferences
 @socketio.on("rebuild_request", namespace="/display")
 @login_required
 def do_rebuild_request():
@@ -283,12 +290,13 @@ def do_rebuild_request():
             "data": {"content": html_data, "tab_selector": selector_data},
             "tab": ScreenShotHandler.get_hash(req_client.current_tab.encode("utf-8")),
         },
-        room=request.sid,
+        to=request.sid,
     )
 
     logger.info(f"Client details: {req_client.client_details()}")
 
 
+# noinspection PyUnresolvedReferences
 @socketio.on("create_custom_evidence", namespace="/display")
 @login_required
 def do_create_custom_evidence(data):
@@ -297,6 +305,7 @@ def do_create_custom_evidence(data):
     create_custom_evidence.delay(data=data)
 
 
+# noinspection PyUnresolvedReferences
 @socketio.on("create_custom_screenshot", namespace="/display")
 @login_required
 def do_create_custom_screenshot(data):
@@ -305,26 +314,27 @@ def do_create_custom_screenshot(data):
     create_custom_screenshot.delay(data=data)
 
 
+# noinspection PyUnresolvedReferences
 @socketio.on("see_custom_screenshot", namespace="/display")
 @login_required
-def do_see_custom_screenshot(reqdata):
+def do_see_custom_screenshot(req_data):
     logger.info(f"Client: {request.sid} is requesting to see custom screenshot...")
 
     sh = ScreenShotHandler()
 
-    sh.set_timestamp_to_picture(filename=reqdata["data"])
+    sh.set_timestamp_to_picture(filename=req_data["data"])
 
-    data = getB64_screenshot(filename=reqdata["data"], with_timestamp=True)
+    data = getB64_screenshot(filename=req_data["data"], with_timestamp=True)
 
     emit(
         "show_screenshot",
         {
             "data": data,
-            "url": sh.get_url_by_hash(reqdata["data"]),
-            "tab-hash": reqdata["tab-hash"],
-            "url-hash": reqdata["data"],
+            "url": sh.get_url_by_hash(req_data["data"]),
+            "tab-hash": req_data["tab-hash"],
+            "url-hash": req_data["data"],
         },
-        room=request.sid,
+        to=request.sid,
     )
 
     logger.info(f"Request from Client: {request.sid} is send...")

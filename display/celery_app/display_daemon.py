@@ -472,7 +472,7 @@ def make_screenshots(display_sources):
                             "data": tab_data,
                             "tab_hash": sh.get_tabhash_by_tabname(source),
                         },
-                        room=source,
+                        to=source,
                         namespace="/display",
                     )
 
@@ -488,7 +488,7 @@ def make_screenshots(display_sources):
                                             changed_source
                                         ),
                                     },
-                                    room=changed_source,
+                                    to=changed_source,
                                     namespace="/display",
                                 )
 
@@ -597,7 +597,7 @@ def monitoring_nodes_results(data, evidence_shot=False, update_timestamp=False):
                                                     source
                                                 ),
                                             },
-                                            room=source,
+                                            to=source,
                                             namespace="/display",
                                         )
                                     handle_changes_for_timeline.delay(data=tab_data)
@@ -629,7 +629,7 @@ def monitoring_nodes_results(data, evidence_shot=False, update_timestamp=False):
                                                     source
                                                 ),
                                             },
-                                            room=source,
+                                            to=source,
                                             namespace="/display",
                                         )
                                     except Exception as err:
@@ -830,7 +830,7 @@ def create_custom_screenshot(data):
                             "data": tab_data,
                             "tab_hash": sh.get_tabhash_by_tabname(source),
                         },
-                        room=source,
+                        to=source,
                         namespace="/display",
                     )
                     handle_changes_for_timeline.delay(data=tab_data, csc=True)

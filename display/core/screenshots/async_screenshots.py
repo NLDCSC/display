@@ -11,7 +11,6 @@ import aiohttp
 from nldcsc.loggers.app_logger import AppLogger
 
 from display.apis.splash.splash_api import SplashApi
-from display.core.cache.display_cache import cache
 from display.core.database_logging.trace_log import TraceLogEntry
 from display.core.general.constants import tracelog_action, tracelog_result
 from display.core.parsers.screenshot_source_config_parser import (
