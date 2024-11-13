@@ -259,7 +259,7 @@ services:
 
 networks:
   backend:
-    name: display_development_backend
+    name: development_backend
     driver_opts:
       com.docker.network.bridge.host_binding_ipv4: "172.16.30.1"
     ipam:
