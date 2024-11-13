@@ -138,8 +138,5 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-dev_data
-docker_data
-display_data
-
-run
+docker-data
+local

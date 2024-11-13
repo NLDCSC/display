@@ -49,7 +49,7 @@ def sso_callback():
         sso.logout()
         abort(401)
 
-    account = db.scalar(select(Users).filter(Users.username == username))
+    account = db.session.scalar(select(Users).filter(Users.username == username))
 
     if account:
         # password validation is done by oidc; just log the user in
@@ -68,6 +68,7 @@ def sso_callback():
         new_user.username = username
         new_user.fullname = fullname
         new_user.active = user_active.ENABLED
+        new_user.email = f"{username}@display.io"
 
         # this account is created from openid; generate random password...
         new_user.password = generate_random_password()
@@ -79,7 +80,7 @@ def sso_callback():
         db.session.commit()
 
         # not yet in group; fetching group id
-        new_group = db.scalar(select(Groups).filter(Groups.name == "user"))
+        new_group = db.session.scalar(select(Groups).filter(Groups.name == "user"))
         group_id = new_group.id
 
         db.session.add(GroupMembers(group=group_id, user=new_user.id))

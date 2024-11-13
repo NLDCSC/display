@@ -1,10 +1,12 @@
 from flask import Blueprint
 
-from ..config import Config
+from display.webapp.config import Config
+
+config = Config()
 
 auth = Blueprint("auth", __name__)
 
 from . import views
 
-if Config().SSO_LOGIN_ENABLE:
+if Config.SSO_LOGIN_ENABLE:
     from . import sso_login  # noqa: F401
