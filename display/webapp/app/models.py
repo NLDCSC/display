@@ -1,40 +1,52 @@
 import collections
 import hashlib
-import uuid
+import uuid as api_key_generator
 from html import escape
+from typing import Optional, Any
 
 from flask_login import UserMixin
+from nldcsc.flask_plugins.flask_sqlalchemy import (
+    int_pk,
+    str_512,
+    str_128,
+    str_256,
+    str_100,
+    big_int_pk,
+    str_30,
+)
+from nldcsc.generic.times import timestampTOdatetimestring
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from display.core.general.constants import user_permissions
-from display.webapp.helpers.utils.times import timestampTOdatetimestring
 from display.webapp.run import db
 
 
-class AppDefaultModel(db.Model):
+class ModelDefault(db.Model):
     __abstract__ = True
 
 
-class Users(UserMixin, AppDefaultModel):
+class Users(UserMixin, ModelDefault):
     __tablename__ = "users"
-    id = db.Column("id", db.Integer, primary_key=True)
-    username = db.Column("username", db.String(128), index=True, unique=True)
-    fullname = db.Column("fullname", db.String(128), default="NA")
-    email = db.Column("email", db.String(256), index=True, unique=True)
-    pw_hash = db.Column("pw_hash", db.String(512))
-    active = db.Column("active", db.Integer, default=0)
-    api_key = db.Column("api_key", db.String(512))
-    api_key_lookup = db.Column("api_key_lookup", db.String(128))
-    last_login = db.Column("last_login", db.Integer, default=0)
-    approval = db.Column("approval", db.Integer, default=0)
-    system = db.Column("system", db.Integer, default=0)
+    id: Mapped[int_pk]
+    username: Mapped[str_128] = mapped_column(index=True, unique=True)
+    fullname: Mapped[str_128] = mapped_column(default="NA")
+    email: Mapped[str_256] = mapped_column(index=True, unique=True)
+    pw_hash: Mapped[str_512]
+    active: Mapped[int] = mapped_column(default=0)
+    api_key: Mapped[Optional[str_512]]
+    api_key_lookup: Mapped[Optional[str_128]]
+    last_login: Mapped[int] = mapped_column(default=0)
+    approval: Mapped[int] = mapped_column(default=0)
+    system: Mapped[int] = mapped_column(default=0)
 
     # ORM CLASS MAPPINGS
-    group_member = db.relationship(
-        "GroupMembers", back_populates="users", lazy="joined"
+    group_member: Mapped[list["GroupMembers"]] = relationship(
+        back_populates="users", lazy="joined"
     )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<< Users: {self.id} >>"
 
     @property
@@ -42,7 +54,7 @@ class Users(UserMixin, AppDefaultModel):
         raise AttributeError("password is not a readable attribute")
 
     @password.setter
-    def password(self, password):
+    def password(self, password) -> None:
         self.pw_hash = generate_password_hash(
             password, method="pbkdf2:sha512", salt_length=128
         )
@@ -52,18 +64,18 @@ class Users(UserMixin, AppDefaultModel):
         raise AttributeError("apikey is not a readable attribute")
 
     @apikey.setter
-    def apikey(self, api_key):
+    def apikey(self, api_key) -> None:
         self.api_key = generate_password_hash(
             api_key, method="pbkdf2:sha512", salt_length=128
         )
 
-    def verify_password(self, password):
+    def verify_password(self, password) -> bool:
         return check_password_hash(self.pw_hash, password)
 
-    def verify_api_key(self, api_key):
+    def verify_api_key(self, api_key) -> bool:
         return check_password_hash(self.api_key, api_key)
 
-    def user_to_dict(self):
+    def user_to_dict(self) -> dict[str, Any]:
         user_dict = {
             "id": self.id,
             "username": escape(self.username),
@@ -79,57 +91,57 @@ class Users(UserMixin, AppDefaultModel):
 
         return user_dict
 
-    def has_api_key(self):
+    def has_api_key(self) -> bool:
         if self.api_key is not None:
             return True
 
         return False
 
-    def get_user_groups(self):
+    def get_user_groups(self) -> list:
         return [x.groups.name for x in self.group_member]
 
-    def is_admin(self):
+    def is_admin(self) -> bool:
         if "admin" not in self.get_user_groups():
             return False
 
         return True
 
-    def is_superuser(self):
+    def is_superuser(self) -> bool:
         if "superuser" not in self.get_user_groups():
             return False
 
         return True
 
-    def can_approve(self):
+    def can_approve(self) -> bool:
         if self.approval == 1 or self.is_admin() or self.is_superuser():
             return True
 
         return False
 
-    def is_system(self):
+    def is_system(self) -> bool:
         if self.system == 1:
             return True
 
         return False
 
-    def check_in_group(self, groupname):
+    def check_in_group(self, groupname) -> bool:
         if groupname not in self.get_user_groups():
             return False
 
         return True
 
-    def get_user_group(self):
+    def get_user_group(self) -> list:
         return self.get_user_groups()[0]
 
-    def get_user_group_object(self):
+    def get_user_group_object(self) -> "Groups":
         return self.group_member[0].groups
 
-    def get_group_permissions_by_permission_id(self, the_id):
+    def get_group_permissions_by_permission_id(self, the_id) -> int:
         return int(
             self.get_user_group_object().get_group_permission_by_permission_id(the_id)
         )
 
-    def group_is_allowed(self, groups: list):
+    def group_is_allowed(self, groups: list) -> bool:
         if (
             self.get_user_group() not in groups
             and not self.is_admin()
@@ -139,7 +151,7 @@ class Users(UserMixin, AppDefaultModel):
 
         return True
 
-    def parse_permissions(self):
+    def parse_permissions(self) -> dict[str, int]:
         perms = sorted(
             self.get_user_group_object().permissions, key=lambda x: x.permission
         )
@@ -151,7 +163,7 @@ class Users(UserMixin, AppDefaultModel):
 
         return dict(ret_dict)
 
-    def get_permission_by_decorator(self, decorator: str):
+    def get_permission_by_decorator(self, decorator: str) -> int:
         if self.is_admin():
             return user_permissions.WRITE
 
@@ -160,15 +172,16 @@ class Users(UserMixin, AppDefaultModel):
         except KeyError:
             return user_permissions.NONE
 
-    def is_active(self):
+    def is_active(self) -> bool:
         if self.active != 1:
             return False
 
         return True
 
-    def create_api_key(self):
-        random_uuid = uuid.uuid4()
+    def create_api_key(self) -> str:
+        random_uuid = api_key_generator.uuid4()
 
+        # noinspection InsecureHash
         key = hashlib.md5(str(random_uuid).encode("utf-8")).hexdigest()
 
         self.api_key_lookup = key[:8]
@@ -176,18 +189,18 @@ class Users(UserMixin, AppDefaultModel):
         return key
 
 
-class Groups(AppDefaultModel):
+class Groups(ModelDefault):
     __tablename__ = "groups"
-    id = db.Column("id", db.Integer, primary_key=True)
-    name = db.Column("name", db.String(256), index=True, unique=True)
-    description = db.Column("description", db.String(512))
+    id: Mapped[int_pk]
+    name: Mapped[str_256] = mapped_column(index=True, unique=True)
+    description: Mapped[str_512]
 
     # ORM CLASS MAPPINGS
-    groupmembers = db.relationship(
-        "GroupMembers", back_populates="groups", lazy="joined"
+    groupmembers: Mapped[list["GroupMembers"]] = relationship(
+        back_populates="groups", lazy="joined"
     )
-    permissions = db.relationship(
-        "GroupPermissions", back_populates="groups", lazy="joined"
+    permissions: Mapped[list["GroupPermissions"]] = relationship(
+        back_populates="groups", lazy="joined"
     )
 
     def get_group_permission_by_permission_id(self, the_id):
@@ -202,15 +215,15 @@ class Groups(AppDefaultModel):
         return f"<< Groups: {self.name} >>"
 
 
-class Permissions(AppDefaultModel):
+class Permissions(ModelDefault):
     __tablename__ = "permissions"
-    id = db.Column("id", db.Integer, primary_key=True)
-    name = db.Column("name", db.String(256), index=True, unique=True)
-    flask_decorator = db.Column("flask_decorator", db.String(100), unique=True)
+    id: Mapped[int_pk]
+    name: Mapped[str_256] = mapped_column(index=True, unique=True)
+    flask_decorator: Mapped[str_100] = mapped_column(unique=True)
 
     # ORM CLASS MAPPINGS
-    permission_member = db.relationship(
-        "GroupPermissions", back_populates="permissions", lazy="joined"
+    permission_member: Mapped[list["GroupPermissions"]] = relationship(
+        back_populates="permissions", lazy="joined"
     )
 
     def get_sorted_group_permissions(self):
@@ -220,87 +233,57 @@ class Permissions(AppDefaultModel):
         return f"<< Permissions: {self.id} >>"
 
 
-class GroupPermissions(AppDefaultModel):
+class GroupPermissions(ModelDefault):
     __tablename__ = "grouppermissions"
-    id = db.Column("id", db.Integer, primary_key=True)
-    permission = db.Column(
-        "permission",
-        db.Integer,
-        db.ForeignKey("permissions.id", ondelete="cascade", onupdate="cascade"),
+    id: Mapped[int_pk]
+    permission: Mapped[int] = mapped_column(
+        ForeignKey("permissions.id", ondelete="cascade", onupdate="cascade"),
     )
-    group = db.Column(
-        "group",
-        db.Integer,
-        db.ForeignKey("groups.id", ondelete="cascade", onupdate="cascade"),
+    group: Mapped[int] = mapped_column(
+        ForeignKey("groups.id", ondelete="cascade", onupdate="cascade"),
     )
     # 0 = none, 1 = read, 2 = write
-    value = db.Column("value", db.Integer, default=0, index=True)
+    value: Mapped[int] = mapped_column(default=0, index=True)
 
     # ORM CLASS MAPPINGS
-    permissions = db.relationship(
-        "Permissions", back_populates="permission_member", lazy="joined"
+    permissions: Mapped[Permissions] = relationship(
+        back_populates="permission_member", lazy="joined"
     )
-    groups = db.relationship("Groups", back_populates="permissions", lazy="joined")
+    groups: Mapped[Groups] = relationship(back_populates="permissions", lazy="joined")
 
     def __repr__(self):
         return f"<< GroupPermissions: {self.id} >>"
 
 
-class GroupMembers(AppDefaultModel):
+class GroupMembers(ModelDefault):
     __tablename__ = "groupmembers"
-    id = db.Column("id", db.Integer, primary_key=True)
-    group = db.Column(
-        "group",
-        db.Integer,
-        db.ForeignKey("groups.id", ondelete="cascade", onupdate="cascade"),
+    id: Mapped[int_pk]
+    group: Mapped[int] = mapped_column(
+        ForeignKey("groups.id", ondelete="cascade", onupdate="cascade"),
     )
-    user = db.Column(
-        "user",
-        db.Integer,
-        db.ForeignKey("users.id", ondelete="cascade", onupdate="cascade"),
+    user: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="cascade", onupdate="cascade"),
     )
 
     # ORM CLASS MAPPINGS
-    users = db.relationship("Users", back_populates="group_member", lazy="joined")
-    groups = db.relationship("Groups", back_populates="groupmembers", lazy="joined")
+    users: Mapped[Users] = relationship(back_populates="group_member", lazy="joined")
+    groups: Mapped[Groups] = relationship(back_populates="groupmembers", lazy="joined")
 
     def __repr__(self):
         return f"<< GroupMembers: {self.id} >>"
 
 
-class Tracelog(AppDefaultModel):
+class Tracelog(ModelDefault):
     __tablename__ = "tracelog"
-    id = db.Column("id", db.Integer, primary_key=True)
-    url = db.Column("url", db.String(512))
-    hash = db.Column(
-        "hash",
-        db.String(12),
-        index=True,
-    )
-    timestamp = db.Column(
-        "timestamp",
-        db.Integer,
-        default=0,
-        index=True,
-    )
-    action = db.Column(
-        "action",
-        db.String(25),
-        index=True,
-    )
-    user = db.Column("user", db.String(128), default="display")
-    result = db.Column(
-        "result",
-        db.String(25),
-        index=True,
-    )
-    status_code = db.Column(
-        "status_code",
-        db.Integer,
-        default=0,
-        index=True,
-    )
-    reason = db.Column("reason", db.String(512))
+    id: Mapped[big_int_pk]
+    url: Mapped[str_512]
+    hash: Mapped[str_30] = mapped_column(index=True)
+    timestamp: Mapped[int] = mapped_column(default=0, index=True)
+    action: Mapped[str_30] = mapped_column(index=True)
+    user: Mapped[str_128] = mapped_column(default="display")
+    result: Mapped[str_30] = mapped_column(index=True)
+    status_code: Mapped[int] = mapped_column(default=0, index=True)
+    reason: Mapped[str_512]
 
     def to_data_dict(self):
         return {

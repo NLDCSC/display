@@ -4,10 +4,11 @@ import os
 from collections import defaultdict
 from multiprocessing.pool import ThreadPool
 
-from display.helpers.logger_class import HelperLogger
+from nldcsc.loggers.app_logger import AppLogger
+
 from display.webapp.config import Config
 
-logging.setLoggerClass(HelperLogger)
+logging.setLoggerClass(AppLogger)
 
 
 class DeduplicateFilesInFolder(object):
@@ -16,6 +17,9 @@ class DeduplicateFilesInFolder(object):
         self.config = Config()
 
         self.top_level_path = top_level_path
+
+        if not os.path.exists(self.config.TIMELINE_LOCATION):
+            os.makedirs(self.config.TIMELINE_LOCATION)
 
         if self.top_level_path is None:
             self.dir_workload = [

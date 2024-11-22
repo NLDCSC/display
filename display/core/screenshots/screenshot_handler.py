@@ -1,22 +1,25 @@
 import hashlib
 import logging
 import os
-from collections import defaultdict
 from io import BytesIO
+from typing import List, Any
 
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
+from nldcsc.loggers.app_logger import AppLogger
 
-from display.core.database_log.db_log import DbLog
+from display.core.database_logging.trace_log import TraceLogEntry
 from display.core.general.constants import tracelog_action, tracelog_result
-from display.webapp.config import Config
-from display.webapp.helpers.utils.screenshots import (
-    getB64_screenshot,
+from display.core.parsers.display_config_parser import DisplayConfigParser
+from display.core.screenshots.utils import (
     get_mod_time,
     get_compare_image,
+    getB64_screenshot,
 )
-from display.webapp.helpers.utils.sources import get_display_sources
+from display.webapp.config import Config
+
+logging.setLoggerClass(AppLogger)
 
 
 class ScreenShotHandler(object):
@@ -25,158 +28,85 @@ class ScreenShotHandler(object):
 
         self.logger = logging.getLogger(__name__)
 
-        self.display_sources = get_display_sources(self.config.SCREENSHOT_HEADER_TABS)
+        self.display_config_parser = DisplayConfigParser()
+        self.display_config = self.display_config_parser.get_display_config_obj()
 
-        self.hash_to_tab_mapping = defaultdict()
-
-        self.tab_to_hash_list = defaultdict(list)
-
-        self.hash_to_url_mapping = defaultdict()
-
-        self.hash_to_data_mapping = defaultdict()
-
-        if self.config.SCREENSHOT_HEADER_TABS:
-            self.hash_to_header_mapping = defaultdict()
-            self.set_hash_to_header_mapping()
-
-        self.tabname_to_tabhash = defaultdict()
-        self.set_tabname_to_tabhash()
-
-        self.tabhash_to_tabname = defaultdict()
-        self.set_tabhash_to_tabname()
-
-        self.set_hash_to_tab_mapping()
-        self.set_tab_to_hash_list()
-        self.set_hash_to_url_mapping()
-        self.set_hash_to_data_mapping()
+        self._hash_to_url_mapping = self.display_config.hash_to_url
+        self._hash_to_data_mapping = self.display_config.hash_to_data()
+        self._hash_to_header_mapping = self.display_config.hash_to_header
+        self._hash_to_tab_mapping = self.display_config.hash_to_tab()
+        self._tab_to_hash_list = self.display_config.hashes_per_tab()
+        self._tabname_to_tabhash = self.display_config.target_group_to_hash
 
         self.current_wd = os.path.dirname(os.path.abspath(__file__))
 
-    def set_tabname_to_tabhash(self):
+    @property
+    def hash_to_url_mapping(self) -> dict[str, str]:
+        return self._hash_to_url_mapping
 
-        for each in self.display_sources:
-            self.tabname_to_tabhash[each] = hashlib.md5(
-                each.encode("utf-8")
-            ).hexdigest()[:6]
+    @property
+    def hash_to_data_mapping(self) -> dict[str, dict[str, str | int]]:
+        return self._hash_to_data_mapping
 
-        self.tabname_to_tabhash = dict(self.tabname_to_tabhash)
+    @property
+    def hash_to_header_mapping(self) -> dict[str, str]:
+        return self._hash_to_header_mapping
 
-    def set_tabhash_to_tabname(self):
+    @property
+    def hash_to_tab_mapping(self) -> dict[str, List[str]]:
+        return self._hash_to_tab_mapping
 
-        for each in self.display_sources:
-            self.tabhash_to_tabname[
-                hashlib.md5(each.encode("utf-8")).hexdigest()[:6]
-            ] = each
+    @property
+    def tab_to_hash_list(self) -> List[dict[str, List[str]]]:
+        return self._tab_to_hash_list
 
-        self.tabhash_to_tabname = dict(self.tabhash_to_tabname)
+    @property
+    def tabname_to_tabhash(self) -> dict[str, str]:
+        return self._tabname_to_tabhash
 
-    def set_hash_to_tab_mapping(self):
+    @staticmethod
+    def get_hash(hash_input: bytes) -> str:
+        # noinspection InsecureHash
+        return hashlib.md5(hash_input).hexdigest()[:6]
 
-        for key, value in self.display_sources.items():
-            for item in value:
-                self.hash_to_tab_mapping[
-                    hashlib.md5(item["url"].encode("utf-8")).hexdigest()[:6]
-                ] = key
-
-        if self.config.SCREENSHOT_HEADER_TABS:
-            for key, value in self.hash_to_header_mapping.items():
-                entry = self.hash_to_tab_mapping[key]
-                self.hash_to_tab_mapping[key] = [entry, value]
-
-        self.hash_to_tab_mapping = dict(self.hash_to_tab_mapping)
-
-    def set_hash_to_header_mapping(self):
-
-        for key, value in self.display_sources.items():
-            for item in value:
-                if item["header"] == key:
-                    self.hash_to_header_mapping[
-                        hashlib.md5(item["url"].encode("utf-8")).hexdigest()[:6]
-                    ] = key
-
-        self.hash_to_header_mapping = dict(self.hash_to_header_mapping)
-
-    def set_hash_to_url_mapping(self):
-
-        for key, value in self.display_sources.items():
-            for item in value:
-                self.hash_to_url_mapping[
-                    hashlib.md5(item["url"].encode("utf-8")).hexdigest()[:6]
-                ] = item["url"]
-
-        self.hash_to_url_mapping = dict(self.hash_to_url_mapping)
-
-    def set_hash_to_data_mapping(self):
-
-        for key, value in self.display_sources.items():
-            for item in value:
-                self.hash_to_data_mapping[
-                    hashlib.md5(item["url"].encode("utf-8")).hexdigest()[:6]
-                ] = {
-                    "url": item["url"],
-                    "wait": item["wait"],
-                    "timeout": item["timeout"],
-                    "wait_on_id": item["wait_on_id"],
-                }
-
-        self.hash_to_data_mapping = dict(self.hash_to_data_mapping)
-
-    def set_tab_to_hash_list(self):
-
-        for key, value in self.hash_to_tab_mapping.items():
-            if isinstance(value, list):
-                for each in value:
-                    self.tab_to_hash_list[each].append(key)
-            elif isinstance(value, str):
-                self.tab_to_hash_list[value].append(key)
-
-        self.tab_to_hash_list = dict(self.tab_to_hash_list)
-
-    def get_tab_by_hash(self, the_hash):
+    def get_tab_by_hash(self, the_hash: str) -> str:
 
         try:
             return self.hash_to_tab_mapping[the_hash]
         except KeyError:
             return False
 
-    def get_url_by_hash(self, the_hash):
+    def get_url_by_hash(self, the_hash: str) -> str:
 
         try:
             return self.hash_to_url_mapping[the_hash]
         except KeyError:
             return False
 
-    def get_data_by_hash(self, the_hash):
+    def get_data_by_hash(self, the_hash: str) -> str:
 
         try:
             return self.hash_to_data_mapping[the_hash]
         except KeyError:
             return False
 
-    def get_hashes_by_tab_name(self, tab_name):
+    def get_hashes_by_tab_name(self, tab_name: str) -> List[str]:
 
         try:
             return self.tab_to_hash_list[tab_name]
         except KeyError:
             return False
 
-    def get_tabhash_by_tabname(self, tab_name):
+    def get_tabhash_by_tabname(self, tab_name: str) -> str:
 
         try:
             return self.tabname_to_tabhash[tab_name]
         except KeyError:
             return False
 
-    def get_tabname_by_tabhash(self, the_hash):
+    def get_hash_by_url(self, the_url: str) -> str:
 
-        try:
-            return self.tabhash_to_tabname[the_hash]
-        except KeyError:
-            return False
-
-    def get_hash_by_url(self, the_url):
-
-        the_hash = hashlib.md5(the_url.encode("utf-8")).hexdigest()[:6]
+        the_hash = self.get_hash(the_url.encode("utf-8"))
 
         if the_hash in self.hash_to_url_mapping:
             return the_hash
@@ -185,27 +115,28 @@ class ScreenShotHandler(object):
                 "The requested url hash is not a part of the urls in the configuration!"
             )
 
-    def get_all_screenshots(self, tab_name):
+    # def get_all_screenshots(self, tab_name: str) -> List[dict[str, Any]]:
+    #
+    #     ret_data = []
+    #
+    #     try:
+    #         screenshot_list = self.get_hashes_by_tab_name(tab_name=tab_name)
+    #         if screenshot_list is not False:
+    #             for each in screenshot_list:
+    #                 ret_data.append(
+    #                     {
+    #                         "sc_id": each,
+    #                         "sc_src": getB64_screenshot(each),
+    #                         "mod_time": get_mod_time(each),
+    #                         "changed": get_compare_image(each),
+    #                     }
+    #                 )
+    #             return ret_data
+    #     except KeyError:
+    #         return ret_data
 
-        ret_data = []
-
-        try:
-            screenshot_list = self.get_hashes_by_tab_name(tab_name=tab_name)
-            if screenshot_list is not False:
-                for each in screenshot_list:
-                    ret_data.append(
-                        {
-                            "sc_id": each,
-                            "sc_src": getB64_screenshot(each),
-                            "mod_time": get_mod_time(each),
-                            "changed": get_compare_image(each),
-                        }
-                    )
-                return ret_data
-        except KeyError:
-            return ret_data
-
-    def get_hash_screenshot(self, url_hash):
+    @staticmethod
+    def get_hash_screenshot(url_hash: str) -> dict[str, Any]:
 
         ret_data = {
             "sc_id": url_hash,
@@ -216,7 +147,7 @@ class ScreenShotHandler(object):
 
         return ret_data
 
-    def get_changed_screenshots_per_tab(self, tab_name):
+    def get_changed_screenshots_per_tab(self, tab_name: str) -> List[dict[str, Any]]:
 
         ret_data = []
 
@@ -234,14 +165,12 @@ class ScreenShotHandler(object):
                                 "changed": is_changed,
                             }
                         )
-                        DbLog.insert(
-                            {
-                                "url": self.get_url_by_hash(each),
-                                "hash": each,
-                                "action": tracelog_action.STATE_CHANGE,
-                                "result": tracelog_result.CHANGED,
-                            }
-                        )
+                        TraceLogEntry(
+                            url=self.get_url_by_hash(each),
+                            hash=each,
+                            action=tracelog_action.STATE_CHANGE,
+                            result=tracelog_result.CHANGED,
+                        ).save()
                     else:
                         ret_data.append(
                             {
@@ -250,19 +179,21 @@ class ScreenShotHandler(object):
                                 "changed": is_changed,
                             }
                         )
-                        DbLog.insert(
-                            {
-                                "url": self.get_url_by_hash(each),
-                                "hash": each,
-                                "action": tracelog_action.STATE_CHANGE,
-                                "result": tracelog_result.NOT_CHANGED,
-                            }
-                        )
+                        TraceLogEntry(
+                            url=self.get_url_by_hash(each),
+                            hash=each,
+                            action=tracelog_action.STATE_CHANGE,
+                            result=tracelog_result.NOT_CHANGED,
+                        ).save()
                 return ret_data
         except KeyError:
             return ret_data
 
-    def get_changed_data_from_custom_screenshots(self, the_hash, evidence_shot=False,):
+    @staticmethod
+    def get_changed_data_from_custom_screenshots(
+        the_hash: str,
+        evidence_shot: bool = False,
+    ):
 
         ret_data = []
 
@@ -290,11 +221,11 @@ class ScreenShotHandler(object):
 
     def set_timestamp_to_picture(
         self,
-        filename,
+        filename: str,
         filename_is_full_path: bool = False,
         url_hash: str = None,
         send_buffer: bool = False,
-    ):
+    ) -> None | BytesIO:
 
         if not filename_is_full_path:
             normal_path = os.path.join(
@@ -326,19 +257,35 @@ class ScreenShotHandler(object):
 
         if not filename_is_full_path:
             if os.path.exists(evidence_path):
-                text = f"    {get_mod_time(filename, False, filename_is_full_path, True)}  -  {self.get_tab_by_hash(the_hash=url_hash)[-1]}    "
+                text = (
+                    f"    {get_mod_time(filename, False, filename_is_full_path, True)}  -  "
+                    f"{self.get_tab_by_hash(the_hash=url_hash)[-1]}    "
+                )
             else:
-                text = f"    {self.get_url_by_hash(the_hash=url_hash)} @ {get_mod_time(filename, False, filename_is_full_path, False)}    "
+                text = (
+                    f"    {self.get_url_by_hash(the_hash=url_hash)} @ "
+                    f"{get_mod_time(filename, False, filename_is_full_path, False)}    "
+                )
         elif filename_is_full_path:
             if os.path.basename(filename)[:4] == "eve-":
-                text = f"    {get_mod_time(filename, False, filename_is_full_path, True)}  -  {self.get_tab_by_hash(the_hash=url_hash)[-1]}    "
+                text = (
+                    f"    {get_mod_time(filename, False, filename_is_full_path, True)}  -  "
+                    f"{self.get_tab_by_hash(the_hash=url_hash)[-1]}    "
+                )
             else:
-                text = f"    {self.get_url_by_hash(the_hash=url_hash)} @ {get_mod_time(filename, False, filename_is_full_path, False)}    "
+                text = (
+                    f"    {self.get_url_by_hash(the_hash=url_hash)} @ "
+                    f"{get_mod_time(filename, False, filename_is_full_path, False)}    "
+                )
         else:
-            text = f"    {self.get_url_by_hash(the_hash=url_hash)} @ {get_mod_time(filename, False, filename_is_full_path, False)}    "
+            text = (
+                f"    {self.get_url_by_hash(the_hash=url_hash)} @ "
+                f"{get_mod_time(filename, False, filename_is_full_path, False)}    "
+            )
 
         # get text width and height
-        text_w, text_h = drawing.textsize(text, font)
+        text_w = int(drawing.textlength(text, font))
+        text_h = int(font.size)
 
         pos = 0, 0
 
@@ -362,7 +309,7 @@ class ScreenShotHandler(object):
 
     def limit_img_size(
         self, filename: str, target_filesize: int = 100000, tolerance: int = 5
-    ):
+    ) -> None:
         """
         Limiting input file to a maximum of approximately (give or take the tolerance) of 100 kb
         """

@@ -3,29 +3,58 @@ name: 'Display'
 
 services:
 
+  flask_lb:
+    image: display-dev-flask_lb
+    build:
+      context: .
+      dockerfile: .docker/images/flask_lb/nginx
+    hostname: flask_lb
+    restart: always
+    depends_on:
+      flask_web:
+        condition: service_healthy
+      flask_ws:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:8000:80"
+    networks:
+      - backend
+
   flask_web:
-    image: display-flask_web
+    image: display-dev-flask_web
     build:
       context: .
       dockerfile: .docker/images/flask/dockerfile-flask
+      args:
+        PORT: 5050
+        UID: ${HOST_UID:-1000}
+        GID: ${HOST_GID:-1000}
+    develop:
+      watch:
+        - action: sync
+          path: ./display/
+          target: /app/display/
+          ignore:
+            - celery_app/
     depends_on:
       redis:
         condition: service_healthy
       mysql:
         condition: service_healthy
-      init_db:
-        condition: service_completed_successfully
-    deploy:
-      replicas: 2
     restart: always
+    expose:
+      - 5050
     env_file:
       - .env
     environment:
       - PYTHONUNBUFFERED=TRUE
     volumes:
-      - "./docker_data/flask:/app/data"
+      - "./docker-data/flask:/app/data"
     networks:
-      - backend
+      backend:
+        ipv4_address: 172.16.30.7
     healthcheck:
       test: curl --fail http://localhost:5050 || exit 1
       interval: 30s
@@ -34,26 +63,26 @@ services:
       start_period: 30s
 
   flask_ws:
-    image: display-flask_ws
+    image: display-dev-flask_ws
     build:
       context: .
       dockerfile: .docker/images/flask/dockerfile-flask
+      args:
+        PORT: 5050
+        UID: ${HOST_UID:-1000}
+        GID: ${HOST_GID:-1000}
     depends_on:
-      redis:
+      flask_web:
         condition: service_healthy
-      mysql:
-        condition: service_healthy
-      init_db:
-        condition: service_completed_successfully
-    deploy:
-      replicas: 3
     restart: always
+    expose:
+      - 5050
     env_file:
       - .env
     environment:
       - PYTHONUNBUFFERED=TRUE
     volumes:
-      - "./docker_data/flask:/app/data"
+      - "./docker-data/flask:/app/data"
     networks:
       - backend
     healthcheck:
@@ -76,9 +105,8 @@ services:
     env_file:
       - .env
     ports:
-      - "127.0.0.1:8050:8050"
+      - "8050:8050"
     networks:
-      - frontend
       - backend
     healthcheck:
       test: |
@@ -96,6 +124,9 @@ services:
       dockerfile: .docker/images/splash/splash_screen
     deploy:
       replicas: 15
+    depends_on:
+      flask_web:
+        condition: service_healthy
     restart: always
     env_file:
       - .env
@@ -109,76 +140,91 @@ services:
       start_period: 20s
 
   celery_daemon:
-    image: display-celery_daemon
+    image: display-dev-celery_daemon
     build:
       context: .
       dockerfile: .docker/images/celery_daemon/dockerfile-celery_daemon
+      args:
+        UID: ${HOST_UID:-1000}
+        GID: ${HOST_GID:-1000}
+    develop:
+      watch:
+        - action: sync
+          path: ./display/
+          target: /app/display/
+          ignore:
+            - webapp/templates/
+            - webapp/static/
+            - webapp/home/
+            - webapp/auth/
+            - webapp/admin/
     depends_on:
       redis:
         condition: service_healthy
       mysql:
         condition: service_healthy
-      init_db:
-        condition: service_completed_successfully
-    deploy:
-      replicas: 2
     restart: always
+    security_opt:
+      - seccomp:unconfined
     env_file:
       - .env
     environment:
       - PYTHONUNBUFFERED=TRUE
     volumes:
-      - "./docker_data/flask:/app/data"
+      - "./docker-data/flask:/app/data"
     networks:
       - backend
-    healthcheck:
-      test: poetry run celery -A display.celery_app.display_daemon inspect ping --destination celery@$$HOSTNAME
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
 
   celery_beat:
-    image: display-celery_beat
+    image: display-dev-celery_beat
     build:
       context: .
       dockerfile: .docker/images/celery_beat/dockerfile-celery_beat
+      args:
+        UID: ${HOST_UID:-1000}
+        GID: ${HOST_GID:-1000}
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./display/
+          target: /app/display/
+          ignore:
+            - webapp/templates/
+            - webapp/static/
+            - webapp/home/
+            - webapp/auth/
+            - webapp/admin/
     depends_on:
       redis:
         condition: service_healthy
       mysql:
         condition: service_healthy
-      init_db:
-        condition: service_completed_successfully
     restart: always
+    security_opt:
+      - seccomp:unconfined
     env_file:
       - .env
     environment:
       - PYTHONUNBUFFERED=TRUE
     volumes:
-      - "./docker_data/flask:/app/data"
+      - "./docker-data/flask:/app/data"
     networks:
       - backend
-    healthcheck:
-      test: '[ "$$(find /tmp/beat_live -mmin -1 | wc -l)" != "" ] || false'
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
 
   redis:
-    image: display-redis
+    image: display-dev-redis
     hostname: redis
     restart: always
     build:
       context: .
       dockerfile: .docker/images/redis/dockerfile-redis
     volumes:
-      - "./docker_data/redis:/data"
+      - "redis_data:/data"
     expose:
       - 6379
     networks:
-      - backend
+      backend:
+        ipv4_address: 172.16.30.4
     healthcheck:
       test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
       interval: 30s
@@ -187,19 +233,23 @@ services:
       start_period: 5s
 
   mysql:
-    image: display-mysql
+    image: display-dev-mysql
     build:
       context: .
       dockerfile: .docker/images/mysql/dockerfile-mysql
-    command: --default-authentication-plugin=mysql_native_password
     hostname: mysql
     restart: always
     env_file:
       - .env
+    ports:
+      - "3306:3306"
     security_opt:
       - seccomp:unconfined
     volumes:
-      - "./docker_data/mysql_data:/var/lib/mysql"
+      - mysql_data:/var/lib/mysql
+    networks:
+      backend:
+        ipv4_address: 172.16.30.5
     healthcheck:
       test: ["CMD", 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p$$MYSQL_ROOT_PASSWORD']
       interval: 30s
@@ -207,39 +257,15 @@ services:
       retries: 1
       start_period: 5s
 
-  init_db:
-    image: display-init_db
-    build:
-      context: .
-      dockerfile: .docker/images/init_db/dockerfile-init-db
-    depends_on:
-      mysql:
-        condition: service_healthy
-    env_file:
-      - .env
-    environment:
-      - PYTHONUNBUFFERED=TRUE
-    volumes:
-      - "./docker_data/flask:/app/data"
-    networks:
-      - backend
-
-  autoheal:
-    image: willfarrell/autoheal:latest
-    hostname: autoheal
-    restart: always
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - AUTOHEAL_CONTAINER_LABEL=all
-    networks:
-      - backend
-
 networks:
-  frontend:
   backend:
+    name: development_backend
     driver_opts:
-      com.docker.network.bridge.host_binding_ipv4: "172.26.1.1"
+      com.docker.network.bridge.host_binding_ipv4: "172.16.30.1"
     ipam:
       config:
-        - subnet: 172.26.1.0/24
+        - subnet: 172.16.30.0/24
+
+volumes:
+  mysql_data:
+  redis_data:

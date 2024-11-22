@@ -1,22 +1,18 @@
-# Use the latest Python image
-FROM python:3.10.12
+FROM python:3.11
+ARG UID
+ARG GID
 
-# Set an environment variable with the directory
-# where we'll be running the app
-ENV APP /app
-
-# Create the directory and instruct Docker to operate
-# from there from now on
-RUN mkdir $APP
-WORKDIR $APP
-
-# Copy the current directory contents into the container at /app
-ADD . $APP
+ENV PYTHONFAULTHANDLER=1 \
+  PYTHONUNBUFFERED=1 \
+  PYTHONHASHSEED=random \
+  PIP_NO_CACHE_DIR=off \
+  PIP_DISABLE_PIP_VERSION_CHECK=on \
+  PIP_DEFAULT_TIMEOUT=100 \
+  # Poetry's configuration:
+  POETRY_NO_INTERACTION=1 \
+  POETRY_HOME='/usr/local'
 
 RUN pip install --upgrade pip
-
-# Install the dependencies
-RUN pip install -r requirements.txt
 
 COPY ./.docker/files/flask/install.sh .
 RUN sed -i -e 's/\r$//' ./install.sh
@@ -25,5 +21,27 @@ RUN ./install.sh
 
 RUN rm ./install.sh
 
+# System deps:
+RUN curl -sSL https://install.python-poetry.org | python3 -
+
+# create basicuser for container and use the GID/UID from the host build user (if provided)
+RUN groupadd -g $GID basicuser && useradd -r -u $UID -g basicuser basicuser
+
+RUN mkdir -p /home/basicuser && chown basicuser:basicuser -R /home/basicuser
+
+USER basicuser
+
+ENV PATH="/home/basicuser/.local/bin:${PATH}"
+
+WORKDIR /app
+# Copy only requirements to cache them in docker layer and prevent reinstalling them if there are no dep changes
+COPY --chown=basicuser:basicuser poetry.lock pyproject.toml /app/
+
+# Project initialization:
+RUN poetry install --only=main --no-interaction --no-ansi
+
+COPY --chown=basicuser:basicuser . /app
+
 # run the command to start the celery beat
-CMD ["/usr/local/bin/celery", "-A", "display.celery_app.display_daemon", "beat", "--loglevel=INFO"]
+CMD ["poetry", "run", "celery", "-A", "display.celery_app.display_daemon", "beat", \
+"-S", "redbeat.RedBeatScheduler", "--loglevel=INFO"]

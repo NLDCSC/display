@@ -1,27 +1,27 @@
-"""
-async_header_collector.py
-=========================
-"""
 import asyncio
-import hashlib
 import json
 import logging
 import os
 import shutil
 from collections import defaultdict
 from pathlib import Path
+from typing import List
 
 import aiohttp
+from nldcsc.loggers.app_logger import AppLogger
 
-from display.core.database_log.db_log import DbLog
+from display.apis.splash.splash_api import SplashApi
+from display.core.database_logging.trace_log import TraceLogEntry
 from display.core.general.constants import tracelog_action, tracelog_result
+from display.core.parsers.screenshot_source_config_parser import (
+    ScreenshotSourceConfigParser,
+)
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
-from display.external_apis.splash.splash_api import SplashApi
-from display.helpers.logger_class import HelperLogger
 from display.webapp.config import Config
-from display.webapp.helpers.utils.sources import get_screenshot_sources
 
-logging.setLoggerClass(HelperLogger)
+logging.setLoggerClass(AppLogger)
+
+config = Config()
 
 
 class AsyncScreenshots(object):
@@ -32,18 +32,17 @@ class AsyncScreenshots(object):
 
     :param incoming_workload: Dict containing at minimal a key with a value and a list with urls which shall be used to
                               take the screenshots
-    :type incoming_workload: dict
-    :param user_agent: The user agent to use when retrieving the data
-    :type user_agent: str
     """
 
-    def __init__(self, incoming_workload=None):
-
-        self.config = Config()
+    def __init__(self, incoming_workload: dict[str, List[str]] = None):
 
         self.logger = logging.getLogger(__name__)
 
-        self.screen_shot_sources = get_screenshot_sources()
+        self.screenshot_source_parser = ScreenshotSourceConfigParser()
+        self.screenshot_config = (
+            self.screenshot_source_parser.get_screenshot_source_config_obj()
+        )
+        self._screen_shot_sources = self.screenshot_config.screenshot_sources()
 
         self.tab_to_screenshotsource_mapping = defaultdict()
         self.set_tab_to_screenshotsource_mapping()
@@ -81,19 +80,22 @@ class AsyncScreenshots(object):
         else:
             raise TypeError(f"Expecting dict; got: {type(incoming_workload)}")
 
-        self.user_agent = self.config.USER_AGENT
+        self.user_agent = config.USER_AGENT
 
         self.headers = self.__default_headers
 
         self.splash_api = SplashApi(
-            (self.config.SPLASH_HOST, self.config.SPLASH_PORT),
-            protocol="http",
-            user_agent=self.config.USER_AGENT,
+            baseurl=f"{config.SPLASH_PROTOCOL}://{config.SPLASH_HOST}:{config.SPLASH_PORT}",
+            user_agent=config.USER_AGENT,
         )
 
         self.screenshotHandler = ScreenShotHandler()
 
         self.current_wd = os.path.dirname(os.path.abspath(__file__))
+
+    @property
+    def screen_shot_sources(self):
+        return self._screen_shot_sources
 
     @property
     def __default_headers(self):
@@ -141,45 +143,35 @@ class AsyncScreenshots(object):
                     for k, v in each.items():
                         self.logger.info(f"Processing: {k}")
 
-                        if not os.path.exists(self.config.SCREENSHOT_LOCATION):
-                            self.logger.info(
-                                f"Creating {self.config.SCREENSHOT_LOCATION}"
-                            )
-                            os.mkdir(self.config.SCREENSHOT_LOCATION)
+                        if not os.path.exists(config.SCREENSHOT_LOCATION):
+                            self.logger.info(f"Creating {config.SCREENSHOT_LOCATION}")
+                            os.mkdir(config.SCREENSHOT_LOCATION)
 
-                        if not os.path.exists(self.config.TIMELINE_LOCATION):
-                            self.logger.info(
-                                f"Creating {self.config.TIMELINE_LOCATION}"
-                            )
-                            os.mkdir(self.config.TIMELINE_LOCATION)
+                        if not os.path.exists(config.TIMELINE_LOCATION):
+                            self.logger.info(f"Creating {config.TIMELINE_LOCATION}")
+                            os.mkdir(config.TIMELINE_LOCATION)
 
                         if not os.path.exists(
-                            os.path.join(self.config.SCREENSHOT_LOCATION, f"{k}.png")
+                            os.path.join(config.SCREENSHOT_LOCATION, f"{k}.png")
                         ):
                             self.logger.info(
-                                f"Creating {os.path.join(self.config.SCREENSHOT_LOCATION, f'{k}.png')}"
+                                f"Creating {os.path.join(config.SCREENSHOT_LOCATION, f'{k}.png')}"
                             )
                             Path(
-                                os.path.join(
-                                    self.config.SCREENSHOT_LOCATION, f"{k}.png"
-                                )
+                                os.path.join(config.SCREENSHOT_LOCATION, f"{k}.png")
                             ).touch()
 
                         if isinstance(v, bytes):
                             if v[:4] == b"\x89PNG":
                                 # picture taken; process
                                 self.store_normal_picture(k, v)
-                                DbLog.insert(
-                                    {
-                                        "url": self.screenshotHandler.get_url_by_hash(
-                                            k
-                                        ),
-                                        "hash": k,
-                                        "action": tracelog_action.SCREENSHOT,
-                                        "result": tracelog_result.OK,
-                                        "status_code": 200,
-                                    }
-                                )
+                                TraceLogEntry(
+                                    url=self.screenshotHandler.get_url_by_hash(k),
+                                    hash=k,
+                                    action=tracelog_action.SCREENSHOT,
+                                    result=tracelog_result.OK,
+                                    status_code=200,
+                                ).save()
                             else:
                                 # no picture assume uncatched error for now!
                                 self.store_error_picture(k)
@@ -187,18 +179,14 @@ class AsyncScreenshots(object):
                                 the_result = json.loads(v)
 
                                 if "error" in the_result:
-                                    DbLog.insert(
-                                        {
-                                            "url": self.screenshotHandler.get_url_by_hash(
-                                                k
-                                            ),
-                                            "hash": k,
-                                            "action": tracelog_action.SCREENSHOT,
-                                            "result": tracelog_result.NOK,
-                                            "status_code": the_result["error"],
-                                            "reason": the_result["description"],
-                                        }
-                                    )
+                                    TraceLogEntry(
+                                        url=self.screenshotHandler.get_url_by_hash(k),
+                                        hash=k,
+                                        action=tracelog_action.SCREENSHOT,
+                                        result=tracelog_result.NOK,
+                                        status_code=the_result["error"],
+                                        reason=the_result["description"],
+                                    ).save()
                         elif isinstance(v, str):
                             if v == "ERROR":
                                 # set to error pic
@@ -207,41 +195,33 @@ class AsyncScreenshots(object):
                             # dict with normal and evidence keys
                             if not evidence_shot:
                                 self.store_normal_picture(k, v["normal"])
-                                DbLog.insert(
-                                    {
-                                        "url": self.screenshotHandler.get_url_by_hash(
-                                            k
-                                        ),
-                                        "hash": k,
-                                        "action": tracelog_action.SCREENSHOT,
-                                        "result": tracelog_result.OK,
-                                        "status_code": 200,
-                                    }
-                                )
+                                TraceLogEntry(
+                                    url=self.screenshotHandler.get_url_by_hash(k),
+                                    hash=k,
+                                    action=tracelog_action.SCREENSHOT,
+                                    result=tracelog_result.OK,
+                                    status_code=200,
+                                ).save()
 
                             self.store_evidence_picture(k, v["evidence"])
-                            DbLog.insert(
-                                {
-                                    "url": self.screenshotHandler.get_url_by_hash(k),
-                                    "hash": k,
-                                    "action": tracelog_action.EVIDENCE,
-                                    "result": tracelog_result.OK,
-                                    "status_code": 200,
-                                }
-                            )
+                            TraceLogEntry(
+                                url=self.screenshotHandler.get_url_by_hash(k),
+                                hash=k,
+                                action=tracelog_action.EVIDENCE,
+                                result=tracelog_result.OK,
+                                status_code=200,
+                            ).save()
 
                         else:
                             # assume it's an error for now
                             self.store_error_picture(k)
-                            DbLog.insert(
-                                {
-                                    "url": self.screenshotHandler.get_url_by_hash(k),
-                                    "hash": k,
-                                    "action": tracelog_action.SCREENSHOT,
-                                    "result": tracelog_result.NOK,
-                                    "status_code": "?",
-                                }
-                            )
+                            TraceLogEntry(
+                                url=self.screenshotHandler.get_url_by_hash(k),
+                                hash=k,
+                                action=tracelog_action.SCREENSHOT,
+                                result=tracelog_result.NOK,
+                                status_code="?",
+                            ).save()
 
             except Exception as err:
                 self.logger.error(f"Error processing {k}, Error produced --> {err}")
@@ -251,13 +231,13 @@ class AsyncScreenshots(object):
 
         # First create a copy of the current file and rename to _old
         shutil.copy2(
-            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}.png"),
-            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}_old.png"),
+            os.path.join(config.SCREENSHOT_LOCATION, f"{hash}.png"),
+            os.path.join(config.SCREENSHOT_LOCATION, f"{hash}_old.png"),
         )
 
         self.logger.info(f"Setting screenshot picture for {hash}")
         with open(
-            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}.png"),
+            os.path.join(config.SCREENSHOT_LOCATION, f"{hash}.png"),
             "wb",
         ) as f:
             f.write(value)
@@ -268,7 +248,7 @@ class AsyncScreenshots(object):
 
         self.logger.info(f"Setting evidence picture for {hash}")
         with open(
-            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}_eve.png"),
+            os.path.join(config.SCREENSHOT_LOCATION, f"{hash}_eve.png"),
             "wb",
         ) as f:
             f.write(value)
@@ -277,8 +257,8 @@ class AsyncScreenshots(object):
 
         # First create a copy of the current file and rename to _old
         shutil.copy2(
-            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}.png"),
-            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}_old.png"),
+            os.path.join(config.SCREENSHOT_LOCATION, f"{hash}.png"),
+            os.path.join(config.SCREENSHOT_LOCATION, f"{hash}_old.png"),
         )
 
         # retrieve bin data
@@ -290,7 +270,7 @@ class AsyncScreenshots(object):
 
         self.logger.debug(f"Setting error picture for {hash}")
         with open(
-            os.path.join(self.config.SCREENSHOT_LOCATION, f"{hash}.png"),
+            os.path.join(config.SCREENSHOT_LOCATION, f"{hash}.png"),
             "wb",
         ) as f:
             f.write(data)
@@ -301,7 +281,7 @@ class AsyncScreenshots(object):
         self.screenshotHandler.limit_img_size(hash)
 
     async def fetch(self, session, entry):
-        url_hash = hashlib.md5(entry["url"].encode("utf-8")).hexdigest()[:6]
+        url_hash = self.screenshotHandler.get_hash(entry["url"].encode("utf-8"))
         try:
             async with session.get(
                 self.splash_api.get_render_url(
@@ -314,15 +294,13 @@ class AsyncScreenshots(object):
             self.logger.warning(
                 f"Error getting {entry['url']} data.... Error observed: {err}"
             )
-            DbLog.insert(
-                {
-                    "url": entry["url"],
-                    "hash": url_hash,
-                    "action": tracelog_action.SCREENSHOT,
-                    "result": tracelog_result.UNK,
-                    "reason": err,
-                }
-            )
+            TraceLogEntry(
+                url=entry["url"],
+                hash=url_hash,
+                action=tracelog_action.SCREENSHOT,
+                result=tracelog_result.UNK,
+                reason=err,
+            ).save()
             return {url_hash: "ERROR"}
 
     async def fetch_all(self, loop):

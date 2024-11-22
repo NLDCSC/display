@@ -3,10 +3,12 @@ from functools import wraps
 
 from flask import abort, request
 from flask_login import current_user
+from nldcsc.loggers.app_logger import AppLogger
+from sqlalchemy import select
 
 from display.core.general.constants import user_active
-from display.helpers.app_logger import AppLogger
 from display.webapp.app.models import Users
+from display.webapp.run import db
 
 logging.setLoggerClass(AppLogger)
 
@@ -132,10 +134,10 @@ def get_apiauth_object_by_key(key, return_raw_user=False):
     Check if the key matches the configured key
     """
 
-    api_user = (
-        Users.query.filter(Users.api_key_lookup == key[:8])
-        .filter(Users.active == user_active.ENABLED)
-        .first()
+    api_user = db.session.scalar(
+        select(Users).filter(
+            Users.api_key_lookup == key[:8], Users.active == user_active.ENABLED
+        )
     )
 
     if return_raw_user:
@@ -152,7 +154,7 @@ def get_admin_apiauth_object_by_key(key, return_raw_user=False):
     Check if the key matches the configured key
     """
 
-    api_user = Users.query.filter_by(api_key_lookup=key[:8]).first()
+    api_user = db.session.scalar(select(Users).filter(Users.api_key_lookup == key[:8]))
 
     if return_raw_user:
         return api_user
@@ -171,7 +173,7 @@ def get_apiauth_object_by_key_and_decorator(key: str, decorator_name: str, level
     Check if the key matches the configured key
     """
 
-    api_user = Users.query.filter_by(api_key_lookup=key[:8]).first()
+    api_user = db.session.scalar(select(Users).filter(Users.api_key_lookup == key[:8]))
 
     if api_user is not None:
         if api_user.is_admin() or api_user.is_superuser():

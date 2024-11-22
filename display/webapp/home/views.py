@@ -3,7 +3,6 @@ import json
 import logging
 import os
 
-import redis
 from flask import (
     render_template,
     send_from_directory,
@@ -12,19 +11,20 @@ from flask import (
     request,
 )
 from flask_login import login_required
+from nldcsc.datatables.server_side_dt_sql import SQLServerSideDataTable
+from nldcsc.loggers.app_logger import AppLogger
 
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
-from display.helpers.app_logger import AppLogger
-from . import home
-from ..config import Config
-from ..helpers.utils.screenshots import get_mod_time
-from ..helpers.utils.sources import get_display_sources
-from ..helpers.utils.timelines import (
+from display.core.timelines.utils import (
     get_mtime_sorted_timeline_dir_from_hash,
     get_mod_time_from_path,
 )
-from ..run import db
-from ...helpers.server_side_dt import ServerSideDataTable
+from . import home
+from ..app.models import Tracelog
+from ..config import Config
+from ..run import db, rediswrap
+from ...core.parsers.display_config_parser import DisplayConfigParser
+from ...core.screenshots.utils import get_mod_time
 
 logging.setLoggerClass(AppLogger)
 
@@ -32,25 +32,31 @@ logger = logging.getLogger(__name__)
 
 config = Config()
 
+display_config_parser = DisplayConfigParser()
+
 
 @home.route("/")
 @login_required
 def index():
-    display_sources = get_display_sources(config.SCREENSHOT_HEADER_TABS)
+
+    display_config = display_config_parser.get_display_config_obj()
+    display_sources = display_config.display_sources()
 
     all_display_sources = display_sources
+    try:
+        header_tabs = [
+            header
+            for header in all_display_sources
+            if all_display_sources[header][0]["header"] == header
+        ]
 
-    header_tabs = [
-        header
-        for header in all_display_sources
-        if all_display_sources[header][0]["header"] == header
-    ]
-
-    normal_tabs = [
-        header
-        for header in all_display_sources
-        if all_display_sources[header][0]["header"] != header
-    ]
+        normal_tabs = [
+            header
+            for header in all_display_sources
+            if all_display_sources[header][0]["header"] != header
+        ]
+    except KeyError:
+        pass
 
     display_sources = {}
 
@@ -63,10 +69,7 @@ def index():
 @login_required
 def get_status_nodes():
 
-    host, port = config.REDIS_URL.split("//")[1][:-1].split(":")
-
-    with redis.Redis(host=host, port=port, db=7) as conn:
-        node_status = conn.get("node_status")
+    node_status = rediswrap.get("node_status")
 
     if node_status is not None:
         node_status = json.loads(node_status)
@@ -104,7 +107,8 @@ def get_screenshot(filename):
 def get_timeline_data(url_hash):
     ret_data = []
 
-    path_list = get_mtime_sorted_timeline_dir_from_hash(url_hash=url_hash)
+    # cap the timeline_data to the first 250 items
+    path_list = get_mtime_sorted_timeline_dir_from_hash(url_hash=url_hash)[:250]
 
     for each in path_list:
         ret_data.append(
@@ -127,10 +131,10 @@ def timeline(url_hash):
 
     last_screenshot_time = get_mod_time(filename=url_hash)
 
-    timeline_data = get_timeline_data(url_hash=url_hash)
-
-    # cap the timeline_data to the first 250 items
-    timeline_data = timeline_data[:250]
+    try:
+        timeline_data = get_timeline_data(url_hash=url_hash)
+    except FileNotFoundError:
+        timeline_data = []
 
     return render_template("pages/timeline.html", header="Display", **locals())
 
@@ -172,9 +176,9 @@ def download_picture(url_hash, filename):
 
     # forming a Response object with Headers to return from flask
     response = make_response(data.getvalue())
-    response.headers[
-        "Content-Disposition"
-    ] = f'attachment; filename="{filename}_{"_".join(sh.get_tab_by_hash(the_hash=url_hash))}.png"'
+    response.headers["Content-Disposition"] = (
+        f'attachment; filename="{filename}_{"_".join(sh.get_tab_by_hash(the_hash=url_hash))}.png"'
+    )
     response.mimetype = "image/png"
     # return the Response object
     return response
@@ -183,10 +187,11 @@ def download_picture(url_hash, filename):
 @home.post("/fetch_log_data")
 @login_required
 def fetch_nodes_data():
-    ssd = ServerSideDataTable(
+    ssd = SQLServerSideDataTable(
         request=request,
         backend=db,
         target_model="tracelog",
+        model_mapping={"tracelog": Tracelog},
     )
 
     return_data = ssd.output_result()

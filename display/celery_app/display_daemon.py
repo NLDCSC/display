@@ -1,11 +1,14 @@
 from dotenv import load_dotenv
 
+from display.core.parsers.screenshot_source_config_parser import (
+    ScreenshotSourceConfigParser,
+)
+
 load_dotenv(".env")
 
 import contextlib
 import base64
 import collections
-import hashlib
 import json
 import logging
 import math
@@ -13,42 +16,57 @@ import os
 import shutil
 import time
 import uuid
-import redis
 
 from io import BytesIO
-
+from pathlib import Path
 from selenium.common import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from kombu import Queue
 from celery import Celery
+from sqlalchemy import delete
+from selenium import webdriver
 from celery.result import AsyncResult, allow_join_result
-from celery.app.log import TaskFormatter
-from celery.signals import task_prerun, after_setup_task_logger, after_setup_logger
+from celery.signals import (
+    task_prerun,
+    worker_process_init,
+    setup_logging,
+    task_failure,
+    task_postrun,
+    task_retry,
+    after_task_publish,
+    beat_init,
+)
 from celery.utils.log import get_task_logger
 from flask_socketio import SocketIO
 from celery.backends.database import SessionManager
 
-from display.core.database_log.db_log import DbLog
-from display.core.general.constants import tracelog_action, tracelog_result
+from display.core.general.constants import (
+    tracelog_action,
+    tracelog_result,
+    task_result,
+)
 from display.webapp.app.models import Tracelog
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
 from display.core.files.dedub_files import DeduplicateFilesInFolder
-from display.helpers.app_logger import AppLogger
 from display.webapp.config import Config
 from display.core.screenshots.async_screenshots import AsyncScreenshots
-from display.webapp.helpers.utils.sources import (
-    get_display_sources,
-    get_display_source_chunk,
-    chunks,
-)
+from display.core.general.utils import chunks
+from display.core.parsers.display_config_parser import DisplayConfigParser
+from display.core.database_logging.trace_log import TraceLogEntry
+from display.core.tasks.task_result import TaskResult
+from display.core.redis_utils.redis_utils_class import RedisUtils
 from pyvirtualdisplay.smartdisplay import SmartDisplay
-from selenium import webdriver
+from nldcsc.loggers.app_logger import AppLogger
+from nldcsc.flask_plugins.flask_redis import FlaskRedis
 
 logging.setLoggerClass(AppLogger)
 
 config = Config()
+
+READINESS_FILE = Path("/tmp/beat_ready")
+HEARTBEAT_FILE = Path("/tmp/beat_live")
 
 app = Celery(
     "display",
@@ -56,62 +74,173 @@ app = Celery(
     backend=f"{config.REDIS_URL}{config.REDIS_BACKEND_DB}",
     result_extended=True,
     include=["display.celery_app.display_daemon"],
-    task_time_limit=900,
+    task_time_limit=config.CELERY_TASK_TIME_LIMIT,
     task_default_queue="default",
     task_queues=(Queue("default"), Queue("nodes", routing_key="nodes")),
     broker_connection_retry_on_startup=True,
-    result_expires=300,
+    result_expires=config.CELERY_RESULT_EXPIRES,
 )
 
 socketio = SocketIO(message_queue=config.REDIS_URL)
+redis_client = FlaskRedis(init_standalone=True).redis_client
+
+display_config_parser = DisplayConfigParser()
+screenshot_source_config_parser = ScreenshotSourceConfigParser()
+
+execution_times = {}
 
 
-@after_setup_logger.connect
-def setup_loggers(logger, *args, **kwargs):
-    """
-    This function will setup the custom loggers for the workers.
-
-    :param logger: Reference to the default celery logger
-    :type logger: logger
-    :param args: Positional Arguments
-    :type args: list
-    :param kwargs: Keyword arguments
-    :type kwargs: list
-    """
-    for handler in logger.handlers:
-        handler.setFormatter(
-            TaskFormatter("%(asctime)s - %(name)-8s - %(levelname)-8s - %(message)s")
-        )
+@worker_process_init.connect
+def worker_proc_init(**kwargs):
+    pass
 
 
-@after_setup_task_logger.connect
-def setup_task_logger(logger, *args, **kwargs):
-    """
-    This function will setup the custom loggers for the tasks.
-
-    :param logger: Reference to the default celery logger
-    :type logger: logger
-    :param args: Positional Arguments
-    :type args: list
-    :param kwargs: Keyword arguments
-    :type kwargs: list
-    """
-    for handler in logger.handlers:
-        handler.setFormatter(
-            TaskFormatter(
-                "%(asctime)s - %(task_name)s[%(task_id)s] - %(levelname)-8s - %(message)s"
-            )
-        )
+@setup_logging.connect
+def setup_logging(logger, *args, **kwargs):
+    # Disregard all celery processing on loggers and let the generic loggerClass handle the configuration of the loggers
+    pass
 
 
 @task_prerun.connect
 def general_task_pre_run_config(task_id, task, *args, **kwargs):
+    logger = get_task_logger(__name__)
+
+    execution_times[task_id] = time.time()
+
+    task.update_state(state="STARTED")
+
+    logger.info("Task: {}, started!".format(task_id))
+
+
+@task_retry.connect
+def general_task_retry_config(request, reason, einfo, *args, **kwargs):
+    logger = get_task_logger(__name__)
+
+    logger.warning(f"Task retry initiated reason: {reason}")
+
+
+@task_postrun.connect
+def general_task_post_run_config(task_id, task, retval, state, *args, **kwargs):
+    logger = get_task_logger(__name__)
+
+    try:
+        cost = time.time() - execution_times.pop(task_id)
+    except KeyError:
+        cost = -1
+
+    logger.info(
+        f"Task post run cost: {cost}, State: {state}, Task: {task}, RetVal: {retval}"
+    )
+
+    task.request.update(task_execution_time=cost)
+
+    if "task_slug" in task.request.kwargs:
+        task_slug = task.request.kwargs["task_slug"]
+    else:
+        task_slug = task.name
+
     if not task.ignore_result:
-        logger = get_task_logger(__name__)
+        if isinstance(retval, Exception) or retval is None:
+            logger.info(f"Completed {task.name} [{task_id}]")
 
-        task.update_state(state="STARTED")
+            task.backend.client.set(
+                f"runresult_{task_slug}",
+                config.CELERY_TASK_FAILED_ERROR_CODE,
+                ex=86400,
+            )
+            task.backend.client.hincrby(f"counter_{task_slug}", "failed", 1)
 
-        logger.info("Task: {}, started!".format(task_id))
+            insert_time = int(time.time())
+            task.backend.client.zadd(
+                f"sortresults_{task_slug}", {f"{task_slug}_{task_id}": insert_time}
+            )
+            task.backend.client.hset(
+                f"{task_slug}_{task_id}",
+                mapping={
+                    "state": "FAILURE",
+                    "status": config.CELERY_TASK_FAILED_ERROR_CODE,
+                    "cost": cost,
+                    "messages": json.dumps(
+                        [
+                            {"data": f"{type(retval)}"},
+                        ]
+                    ),
+                    "errors": json.dumps([]),
+                    "inserted": insert_time,
+                    "task_id": task_id,
+                },
+            )
+            task.backend.client.expire(
+                name=f"{task_slug}_{task_id}",
+                time=config.CELERY_KEEP_TASK_RESULT * 60 * 60 * 24,
+            )
+        elif isinstance(retval, TaskResult):
+            task.backend.client.set(f"runresult_{task_slug}", retval.status, ex=86400)
+            if retval.status == task_result.SUCCESS:
+                task.backend.client.hincrby(f"counter_{task_slug}", "success", 1)
+                logger.info(f"Completed {task.name} [{task_id}]")
+            else:
+                task.backend.client.hincrby(f"counter_{task_slug}", "failed", 1)
+                logger.warning(
+                    f"Completed {task.name} [{task_id}]; execution failed..."
+                )
+
+            insert_time = int(time.time())
+            task.backend.client.zadd(
+                f"sortresults_{task_slug}", {f"{task_slug}_{task_id}": insert_time}
+            )
+            task.backend.client.hset(
+                f"{task_slug}_{task_id}",
+                mapping={
+                    "state": state,
+                    "status": retval.status,
+                    "cost": cost,
+                    "messages": json.dumps(retval.messages),
+                    "errors": json.dumps(retval.errors),
+                    "inserted": insert_time,
+                    "task_id": task_id,
+                },
+            )
+            task.backend.client.expire(
+                name=f"{task_slug}_{task_id}",
+                time=config.CELERY_KEEP_TASK_RESULT * 60 * 60 * 24,
+            )
+
+        else:
+            task.backend.client.set(
+                f"runresult_{task_slug}", retval["status"], ex=86400
+            )
+            task.backend.client.hincrby(f"counter_{task_slug}", "success", 1)
+
+            insert_time = int(time.time())
+            task.backend.client.zadd(
+                f"sortresults_{task_slug}", {f"{task_slug}_{task_id}": insert_time}
+            )
+            task.backend.client.hset(
+                f"{task_slug}_{task_id}",
+                mapping={
+                    "state": state,
+                    "status": retval["status"],
+                    "cost": cost,
+                    "messages": json.dumps(retval),
+                    "errors": json.dumps([]),
+                    "inserted": insert_time,
+                    "task_id": task_id,
+                },
+            )
+            task.backend.client.expire(
+                name=f"{task_slug}_{task_id}",
+                time=config.CELERY_KEEP_TASK_RESULT * 60 * 60 * 24,
+            )
+
+    logger.info("Task execution completed!")
+
+
+@task_failure.connect
+def general_task_failure_config(task_id, exception, traceback, einfo, *args, **kwargs):
+    logger = get_task_logger(__name__)
+
+    logger.exception(exception)
 
 
 @app.on_after_configure.connect
@@ -121,10 +250,33 @@ def setup_periodic_tasks(sender, **kwargs):
         float(config.SCREENSHOT_REFRESH), balance_screenshot_workload.s()
     )
     sender.add_periodic_task(30.0, guard_config.s())
+    sender.add_periodic_task(30.0, ping.s())
     sender.add_periodic_task(60.0, delete_duplicate_timeline_entries.s())
     sender.add_periodic_task(60.0, store_node_status.s())
     sender.add_periodic_task(1800.0, delete_old_timeline_screenshots.s())
     sender.add_periodic_task(1800.0, delete_old_log_entries.s())
+
+
+@beat_init.connect
+def startup_tasks(sender, **kwargs):
+    """
+    Tasks that should be run when beat starts, if two task share the same index they are chained.
+        1. Ping that the daemon is alive is nice to have.
+        2. Fire guard_config.
+    """
+    logger = get_task_logger(__name__)
+
+    logger.info("Running startup tasks")
+    logger.info(f"sending task {ping.delay()} (ping)")
+    logger.info(f"sending task {guard_config.delay()} (guard_config)")
+    # touching file is needed as a check possibility
+    READINESS_FILE.touch()
+
+
+@after_task_publish.connect()
+def task_published(**_):
+    # touching file is needed as a heartbeat check possibility
+    HEARTBEAT_FILE.touch()
 
 
 @contextlib.contextmanager
@@ -148,41 +300,80 @@ def get_db_session():
 @app.task(
     ignore_result=True,
 )
+def ping() -> None:
+    """
+    This function just writes a ping entry into the database logging.
+    """
+    logger = get_task_logger(__name__)
+
+    logger.info("Still alive!")
+
+
+@app.task(
+    ignore_result=True,
+)
 def guard_config():
     logger = get_task_logger(__name__)
 
     logger.info("Starting guard config..")
 
     try:
-
-        display_sources = get_display_sources()
-
+        current_display_config = display_config_parser.get_display_config_obj(
+            force=True
+        )
     except Exception as err:
         logger.error(f"Unhandled error --> {err}")
         return
 
-    current_hash = hashlib.md5(json.dumps(display_sources).encode()).hexdigest()
+    logger.info(f"Current config hash: {current_display_config.config_hash}")
 
-    logger.info(f"Current config hash: {current_hash}")
+    former_hash = RedisUtils.decode_redis_output(redis_client.get("config_hash"))
 
-    host, port = config.REDIS_URL.split("//")[1][:-1].split(":")
+    redis_client.set("config_hash", current_display_config.config_hash)
 
-    with redis.Redis(host=host, port=port, db=7) as conn:
-        former_hash = conn.get("config_hash")
+    logger.info(
+        f"Current_hash: {current_display_config.config_hash} -- Former_hash: {former_hash}"
+    )
 
-        if former_hash is not None:
-            former_hash = former_hash.decode("utf-8")
-
-        conn.set("config_hash", current_hash)
-
-    logger.info(f"Current_hash: {current_hash} -- Former_hash: {former_hash}")
-
-    if former_hash != current_hash:
+    if former_hash != current_display_config.config_hash:
         logger.info("Configs are different, broadcasting client reloads...")
+        # invalidating cache
+        display_config_parser.invalidate_config_file_cache()
         socketio.emit("config_change", {"data": "reload"}, namespace="/display")
         logger.info("Broadcast send!")
     else:
         logger.info("Configs match!")
+
+    logger.info("Getting screenshot source config hash")
+
+    try:
+        current_source_config = (
+            screenshot_source_config_parser.get_screenshot_source_config_obj(force=True)
+        )
+    except Exception as err:
+        logger.error(f"Unhandled error --> {err}")
+        return
+
+    logger.info(
+        f"Current screenshot source config hash: {current_source_config.config_hash}"
+    )
+
+    former_hash = RedisUtils.decode_redis_output(
+        redis_client.get("screenshot_config_hash")
+    )
+
+    redis_client.set("screenshot_config_hash", current_source_config.config_hash)
+
+    logger.info(
+        f"Current_hash: {current_source_config.config_hash} -- Former_hash: {former_hash}"
+    )
+
+    if former_hash != current_display_config.config_hash:
+        logger.info("Configs are different; invalidating cache")
+        screenshot_source_config_parser.invalidate_config_file_cache()
+        logger.info("Cache invalidated!")
+    else:
+        logger.info("Screenshot source configs match!")
 
     logger.info("Done with guard config")
 
@@ -200,7 +391,8 @@ def balance_screenshot_workload():
     logger.info("Creating balanced workload!")
 
     try:
-        display_sources = get_display_sources()
+        display_config = display_config_parser.get_display_config_obj()
+        display_sources = display_config.display_sources()
     except Exception as err:
         logger.error(f"Unhandled error --> {err}")
         return
@@ -213,30 +405,26 @@ def balance_screenshot_workload():
 
     logger.info(f"Total needed chunks calculated: {total_chunks_needed}")
 
-    # check last run chunk number in redis
-    host, port = config.REDIS_URL.split("//")[1][:-1].split(":")
+    last_run_number = RedisUtils.decode_redis_output(
+        redis_client.get("last_run_number")
+    )
 
-    with redis.Redis(host=host, port=port, db=7) as conn:
-        last_run_number = conn.get("last_run_number")
+    if last_run_number is not None:
 
-        if last_run_number is not None:
-
-            last_run_number = int(last_run_number.decode("utf-8"))
-
-            if last_run_number < total_chunks_needed:
-                conn.set("last_run_number", last_run_number + 1)
-            else:
-                # Reset last_run_number to 0 and set 1 for the next run to prevent 0 from running twice
-                conn.set("last_run_number", 1)
-                last_run_number = 0
+        if last_run_number < total_chunks_needed:
+            redis_client.set("last_run_number", last_run_number + 1)
         else:
-            # never run before, storing 0
-            conn.set("last_run_number", 0)
+            # Reset last_run_number to 0 and set 1 for the next run to prevent 0 from running twice
+            redis_client.set("last_run_number", 1)
             last_run_number = 0
+    else:
+        # never run before, storing 0
+        redis_client.set("last_run_number", 0)
+        last_run_number = 0
 
     logger.info(f"Getting display source with number: {last_run_number}")
 
-    display_sources_chunk = get_display_source_chunk(
+    display_sources_chunk = display_config.get_display_source_chunk(
         number=last_run_number, chunk_size=total_chunks_needed
     )
 
@@ -284,7 +472,7 @@ def make_screenshots(display_sources):
                             "data": tab_data,
                             "tab_hash": sh.get_tabhash_by_tabname(source),
                         },
-                        room=source,
+                        to=source,
                         namespace="/display",
                     )
 
@@ -300,7 +488,7 @@ def make_screenshots(display_sources):
                                             changed_source
                                         ),
                                     },
-                                    room=changed_source,
+                                    to=changed_source,
                                     namespace="/display",
                                 )
 
@@ -373,13 +561,13 @@ def monitoring_nodes_results(data, evidence_shot=False, update_timestamp=False):
                                         ret_screenshot_data[k] = v
                                     else:
                                         if "evidence" in v:
-                                            ret_screenshot_data[k][
-                                                "evidence"
-                                            ] = base64.b64decode(v["evidence"])
+                                            ret_screenshot_data[k]["evidence"] = (
+                                                base64.b64decode(v["evidence"])
+                                            )
                                         if "normal" in v:
-                                            ret_screenshot_data[k][
-                                                "normal"
-                                            ] = base64.b64decode(v["normal"])
+                                            ret_screenshot_data[k]["normal"] = (
+                                                base64.b64decode(v["normal"])
+                                            )
 
                             ss = AsyncScreenshots()
                             ss.process_async(
@@ -396,7 +584,8 @@ def monitoring_nodes_results(data, evidence_shot=False, update_timestamp=False):
                                 try:
                                     tab_data = (
                                         sh.get_changed_data_from_custom_screenshots(
-                                            the_hash=url_hash, evidence_shot=evidence_shot
+                                            the_hash=url_hash,
+                                            evidence_shot=evidence_shot,
                                         )
                                     )
                                     for source in sources:
@@ -408,7 +597,7 @@ def monitoring_nodes_results(data, evidence_shot=False, update_timestamp=False):
                                                     source
                                                 ),
                                             },
-                                            room=source,
+                                            to=source,
                                             namespace="/display",
                                         )
                                     handle_changes_for_timeline.delay(data=tab_data)
@@ -440,7 +629,7 @@ def monitoring_nodes_results(data, evidence_shot=False, update_timestamp=False):
                                                     source
                                                 ),
                                             },
-                                            room=source,
+                                            to=source,
                                             namespace="/display",
                                         )
                                     except Exception as err:
@@ -497,7 +686,7 @@ def execute_on_node(entries, scroll_percent=0):
                         f"Driver set to timeout: {entry['timeout']} and implicit wait: {entry['wait']}"
                     )
 
-                    url_hash = hashlib.md5(entry["url"].encode("utf-8")).hexdigest()[:6]
+                    url_hash = ScreenShotHandler.get_hash(entry["url"].encode("utf-8"))
 
                     logger.info(f"Working on hash: {url_hash} ({entry['url']})...")
 
@@ -564,7 +753,7 @@ def execute_on_node(entries, scroll_percent=0):
     retry_jitter=False,
     ignore_result=True,
 )
-def create_custom_evidence(data):
+def create_custom_evidence(data: dict):
     logger = get_task_logger(__name__)
 
     logger.info(f"Starting custom evidence creation on {data}!")
@@ -573,15 +762,14 @@ def create_custom_evidence(data):
 
     url_data = [sh.get_data_by_hash(data["data"])]
 
-    DbLog.insert(
-        {
-            "url": sh.get_url_by_hash(data["data"]),
-            "hash": data["data"],
-            "action": tracelog_action.OD_EVIDENCE,
-            "result": tracelog_result.REQUESTED,
-            "reason": "User requested to create a custom evidence shot",
-        }
-    )
+    TraceLogEntry(
+        url=sh.get_url_by_hash(data["data"]),
+        user="DAEMON",
+        hash=data["data"],
+        action=tracelog_action.OD_EVIDENCE,
+        result=tracelog_result.REQUESTED,
+        reason="User requested to create a custom evidence shot",
+    ).save()
 
     push_to_nodes.delay(url_data, evidence_shot=True, update_timestamp=True)
 
@@ -595,7 +783,7 @@ def create_custom_evidence(data):
     retry_jitter=False,
     ignore_result=True,
 )
-def create_custom_screenshot(data):
+def create_custom_screenshot(data: dict):
     logger = get_task_logger(__name__)
 
     logger.info(f"Starting custom screenshot creation on {data}!")
@@ -606,15 +794,14 @@ def create_custom_screenshot(data):
 
     display_sources = {sh.get_tab_by_hash(data["data"])[0]: [url_data]}
 
-    DbLog.insert(
-        {
-            "url": sh.get_url_by_hash(data["data"]),
-            "hash": data["data"],
-            "action": tracelog_action.OD_SCREENSHOT,
-            "result": tracelog_result.REQUESTED,
-            "reason": "User requested to create a custom screenshot",
-        }
-    )
+    TraceLogEntry(
+        url=sh.get_url_by_hash(data["data"]),
+        user="DAEMON",
+        hash=data["data"],
+        action=tracelog_action.OD_SCREENSHOT,
+        result=tracelog_result.REQUESTED,
+        reason="User requested to create a custom screenshot",
+    ).save()
 
     logger.info(f"Hash mapped to url: {display_sources}!")
 
@@ -643,7 +830,7 @@ def create_custom_screenshot(data):
                             "data": tab_data,
                             "tab_hash": sh.get_tabhash_by_tabname(source),
                         },
-                        room=source,
+                        to=source,
                         namespace="/display",
                     )
                     handle_changes_for_timeline.delay(data=tab_data, csc=True)
@@ -721,15 +908,14 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
                     ),
                 )
 
-            DbLog.insert(
-                {
-                    "url": sh.get_url_by_hash(each["sc_id"]),
-                    "hash": each["sc_id"],
-                    "action": tracelog_action.TIMELINE,
-                    "result": tracelog_result.OK,
-                    "reason": "Previous state screenshots moved to timeline!",
-                }
-            )
+            TraceLogEntry(
+                url=sh.get_url_by_hash(each["sc_id"]),
+                user="DAEMON",
+                hash=each["sc_id"],
+                action=tracelog_action.TIMELINE,
+                result=tracelog_result.OK,
+                reason="Previous state screenshots moved to timeline!",
+            ).save()
 
     if len(evidence_workload) != 0:
         logger.info(
@@ -787,11 +973,11 @@ def delete_old_log_entries():
         # calculate delta in seconds;
         time_delta = config.LOG_PURGE_TIME * 60
 
-        all_logs = (
-            db.query(Tracelog)
-            .filter(Tracelog.timestamp <= (int(time.time()) - time_delta))
-            .delete()
-        )
+        all_logs = db.execute(
+            delete(Tracelog).filter(
+                Tracelog.timestamp <= (int(time.time()) - time_delta)
+            )
+        ).rowcount
         db.commit()
 
         logger.info(f"Deleted {all_logs} log lines!")
@@ -833,9 +1019,6 @@ def store_node_status():
 
     store_dict = {"timestamp": int(time.time()), "data": dict(status_dict)}
 
-    host, port = config.REDIS_URL.split("//")[1][:-1].split(":")
-
-    with redis.Redis(host=host, port=port, db=7) as conn:
-        conn.set("node_status", json.dumps(store_dict))
+    redis_client.set("node_status", json.dumps(store_dict))
 
     logger.info("Done storing node status")

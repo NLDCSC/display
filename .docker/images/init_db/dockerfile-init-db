@@ -1,14 +1,20 @@
-FROM python:3.10.12
+FROM python:3.11
+ARG UID
+ARG GID
 
-COPY . /app
-WORKDIR /app
+ARG PORT=5050
 
-#RUN apt-get update
-#RUN apt-get -y install python3-dev python3-pip
+ENV PYTHONFAULTHANDLER=1 \
+  PYTHONUNBUFFERED=1 \
+  PYTHONHASHSEED=random \
+  PIP_NO_CACHE_DIR=off \
+  PIP_DISABLE_PIP_VERSION_CHECK=on \
+  PIP_DEFAULT_TIMEOUT=100 \
+  # Poetry's configuration:
+  POETRY_NO_INTERACTION=1 \
+  POETRY_HOME='/usr/local'
 
 RUN pip install --upgrade pip
-
-RUN pip install -r requirements.txt
 
 COPY ./.docker/files/flask/install.sh .
 RUN sed -i -e 's/\r$//' ./install.sh
@@ -16,6 +22,29 @@ RUN sed -i -e 's/\r$//' ./install.sh
 RUN ./install.sh
 
 RUN rm ./install.sh
+
+# System deps:
+RUN curl -sSL https://install.python-poetry.org | python3 -
+
+# create basicuser for container and use the GID/UID from the host build user (if provided)
+RUN groupadd -g $GID basicuser && useradd -r -u $UID -g basicuser basicuser
+
+RUN mkdir -p /home/basicuser && chown basicuser:basicuser -R /home/basicuser
+
+USER basicuser
+
+ENV PATH="/home/basicuser/.local/bin:${PATH}"
+
+WORKDIR /app
+# Copy only requirements to cache them in docker layer and prevent reinstalling them if there are no dep changes
+COPY --chown=basicuser:basicuser poetry.lock pyproject.toml /app/
+
+# Project initialization:
+RUN poetry install --only=main --no-interaction --no-ansi
+
+COPY --chown=basicuser:basicuser . /app
+
+EXPOSE $PORT
 
 COPY ./.docker/files/init_db/init.sh .
 RUN sed -i -e 's/\r$//' ./init.sh
