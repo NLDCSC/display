@@ -23,7 +23,15 @@
     <script type="text/javascript"
             src="{{ url_for('static', filename='js/scroll_tabs/jquery.scrolling-tabs.min.js') }}"></script>
 
-    <script> const TIME_LIMIT = {{ tab_rotate_timer }}; </script>
+    <script>
+        let timer_setting = get_cookie("display-timer")
+        if (timer_setting !== "") {
+            var timer_setting_int = parseInt(timer_setting);
+        } else {
+            var timer_setting_int = {{ tab_rotate_timer }};
+        }
+        var TIME_LIMIT = timer_setting_int
+    </script>
 
     <script type="text/javascript" src="{{ url_for('static', filename='js/timer.min.js') }}"></script>
 
@@ -128,18 +136,19 @@
 
             SetKeyDownEvents();
 
-            $( "#tab-rotate" ).click(function() {
-                $( this ).toggleClass( "btn-outline-danger" );
+            $("#tab-rotate").off().on("click", function() {
+                $(this).toggleClass("btn-outline-danger");
                 if ($(this).hasClass("btn-outline-danger")) {
                     DisableTabRotation();
                 } else {
                     EnableTabRotation();
+                    $("#display_timer").off().on("click", OpenSetTimer)
                 }
 
             });
 
         });
-        $(window).resize(function() {
+        $(window).on("resize", function() {
             $('.img-wrap').hide();
             $('.template-row').show();
             if(this.resizeTO) clearTimeout(this.resizeTO);
@@ -154,8 +163,8 @@
             $(this).trigger('resizeCutColumns');
         });
 
-        $(window).bind('resizeEnd', resizeEnd);
-        $(window).bind('resizeCutColumns', resizeCutColumns);
+        $(window).on('resizeEnd', resizeEnd);
+        $(window).on('resizeCutColumns', resizeCutColumns);
         resizeEnd();
 
     </script>

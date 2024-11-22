@@ -1,40 +1,49 @@
-
 const FULL_DASH_ARRAY = 283;
-const WARNING_THRESHOLD = 60;
-const ALERT_THRESHOLD = 30;
-
-const COLOR_CODES = {
-    info: {
-        color: "green"
-    },
-    warning: {
-        color: "orange",
-        threshold: WARNING_THRESHOLD
-    },
-    alert: {
-        color: "red",
-        threshold: ALERT_THRESHOLD
-    }
-};
 
 let timePassed = 0;
 let timeLeft = TIME_LIMIT;
 let timerInterval = null;
-let remainingPathColor = COLOR_CODES.info.color;
+let remainingPathColor = "green";
 
 function onTimesUp() {
     clearInterval(timerInterval);
     SwitchToNextTab();
 }
 
+function getColorCodes(wrn_treshold, alert_treshold) {
+    return {
+        info: {
+            color: "green"
+        },
+        warning: {
+            color: "orange",
+            threshold: wrn_treshold
+        },
+        alert: {
+            color: "red",
+            threshold: alert_treshold
+        }
+    }
+}
+
 function startTimer() {
     timePassed = 0;
+
+    let timer_setting = get_cookie("display-timer")
+    if (timer_setting !== "") {
+        TIME_LIMIT = parseInt(timer_setting);
+    }
+
     timeLeft = TIME_LIMIT;
     timerInterval = null;
-    remainingPathColor = COLOR_CODES.info.color;
 
-    document.getElementById("app").innerHTML = `
-                <div class="base-timer">
+    let color_codes = getColorCodes(TIME_LIMIT / 2, TIME_LIMIT / 4)
+
+    remainingPathColor = color_codes.info.color;
+
+    document.getElementById("app").innerHTML =
+        `
+                <div id="display_timer" class="base-timer set-pointer">
                   <svg class="base-timer__svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                     <g class="base-timer__circle">
                       <circle class="base-timer__path-elapsed" cx="50" cy="50" r="45"></circle>
@@ -51,11 +60,9 @@ function startTimer() {
                       ></path>
                     </g>
                   </svg>
-                  <span id="base-timer-label" class="base-timer__label">${formatTime(
-        timeLeft
-    )}</span>
+                  <span id="base-timer-label" class="base-timer__label">${formatTime(timeLeft)}</span>
                 </div>
-                `;
+        `;
 
 
     timerInterval = setInterval(() => {
@@ -86,7 +93,7 @@ function formatTime(time) {
 }
 
 function setRemainingPathColor(timeLeft) {
-    const { alert, warning, info } = COLOR_CODES;
+    const { alert, warning, info } = getColorCodes(TIME_LIMIT / 2, TIME_LIMIT / 4);
     if (timeLeft <= alert.threshold) {
         document
             .getElementById("base-timer-path-remaining")
@@ -117,4 +124,3 @@ function setCircleDasharray() {
         .getElementById("base-timer-path-remaining")
         .setAttribute("stroke-dasharray", circleDasharray);
 }
-

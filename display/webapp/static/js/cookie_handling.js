@@ -36,10 +36,25 @@ function get_list_cookie(key) {
     if(typeof a === 'undefined') {
         return []
     } else {
-        let items = a.split(',')
-        return items
+        return a.split(',')
     }
 
+}
+
+function get_cookie(key) {
+    let a = Cookies.get(key)
+
+    if(typeof a === 'undefined') {
+        return ""
+    } else {
+        return a
+    }
+
+}
+
+function set_cookie(key, value) {
+    Cookies.set(key, value, { sameSite: 'lax' })
+    return true
 }
 
 function delete_cookie(key){

@@ -10,6 +10,13 @@ services:
       dockerfile: .docker/images/flask_lb/nginx
     hostname: flask_lb
     restart: always
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./display/webapp/static
+          target: /app/static
+          ignore:
+            - celery_app/
     depends_on:
       flask_web:
         condition: service_healthy
@@ -33,7 +40,7 @@ services:
         GID: ${HOST_GID:-1000}
     develop:
       watch:
-        - action: sync
+        - action: sync+restart
           path: ./display/
           target: /app/display/
           ignore:

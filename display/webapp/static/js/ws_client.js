@@ -160,16 +160,19 @@ function SetAllEventListeners() {
         elem.addEventListener("click", GoToUrl);
     });
 
-    $("#display-filter")[0].addEventListener("click", SetDisplayFilter)
-    $("#btn_close")[0].addEventListener("click", CloseDisplayFilter)
+    $("#display-filter").off().on("click", SetDisplayFilter)
 
-    $("#node-status")[0].addEventListener("click", OpenNodeStatus)
+    $("#btn_close").off().on("click", CloseDisplayFilter)
 
-    $("#tracelog")[0].addEventListener("click", OpenTracelog)
+    $("#node-status").off().on("click", OpenNodeStatus)
 
-    $("#dashboard-mode")[0].addEventListener("click", EnableFullScreen)
+    $("#tracelog").off().on("click", OpenTracelog)
 
-    $("#api-key-create")[0].addEventListener("click", OpenApiKeyCreate)
+    $("#dashboard-mode").off().on("click", EnableFullScreen)
+
+    $("#api-key-create").off().on("click", OpenApiKeyCreate)
+
+    $("#display_timer").off().on("click", OpenSetTimer)
 
     let CheckBoxes = DOMRegex(/^cb\_/)
 
@@ -264,7 +267,7 @@ function SetDisplayFilter() {
         $("#cbtab_head_" + value).prop('checked', false)
     })
 
-    $("#check_all_tar").click(function () {
+    $("#check_all_tar").off().on("click", function () {
         $('#checkbox_normal_div input:checkbox[id^="cb_tar_"]').not(this).prop('checked', true);
         $('#checkbox_normal_div > .row > .col-sm').children('input').each(function () {
             let vis_tab = $("#tab_" + this.value)
@@ -274,7 +277,7 @@ function SetDisplayFilter() {
         })
     });
 
-    $("#check_all_head").click(function () {
+    $("#check_all_head").off().on("click",function () {
         $('#checkbox_header_div input:checkbox[id^="cb_head_"]').not(this).prop('checked', true);
         $('#checkbox_header_div > .row > .col-sm').children('input').each(function () {
             let vis_tab = $("#tab_" + this.value)
@@ -284,7 +287,7 @@ function SetDisplayFilter() {
         })
     });
 
-    $("#uncheck_all_tar").click(function () {
+    $("#uncheck_all_tar").off().on("click",function () {
         $('#checkbox_normal_div input:checkbox[id^="cb_tar_"]').prop('checked', false);
         $('#checkbox_normal_div > .row > .col-sm').children('input').each(function () {
             let vis_tab = $("#tab_" + this.value)
@@ -294,7 +297,7 @@ function SetDisplayFilter() {
         })
     });
 
-    $("#uncheck_all_head").click(function () {
+    $("#uncheck_all_head").off().on("click",function () {
         $('#checkbox_header_div input:checkbox[id^="cb_head_"]').prop('checked', false);
         $('#checkbox_header_div > .row > .col-sm').children('input').each(function () {
             let vis_tab = $("#tab_" + this.value)
@@ -304,28 +307,28 @@ function SetDisplayFilter() {
         })
     });
 
-    $("#check_all_tab_tar").click(function () {
+    $("#check_all_tab_tar").off().on("click",function () {
         $('#checkbox_normal_div_tab input:checkbox[id^="cbtab_tar_"]').not(this).prop('checked', true);
         $('#checkbox_normal_div_tab > .row > .col-sm').children('input').each(function () {
             SetTabContentVisibility(this.value)
         })
     });
 
-    $("#check_all_tab_head").click(function () {
+    $("#check_all_tab_head").off().on("click",function () {
         $('#checkbox_header_div_tab input:checkbox[id^="cbtab_head_"]').not(this).prop('checked', true);
         $('#checkbox_header_div_tab > .row > .col-sm').children('input').each(function () {
             SetTabContentVisibility(this.value)
         })
     });
 
-    $("#uncheck_all_tab_tar").click(function () {
+    $("#uncheck_all_tab_tar").off().on("click",function () {
         $('#checkbox_normal_div_tab input:checkbox[id^="cbtab_tar_"]').prop('checked', false);
         $('#checkbox_normal_div_tab > .row > .col-sm').children('input').each(function () {
             SetTabContentVisibility(this.value)
         })
     });
 
-    $("#uncheck_all_tab_head").click(function () {
+    $("#uncheck_all_tab_head").off().on("click",function () {
         $('#checkbox_header_div_tab input:checkbox[id^="cbtab_head_"]').prop('checked', false);
         $('#checkbox_header_div_tab > .row > .col-sm').children('input').each(function () {
             SetTabContentVisibility(this.value)
@@ -335,6 +338,32 @@ function SetDisplayFilter() {
     $("#popup-filter").show()
 }
 
+function OpenSetTimer() {
+    $("#btn_timer").off().on("click", CloseSetTimer)
+    $("#popup-timer").show()
+
+    let current_interval = get_cookie("display-timer");
+
+    if (current_interval !== "") {
+        current_interval = parseInt(current_interval);
+    } else {
+        current_interval = 90
+    }
+
+    $("#timer_int").val(current_interval)
+
+    $("#timer_form").off().on("submit", function (event) {
+        event.preventDefault()
+
+        set_cookie("display-timer", $("#timer_int").val())
+        DisableTabRotation()
+        EnableTabRotation()
+
+        $("#popup-timer").hide()
+    })
+
+}
+
 function OpenNodeStatus(){
 
     $.ajax({
@@ -342,7 +371,7 @@ function OpenNodeStatus(){
     })
         .done(function( data ) {
             $("#popup-node").html(data)
-            $("#btn_close2")[0].addEventListener("click", CloseNodeStatus)
+            $("#btn_close2").off().on("click", CloseNodeStatus)
             $("#popup-node").show()
         });
 
@@ -354,13 +383,13 @@ function OpenApiKeyCreate() {
     })
         .done(function( data ) {
             $("#popup-api-key").html(data)
-            $("#btn_close4")[0].addEventListener("click", CloseApiKey)
+            $("#btn_close4").off().on("click", CloseApiKey)
             $("#popup-api-key").show()
         });
 }
 
 function OpenTracelog() {
-    $("#btn_close3")[0].addEventListener("click", CloseTracelog)
+    $("#btn_close3").off().on("click", CloseTracelog)
     let dataTable = $('#display-tracelog')
     dataTable.DataTable().clear().destroy();
     dataTable.DataTable({
@@ -458,7 +487,7 @@ function SetTabVisibility(el) {
         remove_from_list_cookie("display-top-filter", tab_value)
         // check if this the only visible tab; if so, click it...
         if ($('button[id^="tab_"]:visible').length === 1) {
-            tab_element.click()
+            tab_element.trigger('click')
         }
     } else {
         add_list_cookie("display-top-filter", tab_value)
@@ -731,6 +760,10 @@ function CloseApiKey() {
     $("#popup-api-key").hide()
 }
 
+function CloseSetTimer() {
+    $("#popup-timer").hide()
+}
+
 function CloseDisplayFilter() {
     DestroyScrollingTabs()
     InitScrollingTabs()
@@ -738,7 +771,7 @@ function CloseDisplayFilter() {
     let check_visible = $('button[id^="tab_"]:visible')
 
     if (!check_visible.hasClass('active')){
-        check_visible[0].click()
+        check_visible.trigger('click');
     }
 
     $("#popup-filter").hide()
@@ -752,13 +785,13 @@ function ReEnableDisplayFilter() {
     let check_visible = $('button[id^="tab_"]:visible')
 
     if (!check_visible.hasClass('active')){
-        check_visible[0].click()
+        check_visible.trigger('click')
     }
 }
 
 function SetKeyDownEvents() {
     $(document).keydown(function (event) {
-        if (event.keyCode === 27) {
+        if (event.key === 'Escape') {
             let modal_sel = $('#the-modal')
             let popup_sel = $('#popup-filter')
             let popup_stat = $('#popup-node')
@@ -897,7 +930,7 @@ function SelectTabClick(evt){
 
     let data_hash = attrs["data-hash"].nodeValue;
 
-    $("#tab_" + data_hash).click()
+    $("#tab_" + data_hash).trigger('click')
 
     $('.nav-tabs').scrollingTabs('scrollToActiveTab');
 
@@ -919,10 +952,10 @@ function SwitchToNextTab(){
     check_visible.each(function (val){
         if ($("#" + check_visible[val].id).hasClass('active')){
             try {
-                $("#" + check_visible[val + 1].id).click()
+                $("#" + check_visible[val + 1].id).trigger('click');
                 return false;
             } catch (e) {
-                $("#" + check_visible[0].id).click();
+                $("#" + check_visible[0].id).trigger('click');
                 return false;
             }
         }
