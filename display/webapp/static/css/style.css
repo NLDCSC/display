@@ -611,3 +611,7 @@ table#display-tracelog.table.table-striped.table-dark.dataTable.no-footer thead 
 table#display-tracelog.table.table-striped.table-dark.no-footer.dataTable thead tr th.table_center_text.sorting {
   text-align: center;
 }
+
+.set-pointer {
+  cursor: pointer;
+}
