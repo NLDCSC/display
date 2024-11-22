@@ -111,7 +111,9 @@ class Config(object):
     SSO_CLIENT_SECRET: str = os.getenv("SSO_CLIENT_SECRET", "secret!")
     SSO_CALLBACK_ENDPOINT: str = os.getenv("SSO_CALLBACK_ENDPOINT", "sso_callback")
     SSO_OVERWRITE_REDIRECT_URI: str = os.getenv("SSO_OVERWRITE_REDIRECT_URI", None)
-    SSO_SCOPES: List[str] = getenv_list("SSO_SCOPES", ["openid", "profile", "email"])
+    SSO_SCOPES: List[str] = getenv_list(
+        "SSO_SCOPES", ["openid", "resources", "profile"]
+    )
 
     ALLOWED_USER_GROUPS: List[str] = getenv_list("ALLOWED_USER_GROUPS", [])
 
