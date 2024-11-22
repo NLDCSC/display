@@ -13,6 +13,7 @@ from nldcsc.flask_plugins.flask_sqlalchemy import (
     str_100,
     big_int_pk,
     str_30,
+    str_text,
 )
 from nldcsc.generic.times import timestampTOdatetimestring
 from sqlalchemy import ForeignKey
@@ -299,3 +300,12 @@ class Tracelog(ModelDefault):
 
     def __repr__(self):
         return f"<< Tracelog: {self.id} / {self.url_hash} >>"
+
+
+class TemplateTexts(ModelDefault):
+    __tablename__ = "templatetexts"
+    id: Mapped[int_pk]
+    text: Mapped[str_text]
+
+    def __repr__(self):
+        return f"<< TemplateTexts >>"

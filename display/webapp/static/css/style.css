@@ -615,3 +615,23 @@ table#display-tracelog.table.table-striped.table-dark.no-footer.dataTable thead 
 .set-pointer {
   cursor: pointer;
 }
+
+.assessed_defaced {
+    -webkit-animation: blinkshadow 3.0s linear infinite;
+    -moz-animation: blinkshadow 3.0s linear infinite;
+    -ms-animation: blinkshadow 3.0s linear infinite;
+    -o-animation: blinkshadow 3.0s linear infinite;
+    animation: blinkshadow 3.0s linear infinite;
+}
+
+@keyframes blinkshadow {
+    0% { box-shadow: 0 0 10px 5px #c83e3e; }
+    50% { box-shadow: none; }
+    100% { box-shadow: 0 0 10px 5px #c83e3e; }
+}
+
+@-webkit-keyframes blinkshadow {
+    0% { box-shadow: 0 0 10px 5px #c83e3e; }
+    50% { box-shadow: 0 0 0; }
+    100% { box-shadow: 0 0 10px 5px #c83e3e; }
+}

@@ -130,3 +130,7 @@ class Config(object):
     CELERY_RESULT_EXPIRES: int = int(
         os.getenv("CELERY_RESULT_EXPIRES", 300)
     )  # in seconds
+
+    DISPLAY_ASSUME_NO_TEXT_DEFACED: bool = getenv_bool(
+        "DISPLAY_ASSUME_NO_TEXT_DEFACED", "True"
+    )
