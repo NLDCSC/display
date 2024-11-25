@@ -128,6 +128,12 @@
     {% include "partials/set_timer.html" %}
 </div>
 
+{% if current_user.is_admin() %}
+    <div id="popup-settings" class="overlay">
+        {% include "partials/settings.html" %}
+    </div>
+{% endif %}
+
 <ul class="nav nav-tabs" id="myTab" role="tablist">
     {% for key in all_display_sources %}
         <li class="nav-item" role="presentation">

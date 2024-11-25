@@ -174,6 +174,8 @@ function SetAllEventListeners() {
 
     $("#display_timer").off().on("click", OpenSetTimer)
 
+    $("#settings").off().on("click", OpenSettings)
+
     let CheckBoxes = DOMRegex(/^cb\_/)
 
     CheckBoxes.forEach(function (elem) {
@@ -361,6 +363,14 @@ function OpenSetTimer() {
 
         $("#popup-timer").hide()
     })
+
+}
+
+function OpenSettings(){
+    $("#btn_settings").off().on("click", CloseSettings)
+    $("#popup-settings").show()
+
+    addFormElements()
 
 }
 
@@ -764,6 +774,10 @@ function CloseSetTimer() {
     $("#popup-timer").hide()
 }
 
+function CloseSettings() {
+    $("#popup-settings").hide()
+}
+
 function CloseDisplayFilter() {
     DestroyScrollingTabs()
     InitScrollingTabs()
@@ -797,6 +811,8 @@ function SetKeyDownEvents() {
             let popup_stat = $('#popup-node')
             let popup_trace = $('#popup-tracelog')
             let display_header = $("#display-header-row")
+            let set_timer = $("#popup-timer")
+            let settings = $("#popup-settings")
 
             if (modal_sel.is(":visible")) {
                 modal_sel.hide();
@@ -806,6 +822,12 @@ function SetKeyDownEvents() {
             }
             if (popup_stat.is(":visible")) {
                 CloseNodeStatus();
+            }
+            if (set_timer.is(":visible")) {
+                CloseSetTimer();
+            }
+            if (settings.is(":visible")) {
+                CloseSettings();
             }
             if (popup_trace.is(":visible")) {
                 CloseTracelog();
@@ -974,4 +996,22 @@ function GoToUrl(evt){
 
     window.open(data_url, '_blank');
 
+}
+
+function addFormElements() {
+
+    $('#form-list').append($("#form-template .form-row").clone())
+
+    // if ($('#form-list .item-entry').length > 1){
+    //     //console.log($('#form-list .item-entry')[0])
+    //     if ($('#form-list .item-entry .form-group #entry_type')[0].value === "list"){
+    //         $('#form-list .item-entry .form-group #entry_type').last().find('option').not(':last').remove();
+    //     }
+    // }
+}
+
+function removeFormElements() {
+    if ($('#form-list .form-row').length > 1){
+        $(this).parents('.form-row').remove();
+    }
 }

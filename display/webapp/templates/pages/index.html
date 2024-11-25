@@ -95,6 +95,11 @@
                                         </div>
                                     </div>
                                 </div>
+                                {% if current_user.is_admin() %}
+                                    <div id="settings" class="float-right mr-3 set-pointer">
+                                        <span class="mdi mdi-cog"></span>
+                                    </div>
+                                {% endif %}
                                 <div id="app" class="float-right"></div>
                                 <div class="float-right con-details">
                                     <span class="con-details-text">
@@ -166,6 +171,9 @@
         $(window).on('resizeEnd', resizeEnd);
         $(window).on('resizeCutColumns', resizeCutColumns);
         resizeEnd();
+
+        $(document).on("click", ".add-btn", addFormElements);
+        $(document).on("click", ".remove-btn", removeFormElements);
 
     </script>
 

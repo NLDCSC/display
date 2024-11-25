@@ -116,6 +116,7 @@ class Config(object):
     )
 
     ALLOWED_USER_GROUPS: List[str] = getenv_list("ALLOWED_USER_GROUPS", [])
+    ALLOWED_ADMIN_GROUPS: List[str] = getenv_list("ALLOWED_ADMIN_GROUPS", [])
 
     # DAEMON TASK STORAGE SETTINGS
     CELERY_TASK_FAILED_ERROR_CODE: int = int(

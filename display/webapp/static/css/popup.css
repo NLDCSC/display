@@ -22,7 +22,8 @@
 #popup-node,
 #popup-tracelog,
 #popup-api-key,
-#popup-timer {
+#popup-timer,
+#popup-settings {
   z-index: 1;
 }
 
@@ -42,7 +43,6 @@
   padding: 20px;
   border-radius: 5px;
   width: 25%;
-  height: 25%;
   position: relative;
   transition: all 5s ease-in-out;
   background-color: #1e1e1e;
@@ -78,6 +78,16 @@
   background-color: #1e1e1e;
 }
 
+.popup_settings {
+  margin: 70px auto;
+  padding: 20px;
+  border-radius: 5px;
+  width: 80%;
+  position: relative;
+  transition: all 5s ease-in-out;
+  background-color: #1e1e1e;
+}
+
 hr.ruler {
   border: 2px solid #484747;
 }
@@ -86,7 +96,8 @@ hr.ruler {
 .popup_status h2,
 .popup_tracelog h2,
 .popup_api_key h2,
-.popup_timer h2 {
+.popup_timer h2,
+.popup_settings h2 {
   margin-top: 0;
   color: white;
   font-family: Tahoma, Arial, sans-serif;
@@ -96,7 +107,8 @@ hr.ruler {
 .popup_status .popup-close,
 .popup_tracelog .popup-close,
 .popup_api_key .popup-close,
-.popup_timer .popup-close {
+.popup_timer .popup-close,
+.popup_settings .popup-close {
   position: absolute;
   top: 20px;
   right: 30px;
@@ -120,7 +132,8 @@ hr.ruler {
 .popup_status .content,
 .popup_tracelog .content,
 .popup_api_key .content,
-.popup_timer .content {
+.popup_timer .content,
+.popup_settings .content {
   height: 50vh;
   overflow-y: auto;
   overflow-x: hidden;
