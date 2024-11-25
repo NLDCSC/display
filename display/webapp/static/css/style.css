@@ -159,6 +159,10 @@
   min-height: 30px;
 }
 @media (max-width: 768px) {
+  #defacement_chart {
+    display: none;
+  }
+
   #dashboard-mode {
     display: none;
   }

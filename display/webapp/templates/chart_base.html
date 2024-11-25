@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{{ header }} | {{ get_version() }}</title>
+    <base id="base_path" href="{{ url_for('home.index') }}">
+
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/display.png') }}" />
+
+    {% block head_css %}
+    {% endblock %}
+
+    <script type="text/javascript" src="{{ url_for('static', filename='js/jquery/jquery.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap/bootstrap.bundle.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/js-cookie.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/cookie_handling.min.js') }}"></script>
+
+    <script> const BasePath = $("#base_path")[0].baseURI </script>
+
+    {% block head_scripts %}
+    {% endblock %}
+</head>
+<body>
+<div class="container-scroller">
+    <div class="container-fluid page-body-wrapper">
+        <div class="main-panel">
+            <div class="content-wrapper">
+                {% block body %}
+                {% endblock %}
+            </div>
+            <!-- content-wrapper ends -->
+        </div>
+        <!-- main-panel ends -->
+    </div>
+    <!-- page-body-wrapper ends -->
+</div>
+<!-- container-scroller -->
+{% block body_scripts %}
+{% endblock %}
+</body>
+</html>

@@ -174,6 +174,8 @@ function SetAllEventListeners() {
 
     $("#display_timer").off().on("click", OpenSetTimer)
 
+    $("#defacement_chart").off().on("click", GotoDefacementChart)
+
     $("#settings").off().on("click", OpenSettings)
 
     let CheckBoxes = DOMRegex(/^cb\_/)
@@ -338,6 +340,11 @@ function SetDisplayFilter() {
     });
 
     $("#popup-filter").show()
+}
+
+function GotoDefacementChart(){
+    let url = BasePath + "chart"
+    window.open(url, '_blank');
 }
 
 function OpenSetTimer() {
