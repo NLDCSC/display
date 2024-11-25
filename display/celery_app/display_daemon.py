@@ -1,9 +1,5 @@
 from dotenv import load_dotenv
 
-from display.core.parsers.screenshot_source_config_parser import (
-    ScreenshotSourceConfigParser,
-)
-
 load_dotenv(".env")
 
 import contextlib
@@ -17,15 +13,19 @@ import shutil
 import time
 import uuid
 
+import sqlalchemy
+
 from io import BytesIO
 from pathlib import Path
 from selenium.common import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
+from typing import Optional
+
 from kombu import Queue
 from celery import Celery
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 from selenium import webdriver
 from celery.result import AsyncResult, allow_join_result
 from celery.signals import (
@@ -38,6 +38,7 @@ from celery.signals import (
     after_task_publish,
     beat_init,
 )
+from celery.schedules import crontab
 from celery.utils.log import get_task_logger
 from flask_socketio import SocketIO
 from celery.backends.database import SessionManager
@@ -47,7 +48,7 @@ from display.core.general.constants import (
     tracelog_result,
     task_result,
 )
-from display.webapp.app.models import Tracelog
+from display.webapp.app.models import Tracelog, TemplateTexts, Defacements
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
 from display.core.files.dedub_files import DeduplicateFilesInFolder
 from display.webapp.config import Config
@@ -57,6 +58,11 @@ from display.core.parsers.display_config_parser import DisplayConfigParser
 from display.core.database_logging.trace_log import TraceLogEntry
 from display.core.tasks.task_result import TaskResult
 from display.core.redis_utils.redis_utils_class import RedisUtils
+from display.core.parsers.screenshot_source_config_parser import (
+    ScreenshotSourceConfigParser,
+)
+from display.core.defacements.defacement_assessment import DefacementAssessment
+
 from pyvirtualdisplay.smartdisplay import SmartDisplay
 from nldcsc.loggers.app_logger import AppLogger
 from nldcsc.flask_plugins.flask_redis import FlaskRedis
@@ -249,8 +255,11 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(
         float(config.SCREENSHOT_REFRESH), balance_screenshot_workload.s()
     )
+
+    sender.add_periodic_task(crontab(minute="*/5"), check_defacement.s())
+    sender.add_periodic_task(crontab(minute="*/5"), ping.s())
+
     sender.add_periodic_task(30.0, guard_config.s())
-    sender.add_periodic_task(30.0, ping.s())
     sender.add_periodic_task(60.0, delete_duplicate_timeline_entries.s())
     sender.add_periodic_task(60.0, store_node_status.s())
     sender.add_periodic_task(1800.0, delete_old_timeline_screenshots.s())
@@ -280,19 +289,34 @@ def task_published(**_):
 
 
 @contextlib.contextmanager
-def get_db_session():
+def get_db_session(log_errors: Optional[bool] = True) -> sqlalchemy.orm.Session:
+    """
+    yields a db session.
+
+    use with context block.
+
+    Args:
+        log_errors (bool, optional): log errors in case of an exception during context. Defaults to True.
+
+    Yields:
+        Session: sqlalchemy orm session
+    """
     session_logger = logging.getLogger(__name__)
 
     session_manager = SessionManager()
     engine, Session = session_manager.create_session(config.SQLALCHEMY_DATABASE_URI)
-    session = Session()
+    session: sqlalchemy.orm.Session = Session()
 
     try:
         yield session
     except Exception as err:
-        session_logger.warning(f"Error inserting data into database: {err}")
-        session_logger.exception(err)
+        if log_errors:
+            session_logger.warning(f"Error inserting data into database: {err}")
+            session_logger.exception(err)
         session.rollback()
+
+        # exception should be re-raised so that it can be handled outside this context
+        raise
     finally:
         session.close()
 
@@ -368,7 +392,7 @@ def guard_config():
         f"Current_hash: {current_source_config.config_hash} -- Former_hash: {former_hash}"
     )
 
-    if former_hash != current_display_config.config_hash:
+    if former_hash != current_source_config.config_hash:
         logger.info("Configs are different; invalidating cache")
         screenshot_source_config_parser.invalidate_config_file_cache()
         logger.info("Cache invalidated!")
@@ -1022,3 +1046,55 @@ def store_node_status():
     redis_client.set("node_status", json.dumps(store_dict))
 
     logger.info("Done storing node status")
+
+
+@app.task(
+    ignore_result=True,
+)
+def check_defacement():
+    logger = get_task_logger(__name__)
+
+    logger.info("Checking for defacement's...")
+
+    sh = ScreenShotHandler()
+
+    with get_db_session(True) as db:
+        all_texts = db.scalars(select(TemplateTexts.text)).all()
+
+        da = DefacementAssessment(template_texts=all_texts)
+
+        display_config = display_config_parser.get_display_config_obj()
+
+        header_hashes = display_config.hashes_per_header_tab()
+
+        check_time = int(time.time())
+
+        for header, hashes in header_hashes.items():
+            all_screenshot_paths = [
+                Path(os.path.join(config.SCREENSHOT_LOCATION, f"{x}.png"))
+                for x in hashes
+            ]
+            defacement_count = 0
+            for screenshot_path in all_screenshot_paths:
+                result, reason = da.assess_image(screenshot_path)
+                TraceLogEntry(
+                    url=sh.get_url_by_hash(screenshot_path.stem),
+                    user="DAEMON",
+                    hash=screenshot_path.stem,
+                    action=tracelog_action.DEFACEMENT,
+                    result=tracelog_result.OK,
+                    reason=f"Defacement: {result} -> {reason}",
+                ).save()
+
+                if result:
+                    defacement_count += 1
+
+            new_entry = Defacements(
+                hash=display_config.target_group_to_hash[header],
+                header=header,
+                created_at=check_time,
+                count=defacement_count,
+            )
+            db.add(new_entry)
+            db.commit()
+    logger.info("Done checking for defacement's...")

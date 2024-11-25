@@ -309,3 +309,15 @@ class TemplateTexts(ModelDefault):
 
     def __repr__(self):
         return f"<< TemplateTexts >>"
+
+
+class Defacements(ModelDefault):
+    __tablename__ = "defacements"
+    id: Mapped[big_int_pk]
+    hash: Mapped[str_30] = mapped_column(index=True)
+    header: Mapped[str_30] = mapped_column(index=True)
+    created_at: Mapped[int] = mapped_column(default=0, index=True)
+    count: Mapped[int] = mapped_column(default=0, index=True)
+
+    def __repr__(self):
+        return f"<< TemplateTexts >>"

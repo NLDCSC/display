@@ -127,9 +127,15 @@ class DisplayConfig:
                     ret_dict[target.target_hash] = target_group.name
         return ret_dict
 
-    def hashes_per_tab(self) -> List[dict[str, List[str]]]:
+    def hashes_per_tab(self) -> dict[str, List[str]]:
         ret_dict = {}
         for target_group in self.iterate_all():
+            ret_dict[target_group.name] = target_group.target_hashes()
+        return ret_dict
+
+    def hashes_per_header_tab(self) -> dict[str, List[str]]:
+        ret_dict = {}
+        for target_group in self.iterate_from_headers_only():
             ret_dict[target_group.name] = target_group.target_hashes()
         return ret_dict
 
@@ -143,6 +149,11 @@ class DisplayConfig:
     def iterate_primary_only(self) -> TargetGroup:
         for x in self.target_groups:
             if not x.from_headers:
+                yield x
+
+    def iterate_from_headers_only(self) -> TargetGroup:
+        for x in self.target_groups:
+            if x.from_headers:
                 yield x
 
     def iterate_all(self) -> TargetGroup:

@@ -503,6 +503,8 @@ function OpenTracelog() {
                         return '<span class="badge badge-evidence logging_badges">' + action + '</span>'
                     } else if (action === "TIMELINE") {
                         return '<span class="badge badge-timeline logging_badges">' + action + '</span>'
+                    } else if (action === "DEFACEMENT") {
+                        return '<span class="badge badge-defacement logging_badges">' + action + '</span>'
                     } else {
                         return action
                     }
