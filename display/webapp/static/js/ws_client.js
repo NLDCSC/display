@@ -368,10 +368,84 @@ function OpenSetTimer() {
 
 function OpenSettings(){
     $("#btn_settings").off().on("click", CloseSettings)
-    $("#popup-settings").show()
+    let form_list = $("#form-list")
 
-    addFormElements()
+    // first clear the form...
+    form_list.empty()
 
+    form_list.html(`
+            <div className="row">
+                <div className="form-group col-md-11 mb-0 pb-0">
+                    <label>Defacement texts:</label>
+                </div>
+            </div>
+    `)
+
+    $.ajax({
+        method: "GET",
+        url: BasePath + "defacement_texts",
+    })
+        .done(function (data) {
+            if (data.length === 0) {
+                $('#form-list').append($("#form-template .form-row").clone())
+            } else {
+                data.forEach((item) => {
+                    addFormElements();
+                    let entity_row = $("#form-list .item-entry:last-child")
+                    $(entity_row).find("#entry_field").val(item)
+                })
+            }
+
+            $("#popup-settings").show()
+            $('#defacement_form')
+                .off()
+                .on("submit", function (event){
+                    event.preventDefault()
+
+                    let _this = this;
+
+                    setWaitCursor(this);
+
+                    let json = {}
+
+                    json["form-list"] = $("#defacement_form").serialize()
+
+                    $.ajax({
+                        method: "POST",
+                        url: BasePath + "defacement_texts",
+                        data: json,
+                    })
+                        .done(function( data ) {
+                            showMessage(data["msg_cat"], data["msg"])
+                        })
+                        .fail(function( data ) {
+                            showMessage("error", "Failed adding new exception list item!")
+                        })
+                        .always(function( data ) {
+                            removeWaitCursor(_this);
+                        });
+                });
+
+        })
+
+    $("#clear_screenshot").off().on("click", function (event) {
+        $.ajax({
+            method: "GET",
+            url: BasePath + "clear/screenshots",
+        })
+            .done(function( data ) {
+                showMessage(data["msg_cat"], data["msg"])
+            })
+    })
+    $("#clear_timeline").off().on("click", function (event) {
+        $.ajax({
+            method: "GET",
+            url: BasePath + "clear/timeline",
+        })
+            .done(function( data ) {
+                showMessage(data["msg_cat"], data["msg"])
+            })
+    })
 }
 
 function OpenNodeStatus(){
@@ -999,15 +1073,7 @@ function GoToUrl(evt){
 }
 
 function addFormElements() {
-
     $('#form-list').append($("#form-template .form-row").clone())
-
-    // if ($('#form-list .item-entry').length > 1){
-    //     //console.log($('#form-list .item-entry')[0])
-    //     if ($('#form-list .item-entry .form-group #entry_type')[0].value === "list"){
-    //         $('#form-list .item-entry .form-group #entry_type').last().find('option').not(':last').remove();
-    //     }
-    // }
 }
 
 function removeFormElements() {
