@@ -995,7 +995,7 @@ def delete_old_log_entries():
 
     with get_db_session() as db:
         # calculate delta in seconds;
-        time_delta = config.LOG_PURGE_TIME * 60
+        time_delta = config.LOG_PURGE_TIME * 60 * 60 * 24
 
         all_logs = db.execute(
             delete(Tracelog).filter(
@@ -1007,6 +1007,30 @@ def delete_old_log_entries():
         logger.info(f"Deleted {all_logs} log lines!")
 
     logger.info("Done checking old log lines!")
+
+
+@app.task(
+    ignore_result=True,
+)
+def delete_old_defacement_entries():
+    logger = get_task_logger(__name__)
+
+    logger.info("Starting check for removing old defacement counts from the database")
+
+    with get_db_session() as db:
+        # calculate delta in seconds;
+        time_delta = config.DISPLAY_DEFACEMENT_PURGE_TIME * 60 * 60 * 24
+
+        all_logs = db.execute(
+            delete(Defacements).filter(
+                Defacements.created_at <= (int(time.time()) - time_delta)
+            )
+        ).rowcount
+        db.commit()
+
+        logger.info(f"Deleted {all_logs} defacement count entries!")
+
+    logger.info("Done checking old defacement count entries!")
 
 
 @app.task(

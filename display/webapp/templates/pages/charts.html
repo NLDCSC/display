@@ -22,25 +22,11 @@
 
 {% block body_scripts %}
     <script>
-        var trace1 = {
-            x: [1, 2, 3, 4],
-            y: [10, 15, 13, 17],
-            type: 'scatter',
-            name: "BT01"
-        };
-
-        var trace2 = {
-            x: [1, 2, 3, 4],
-            y: [16, 5, 11, 9],
-            type: 'scatter',
-            name: "BT02"
-        };
-
         var layout = {
-            paper_bgcolor: "rgba(0,0,0,0)",
-            plot_bgcolor: "rgba(0,0,0,0)",
+            paper_bgcolor: "#191c24",
+            plot_bgcolor: "#191c24",
             modebar: {
-                bgcolor: "rgba(0,0,0,0)"
+                bgcolor: "#191c24"
             },
             legend: {
                 font: {
@@ -49,21 +35,76 @@
             },
             xaxis: {
                 gridcolor: '#3a3939',
-                color: '#ffffff'
+                color: '#ffffff',
+                title: {
+                    text: "Time"
+                }
             },
             yaxis: {
                 gridcolor: '#3a3939',
-                color: '#ffffff'
-            }
+                color: '#ffffff',
+                range: [0, 30],
+                title: {
+                    text: "Defacements"
+                }
+            },
+            shapes: [
+                {
+                    type: 'line',
+                    xref: 'paper',
+                    x0: 0,
+                    y0: {{ target_count }},
+                    x1: 1,
+                    y1: {{ target_count }},
+                    line:{
+                        color: '#d50000',
+                        width: 2,
+                        dash:'dot'
+                    },
+                    label: {
+                        text: "Total Web-targets",
+                        font: {
+                            color: '#d50000'
+                        }
+                    }
+                }
+            ]
         };
 
         var options = {
             displaylogo: false,
             displayModeBar: true,
-            modeBarButtonsToRemove: ['lasso2d', "select2d"]
+            modeBarButtonsToRemove: ['lasso2d', "select2d"],
+            responsive: true,
+            modeBarButtons: [[{
+                name: 'Download chart',
+                icon: Plotly.Icons.camera,
+                click: function (gd) {
+                    Plotly.downloadImage(gd, {
+                        filename: 'defacements_graph',
+                        format: 'png',
+                        width: gd._fullLayout.width,
+                        height: gd._fullLayout.height,
+                    })
+                }
+            }, 'zoom2d', 'pan2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d'
+            ], []]
         }
 
-        var data = [trace1, trace2];
+        {% if scatter_data is defined %}
+            var data = [
+                {% for each in scatter_data %}
+                    {
+                        x: [{% for dtg in each.x %}"{{ dtg|timestamptodatetime }}"{% if not loop.last %}, {% endif %}{% endfor %}],
+                        y: {{ each.y }},
+                        type: "{{ each.type }}",
+                        name: "{{ each.name }}",
+                    }{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ];
+        {% else %}
+            var data = [];
+        {% endif %}
 
         Plotly.newPlot('defacement_chart', data, layout, options);
     </script>

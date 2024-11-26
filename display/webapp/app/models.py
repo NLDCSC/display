@@ -320,4 +320,4 @@ class Defacements(ModelDefault):
     count: Mapped[int] = mapped_column(default=0, index=True)
 
     def __repr__(self):
-        return f"<< TemplateTexts >>"
+        return f"<< Defacements >>"

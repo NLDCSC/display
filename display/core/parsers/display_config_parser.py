@@ -92,6 +92,10 @@ class DisplayConfig:
     target_groups: List[TargetGroup]
 
     @property
+    def target_count(self) -> int:
+        return len([x for x in self.target_groups if not x.from_headers])
+
+    @property
     def hash_to_url(self) -> dict[str, str]:
         ret_dict = {}
         for target_group in self.iterate_primary_only():

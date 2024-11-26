@@ -14,6 +14,7 @@ from nldcsc.loggers.app_logger import AppLogger
 
 from display.core.general.data_class_validations import Validations
 from display.core.general.utils import exclude_optional_dict
+from display.webapp.config import Config
 
 logging.setLoggerClass(AppLogger)
 
@@ -38,19 +39,28 @@ class ImageAssessment(Validations):
 
 defacement_assessment_text = collections.namedtuple(
     "defacement_assessment_text",
-    ["NO_TEXT", "FULL_MATCH", "CORRECTED_COUNT", "MULTI_MATCH", "NO_DEFACEMENT"],
+    [
+        "NO_TEXT",
+        "FULL_MATCH",
+        "CORRECTED_COUNT",
+        "MULTI_MATCH",
+        "NO_DEFACEMENT",
+        "NO_TEXT_NO_DEFACEMENT",
+    ],
 )(
     "No text found in screenshot; assuming defacement!",
     "Defacement text found in screenshot (full match)",
     "Defacement text found in screenshot (corrected count match)",
     "Multiple Defacement texts found in screenshot (data_length mod count match)",
     "No defacement detected!",
+    "No text found in screenshot; assuming NO defacement!",
 )
 
 
 class DefacementAssessment(object):
     def __init__(self, template_texts: List[str]):
         self.logger = logging.getLogger(__name__)
+        self.config = Config()
 
         self.reg_ex = re.compile(r"\d{4}-\d{2}-\d{2}t\d{2}:\d{2}:\d{2}z-bt\d{2}")
         self.reg_domain = re.compile(r"\w+(?:\.\w+){1,4}")
@@ -82,7 +92,10 @@ class DefacementAssessment(object):
 
         if assess_image_obj.data_length == 0:
             self.logger.debug(defacement_assessment_text.NO_TEXT)
-            return True, defacement_assessment_text.NO_TEXT
+            if self.config.DISPLAY_ASSUME_NO_TEXT_DEFACED:
+                return True, defacement_assessment_text.NO_TEXT
+            else:
+                return False, defacement_assessment_text.NO_TEXT_NO_DEFACEMENT
 
         for result in assess_image_obj.results:
             # check for full match
