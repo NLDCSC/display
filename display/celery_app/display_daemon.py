@@ -48,7 +48,12 @@ from display.core.general.constants import (
     tracelog_result,
     task_result,
 )
-from display.webapp.app.models import Tracelog, TemplateTexts, Defacements
+from display.webapp.app.models import (
+    Tracelog,
+    TemplateTexts,
+    Defacements,
+    DefacementTracker,
+)
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
 from display.core.files.dedub_files import DeduplicateFilesInFolder
 from display.webapp.config import Config
@@ -264,6 +269,7 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(60.0, store_node_status.s())
     sender.add_periodic_task(1800.0, delete_old_timeline_screenshots.s())
     sender.add_periodic_task(1800.0, delete_old_log_entries.s())
+    sender.add_periodic_task(1800.0, delete_old_defacement_entries.s())
 
 
 @beat_init.connect
@@ -1017,18 +1023,21 @@ def delete_old_defacement_entries():
 
     logger.info("Starting check for removing old defacement counts from the database")
 
-    with get_db_session() as db:
-        # calculate delta in seconds;
-        time_delta = config.DISPLAY_DEFACEMENT_PURGE_TIME * 60 * 60 * 24
+    all_tables = [Defacements, DefacementTracker]
 
-        all_logs = db.execute(
-            delete(Defacements).filter(
-                Defacements.created_at <= (int(time.time()) - time_delta)
-            )
-        ).rowcount
-        db.commit()
+    with get_db_session(True) as db:
+        for table in all_tables:
+            # calculate delta in seconds;
+            time_delta = config.DISPLAY_DEFACEMENT_PURGE_TIME * 60 * 60 * 24
 
-        logger.info(f"Deleted {all_logs} defacement count entries!")
+            all_entries = db.execute(
+                delete(table).filter(
+                    table.created_at <= (int(time.time()) - time_delta)
+                )
+            ).rowcount
+            db.commit()
+
+            logger.info(f"Deleted {all_entries} defacement count entries!")
 
     logger.info("Done checking old defacement count entries!")
 
