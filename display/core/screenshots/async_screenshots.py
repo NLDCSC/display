@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import json
 import logging
 import os
@@ -9,14 +10,18 @@ from typing import List
 
 import aiohttp
 from nldcsc.loggers.app_logger import AppLogger
+from sqlalchemy import select, create_engine
+from sqlalchemy.orm import sessionmaker
 
 from display.apis.splash.splash_api import SplashApi
 from display.core.database_logging.trace_log import TraceLogEntry
+from display.core.defacements.defacement_assessment import DefacementAssessment
 from display.core.general.constants import tracelog_action, tracelog_result
 from display.core.parsers.screenshot_source_config_parser import (
     ScreenshotSourceConfigParser,
 )
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
+from display.webapp.app.models import TemplateTexts, DefacementTracker
 from display.webapp.config import Config
 
 logging.setLoggerClass(AppLogger)
@@ -34,7 +39,10 @@ class AsyncScreenshots(object):
                               take the screenshots
     """
 
-    def __init__(self, incoming_workload: dict[str, List[str]] = None):
+    def __init__(
+        self,
+        incoming_workload: dict[str, List[str]] = None,
+    ):
 
         self.logger = logging.getLogger(__name__)
 
@@ -91,6 +99,16 @@ class AsyncScreenshots(object):
 
         self.screenshotHandler = ScreenShotHandler()
 
+        engine = create_engine(
+            config.SQLALCHEMY_DATABASE_URI, **{"pool_recycle": 299, "pool_timeout": 20}
+        )
+
+        self.db_session = sessionmaker(engine)
+
+        self.defacement_assessment = DefacementAssessment(
+            template_texts=self.get_template_texts()
+        )
+
         self.current_wd = os.path.dirname(os.path.abspath(__file__))
 
     @property
@@ -111,6 +129,11 @@ class AsyncScreenshots(object):
             "User-Agent": f"{self.user_agent}",
         }
 
+    def get_template_texts(self) -> List[TemplateTexts]:
+        with self.db_session.begin() as session:
+            all_texts = session.scalars(select(TemplateTexts.text)).all()
+        return all_texts
+
     def set_tab_to_screenshotsource_mapping(self):
 
         for key, value in self.screen_shot_sources.items():
@@ -120,6 +143,11 @@ class AsyncScreenshots(object):
         self.tab_to_screenshotsource_mapping = dict(
             self.tab_to_screenshotsource_mapping
         )
+
+    @staticmethod
+    def get_file_hash(file_data: bytes) -> str:
+        # noinspection InsecureHash
+        return hashlib.md5(file_data).hexdigest()
 
     def process_async(self, results: list = None, evidence_shot: bool = False):
         """
@@ -138,9 +166,10 @@ class AsyncScreenshots(object):
         self.logger.info(f"Processing screenshot results: {len(results)}")
 
         for each in results:
-            try:
-                if isinstance(each, dict):
-                    for k, v in each.items():
+
+            if isinstance(each, dict):
+                for k, v in each.items():
+                    try:
                         self.logger.info(f"Processing: {k}")
 
                         if not os.path.exists(config.SCREENSHOT_LOCATION):
@@ -172,8 +201,46 @@ class AsyncScreenshots(object):
                                     result=tracelog_result.OK,
                                     status_code=200,
                                 ).save()
+
+                                # do defacement_assessment
+                                result, reason = (
+                                    self.defacement_assessment.assess_image(
+                                        Path(
+                                            os.path.join(
+                                                config.SCREENSHOT_LOCATION, f"{k}.png"
+                                            )
+                                        )
+                                    )
+                                )
+
+                                data_hash = self.get_file_hash(v)
+
+                                self.logger.info(
+                                    f"Storing defacement result for {data_hash}: {result} -> {reason}"
+                                )
+
+                                with self.db_session.begin() as session:
+                                    current_data = session.scalar(
+                                        select(DefacementTracker).filter(
+                                            DefacementTracker.picture_hash == data_hash
+                                        )
+                                    )
+
+                                    if current_data is None:
+                                        new_entry = DefacementTracker(
+                                            hash=k,
+                                            picture_hash=data_hash,
+                                            defaced=result,
+                                        )
+                                    else:
+                                        new_entry = current_data
+                                        new_entry.defaced = result
+
+                                    session.add(new_entry)
+                                    session.commit()
+
                             else:
-                                # no picture assume uncatched error for now!
+                                # no picture assume un-caught error for now!
                                 self.store_error_picture(k)
 
                                 the_result = json.loads(v)
@@ -203,6 +270,43 @@ class AsyncScreenshots(object):
                                     status_code=200,
                                 ).save()
 
+                                # do defacement_assessment
+                                result, reason = (
+                                    self.defacement_assessment.assess_image(
+                                        Path(
+                                            os.path.join(
+                                                config.SCREENSHOT_LOCATION, f"{k}.png"
+                                            )
+                                        )
+                                    )
+                                )
+
+                                data_hash = self.get_file_hash(v["normal"])
+
+                                self.logger.info(
+                                    f"Storing defacement result for {data_hash}: {result} -> {reason}"
+                                )
+
+                                with self.db_session.begin() as session:
+                                    current_data = session.scalar(
+                                        select(DefacementTracker).filter(
+                                            DefacementTracker.picture_hash == data_hash
+                                        )
+                                    )
+
+                                    if current_data is None:
+                                        new_entry = DefacementTracker(
+                                            hash=k,
+                                            picture_hash=data_hash,
+                                            defaced=result,
+                                        )
+                                    else:
+                                        new_entry = current_data
+                                        new_entry.defaced = result
+
+                                    session.add(new_entry)
+                                    session.commit()
+
                             self.store_evidence_picture(k, v["evidence"])
                             TraceLogEntry(
                                 url=self.screenshotHandler.get_url_by_hash(k),
@@ -223,11 +327,13 @@ class AsyncScreenshots(object):
                                 status_code="?",
                             ).save()
 
-            except Exception as err:
-                self.logger.error(f"Error processing {k}, Error produced --> {err}")
-                continue
+                    except Exception as err:
+                        self.logger.error(
+                            f"Error processing {k}, Error produced --> {err}"
+                        )
+                        continue
 
-    def store_normal_picture(self, hash, value):
+    def store_normal_picture(self, hash: str, value: bytes) -> None:
 
         # First create a copy of the current file and rename to _old
         shutil.copy2(
@@ -244,7 +350,7 @@ class AsyncScreenshots(object):
 
         self.minify_current_screenshot(hash=hash)
 
-    def store_evidence_picture(self, hash, value):
+    def store_evidence_picture(self, hash: str, value: bytes) -> None:
 
         self.logger.info(f"Setting evidence picture for {hash}")
         with open(
@@ -253,7 +359,7 @@ class AsyncScreenshots(object):
         ) as f:
             f.write(value)
 
-    def store_error_picture(self, hash):
+    def store_error_picture(self, hash: str) -> None:
 
         # First create a copy of the current file and rename to _old
         shutil.copy2(
@@ -277,8 +383,8 @@ class AsyncScreenshots(object):
 
         self.minify_current_screenshot(hash=hash)
 
-    def minify_current_screenshot(self, hash):
-        self.screenshotHandler.limit_img_size(hash)
+    def minify_current_screenshot(self, hash: str) -> None:
+        self.screenshotHandler.limit_img_size(filename=hash)
 
     async def fetch(self, session, entry):
         url_hash = self.screenshotHandler.get_hash(entry["url"].encode("utf-8"))

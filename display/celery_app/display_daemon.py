@@ -471,7 +471,7 @@ def make_screenshots(display_sources):
 
     logger.info(f"Got urls of {len(display_sources)} sources")
 
-    ss = AsyncScreenshots(display_sources)
+    ss = AsyncScreenshots(incoming_workload=display_sources)
 
     if hasattr(ss, "selenium_workload"):
         if len(ss.selenium_workload) != 0:
@@ -829,7 +829,7 @@ def create_custom_screenshot(data: dict):
 
     logger.info(f"Hash mapped to url: {display_sources}!")
 
-    ss = AsyncScreenshots(display_sources)
+    ss = AsyncScreenshots(incoming_workload=display_sources)
 
     if hasattr(ss, "selenium_workload"):
         if len(ss.selenium_workload) != 0:
