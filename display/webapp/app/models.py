@@ -321,3 +321,14 @@ class Defacements(ModelDefault):
 
     def __repr__(self):
         return f"<< Defacements >>"
+
+
+class DefacementTracker(ModelDefault):
+    __tablename__ = "defacementtracker"
+    id: Mapped[big_int_pk]
+    hash: Mapped[str_30] = mapped_column(index=True)
+    picture_hash: Mapped[str_30] = mapped_column(index=True)
+    defaced: Mapped[int] = mapped_column(default=0, index=True)
+
+    def __repr__(self):
+        return f"<< DefacementTracker >>"
