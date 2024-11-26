@@ -8,6 +8,8 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 from nldcsc.loggers.app_logger import AppLogger
+from sqlalchemy import create_engine, select
+from sqlalchemy.orm import sessionmaker
 
 from display.core.database_logging.trace_log import TraceLogEntry
 from display.core.general.constants import tracelog_action, tracelog_result
@@ -17,6 +19,7 @@ from display.core.screenshots.utils import (
     get_compare_image,
     getB64_screenshot,
 )
+from display.webapp.app.models import DefacementTracker
 from display.webapp.config import Config
 
 logging.setLoggerClass(AppLogger)
@@ -39,6 +42,13 @@ class ScreenShotHandler(object):
         self._tabname_to_tabhash = self.display_config.target_group_to_hash
 
         self.current_wd = os.path.dirname(os.path.abspath(__file__))
+
+        engine = create_engine(
+            self.config.SQLALCHEMY_DATABASE_URI,
+            **{"pool_recycle": 299, "pool_timeout": 20},
+        )
+
+        self.db_session = sessionmaker(engine)
 
     @property
     def hash_to_url_mapping(self) -> dict[str, str]:
@@ -115,37 +125,36 @@ class ScreenShotHandler(object):
                 "The requested url hash is not a part of the urls in the configuration!"
             )
 
-    # def get_all_screenshots(self, tab_name: str) -> List[dict[str, Any]]:
-    #
-    #     ret_data = []
-    #
-    #     try:
-    #         screenshot_list = self.get_hashes_by_tab_name(tab_name=tab_name)
-    #         if screenshot_list is not False:
-    #             for each in screenshot_list:
-    #                 ret_data.append(
-    #                     {
-    #                         "sc_id": each,
-    #                         "sc_src": getB64_screenshot(each),
-    #                         "mod_time": get_mod_time(each),
-    #                         "changed": get_compare_image(each),
-    #                     }
-    #                 )
-    #             return ret_data
-    #     except KeyError:
-    #         return ret_data
-
-    @staticmethod
-    def get_hash_screenshot(url_hash: str) -> dict[str, Any]:
+    def get_hash_screenshot(self, url_hash: str) -> dict[str, Any]:
 
         ret_data = {
             "sc_id": url_hash,
             "sc_src": getB64_screenshot(url_hash),
             "mod_time": get_mod_time(url_hash),
             "changed": get_compare_image(url_hash),
+            "defaced": self.is_defaced(picture_hash=url_hash),
         }
 
         return ret_data
+
+    def get_picture_hash(self, picture_hash: str) -> str:
+        with open(
+            os.path.join(self.config.SCREENSHOT_LOCATION, picture_hash), "rb"
+        ) as f:
+            # noinspection InsecureHash
+            return hashlib.md5(f.read()).hexdigest()
+
+    def is_defaced(self, picture_hash: str) -> int:
+        with self.db_session.begin() as session:
+            def_data = session.scalar(
+                select(DefacementTracker.defaced)
+                .filter(
+                    DefacementTracker.picture_hash
+                    == self.get_picture_hash(picture_hash=picture_hash)
+                )
+                .order_by(DefacementTracker.created_at.desc())
+            )
+        return def_data
 
     def get_changed_screenshots_per_tab(self, tab_name: str) -> List[dict[str, Any]]:
 
@@ -163,6 +172,7 @@ class ScreenShotHandler(object):
                                 "sc_src": getB64_screenshot(each),
                                 "mod_time": get_mod_time(each),
                                 "changed": is_changed,
+                                "defaced": self.is_defaced(picture_hash=each),
                             }
                         )
                         TraceLogEntry(
@@ -177,6 +187,7 @@ class ScreenShotHandler(object):
                                 "sc_id": each,
                                 "mod_time": get_mod_time(each),
                                 "changed": is_changed,
+                                "defaced": self.is_defaced(picture_hash=each),
                             }
                         )
                         TraceLogEntry(
@@ -189,8 +200,8 @@ class ScreenShotHandler(object):
         except KeyError:
             return ret_data
 
-    @staticmethod
     def get_changed_data_from_custom_screenshots(
+        self,
         the_hash: str,
         evidence_shot: bool = False,
     ):
@@ -206,6 +217,7 @@ class ScreenShotHandler(object):
                     "sc_src": getB64_screenshot(the_hash),
                     "mod_time": get_mod_time(the_hash, evidence_shot=evidence_shot),
                     "changed": is_changed,
+                    "defaced": self.is_defaced(picture_hash=the_hash),
                 }
             )
         else:
@@ -214,6 +226,7 @@ class ScreenShotHandler(object):
                     "sc_id": the_hash,
                     "mod_time": get_mod_time(the_hash, evidence_shot=evidence_shot),
                     "changed": is_changed,
+                    "defaced": self.is_defaced(picture_hash=the_hash),
                 }
             )
 

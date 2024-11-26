@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import shutil
+import time
 from collections import defaultdict
 from pathlib import Path
 from typing import List
@@ -99,11 +100,7 @@ class AsyncScreenshots(object):
 
         self.screenshotHandler = ScreenShotHandler()
 
-        engine = create_engine(
-            config.SQLALCHEMY_DATABASE_URI, **{"pool_recycle": 299, "pool_timeout": 20}
-        )
-
-        self.db_session = sessionmaker(engine)
+        self.db_session = self.screenshotHandler.db_session
 
         self.defacement_assessment = DefacementAssessment(
             template_texts=self.get_template_texts()
@@ -231,10 +228,12 @@ class AsyncScreenshots(object):
                                             hash=k,
                                             picture_hash=data_hash,
                                             defaced=result,
+                                            created_at=int(time.time()),
                                         )
                                     else:
                                         new_entry = current_data
                                         new_entry.defaced = result
+                                        new_entry.created_at = int(time.time())
 
                                     session.add(new_entry)
                                     session.commit()
@@ -299,10 +298,12 @@ class AsyncScreenshots(object):
                                             hash=k,
                                             picture_hash=data_hash,
                                             defaced=result,
+                                            created_at=int(time.time()),
                                         )
                                     else:
                                         new_entry = current_data
                                         new_entry.defaced = result
+                                        new_entry.created_at = int(time.time())
 
                                     session.add(new_entry)
                                     session.commit()

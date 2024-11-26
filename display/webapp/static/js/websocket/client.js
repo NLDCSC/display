@@ -64,6 +64,18 @@ $(document).ready(function () {
                         }
                     }
 
+                    if (item.defaced === "0") {
+                        if (!img_content.hasClass('assessed_defaced')) {
+                            img_content.addClass('assessed_defaced');
+                        }
+                    }
+
+                    if (item.defaced === "1") {
+                        if (img_content.hasClass('assessed_defaced')) {
+                            img_content.removeClass('assessed_defaced');
+                        }
+                    }
+
                     mod_time.toggleClass("active");
                     setTimeout(function () {
                         mod_time.toggleClass("active");
@@ -138,6 +150,18 @@ $(document).ready(function () {
             if (msg["url_screenshot"].changed === "1") {
                 if (img_content.hasClass('red-src')) {
                     img_content.removeClass('red-src');
+                }
+            }
+
+            if (msg["url_screenshot"].defaced === "0") {
+                if (!img_content.hasClass('assessed_defaced')) {
+                    img_content.addClass('assessed_defaced');
+                }
+            }
+
+            if (msg["url_screenshot"].defaced === "1") {
+                if (img_content.hasClass('assessed_defaced')) {
+                    img_content.removeClass('assessed_defaced');
                 }
             }
 

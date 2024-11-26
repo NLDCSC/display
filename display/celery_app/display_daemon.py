@@ -999,7 +999,7 @@ def delete_old_log_entries():
 
     logger.info("Starting check for removing old log lines from the database")
 
-    with get_db_session() as db:
+    with get_db_session(True) as db:
         # calculate delta in seconds;
         time_delta = config.LOG_PURGE_TIME * 60 * 60 * 24
 
