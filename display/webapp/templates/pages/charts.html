@@ -1,6 +1,7 @@
 {% extends "chart_base.html" %}
 
 {% block head_css %}
+    <link href="{{ url_for('static', filename='css/bootstrap/bootstrap.min.css') }}" rel="stylesheet" />
     <link href="{{ url_for('static', filename='css/defacement_chart.min.css') }}" rel="stylesheet"/>
 {% endblock %}
 
@@ -9,7 +10,14 @@
 {% endblock %}
 
 {% block body %}
-    <div id="defacement_chart"></div>
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title mb-0">Defacements</h4>
+        </div>
+        <div class="card-body">
+            <div id="defacement_chart"></div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block body_scripts %}
@@ -28,8 +36,35 @@
             name: "BT02"
         };
 
+        var layout = {
+            paper_bgcolor: "rgba(0,0,0,0)",
+            plot_bgcolor: "rgba(0,0,0,0)",
+            modebar: {
+                bgcolor: "rgba(0,0,0,0)"
+            },
+            legend: {
+                font: {
+                    color: '#ffffff'
+                }
+            },
+            xaxis: {
+                gridcolor: '#3a3939',
+                color: '#ffffff'
+            },
+            yaxis: {
+                gridcolor: '#3a3939',
+                color: '#ffffff'
+            }
+        };
+
+        var options = {
+            displaylogo: false,
+            displayModeBar: true,
+            modeBarButtonsToRemove: ['lasso2d', "select2d"]
+        }
+
         var data = [trace1, trace2];
 
-        Plotly.newPlot('defacement_chart', data);
+        Plotly.newPlot('defacement_chart', data, layout, options);
     </script>
 {% endblock %}
