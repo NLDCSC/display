@@ -453,6 +453,16 @@ function OpenSettings(){
                 showMessage(data["msg_cat"], data["msg"])
             })
     })
+    $("#clear_texts").off().on("click", function (event) {
+        $.ajax({
+            method: "GET",
+            url: BasePath + "clear/defacements",
+        })
+            .done(function( data ) {
+                form_list.empty()
+                showMessage(data["msg_cat"], data["msg"])
+            })
+    })
 }
 
 function OpenNodeStatus(){

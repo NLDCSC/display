@@ -82,8 +82,17 @@ def get_clear_location(location):
     try:
         if location == "screenshots":
             clear_directory(config.SCREENSHOT_LOCATION)
-        else:
+        elif location == "defacements":
+            db.session.execute(delete(TemplateTexts).filter())
+            db.session.commit()
+        elif location == "timeline":
             clear_directory(config.TIMELINE_LOCATION)
-        return {"msg_cat": msg_cats.OK, "msg": "Directory cleared!"}
+        else:
+            return {
+                "msg_cat": msg_cats.NOK,
+                "msg": f"{location} is not configured to be cleared!",
+            }
+
+        return {"msg_cat": msg_cats.OK, "msg": "Directory / DB cleared!"}
     except OSError as err:
         return {"msg_cat": msg_cats.NOK, "msg": f"{err}"}

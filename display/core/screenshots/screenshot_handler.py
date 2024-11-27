@@ -139,7 +139,7 @@ class ScreenShotHandler(object):
 
     def get_picture_hash(self, picture_hash: str) -> str:
         with open(
-            os.path.join(self.config.SCREENSHOT_LOCATION, picture_hash), "rb"
+            os.path.join(self.config.SCREENSHOT_LOCATION, f"{picture_hash}.png"), "rb"
         ) as f:
             # noinspection InsecureHash
             return hashlib.md5(f.read()).hexdigest()
@@ -154,7 +154,11 @@ class ScreenShotHandler(object):
                 )
                 .order_by(DefacementTracker.created_at.desc())
             )
-        return def_data
+
+        if def_data is None:
+            def_data = 0
+
+        return f"{def_data}"
 
     def get_changed_screenshots_per_tab(self, tab_name: str) -> List[dict[str, Any]]:
 

@@ -232,7 +232,8 @@ class AsyncScreenshots(object):
                                         )
                                     else:
                                         new_entry = current_data
-                                        new_entry.defaced = result
+                                        if not new_entry.force:
+                                            new_entry.defaced = result
                                         new_entry.created_at = int(time.time())
 
                                     session.add(new_entry)
@@ -302,7 +303,8 @@ class AsyncScreenshots(object):
                                         )
                                     else:
                                         new_entry = current_data
-                                        new_entry.defaced = result
+                                        if not new_entry.force:
+                                            new_entry.defaced = result
                                         new_entry.created_at = int(time.time())
 
                                     session.add(new_entry)

@@ -78,6 +78,13 @@ services:
         PORT: 5050
         UID: ${HOST_UID:-1000}
         GID: ${HOST_GID:-1000}
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./display/
+          target: /app/display/
+          ignore:
+            - celery_app/
     depends_on:
       flask_web:
         condition: service_healthy

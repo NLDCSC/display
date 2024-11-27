@@ -330,6 +330,7 @@ class DefacementTracker(ModelDefault):
     picture_hash: Mapped[str_128] = mapped_column(index=True)
     defaced: Mapped[int] = mapped_column(default=0, index=True)
     created_at: Mapped[int] = mapped_column(default=0, index=True)
+    force: Mapped[int] = mapped_column(default=0)
 
     def __repr__(self):
         return f"<< DefacementTracker >>"
