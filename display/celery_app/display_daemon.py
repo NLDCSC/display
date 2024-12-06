@@ -1109,15 +1109,34 @@ def check_defacement():
             ]
             defacement_count = 0
             for screenshot_path in all_screenshot_paths:
-                result, reason = da.assess_image(screenshot_path)
-                TraceLogEntry(
-                    url=sh.get_url_by_hash(screenshot_path.stem),
-                    user="DAEMON",
-                    hash=screenshot_path.stem,
-                    action=tracelog_action.DEFACEMENT,
-                    result=tracelog_result.OK,
-                    reason=f"Defacement: {result} -> {reason}",
-                ).save()
+                # first check if there is an entry for this specific picture already
+                picture_hash = sh.get_picture_hash(screenshot_path.stem)
+                check_defacement_data: DefacementTracker = db.scalar(
+                    select(DefacementTracker).filter(
+                        DefacementTracker.picture_hash == picture_hash
+                    )
+                )
+                if check_defacement_data is None:
+                    result, reason = da.assess_image(screenshot_path)
+                    TraceLogEntry(
+                        url=sh.get_url_by_hash(screenshot_path.stem),
+                        user="DAEMON",
+                        hash=screenshot_path.stem,
+                        action=tracelog_action.DEFACEMENT,
+                        result=tracelog_result.OK,
+                        reason=f"Defacement: {result} -> {reason}",
+                    ).save()
+                else:
+                    # the table is leading for defacement assignment; set accordingly
+                    result = True if check_defacement_data.defaced == 1 else False
+                    TraceLogEntry(
+                        url=sh.get_url_by_hash(screenshot_path.stem),
+                        user="DAEMON",
+                        hash=screenshot_path.stem,
+                        action=tracelog_action.DEFACEMENT,
+                        result=tracelog_result.OK,
+                        reason=f"Defacement: {result} -> Fetched from previous entry in defacement tracker table",
+                    ).save()
 
                 if result:
                     defacement_count += 1
