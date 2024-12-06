@@ -140,9 +140,6 @@ def timeline(url_hash):
 @login_required
 def get_last_screenshot(filename):
     try:
-        # data = send_from_directory(
-        #     current_app.config["SCREENSHOT_LOCATION"], f"{filename}.png"
-        # )
         return get_screenshot(filename=filename)
     except Exception:
         return send_from_directory(current_app.static_folder, "img/noScreenShot.png")

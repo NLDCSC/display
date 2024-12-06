@@ -37,6 +37,7 @@ logger = logging.getLogger(__name__)
 clients = ClientPool()
 
 display_config_parser = DisplayConfigParser()
+sh = ScreenShotHandler()
 
 
 # noinspection PyUnresolvedReferences
@@ -156,8 +157,6 @@ def do_disconnect() -> None:
 def do_change_display_tab(data: dict) -> None:
     global clients
 
-    sh = ScreenShotHandler()
-
     req_client = clients.get(request.sid)
 
     if req_client.current_tab is not None:
@@ -224,7 +223,6 @@ def do_get_hash_screenshot(
     req_client = clients.get(request.sid)
 
     if req_client.current_tab_hash == tab_hash:
-        sh = ScreenShotHandler()
 
         url_screenshot = sh.get_hash_screenshot(url_hash=url_hash)
 
@@ -331,8 +329,6 @@ def do_create_custom_screenshot(data: dict) -> None:
 def do_see_custom_screenshot(req_data: dict) -> None:
     logger.info(f"Client: {request.sid} is requesting to see custom screenshot...")
 
-    sh = ScreenShotHandler()
-
     sh.set_timestamp_to_picture(filename=req_data["data"])
 
     data = getB64_screenshot(filename=req_data["data"], with_timestamp=True)
@@ -359,8 +355,6 @@ def do_set_defaced(req_data: dict) -> None:
         f"Client: {request.sid} is setting {req_data['data']} "
         f"to {'defaced' if int(req_data['data-state']) ==1 else 'not defaced'}..."
     )
-
-    sh = ScreenShotHandler()
 
     picture_hash = sh.get_picture_hash(req_data["data"])
     def_tracker: DefacementTracker = db.session.scalar(

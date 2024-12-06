@@ -526,7 +526,7 @@ function OpenTracelog() {
         "columns": [
             {"data": "timestamp", "name": "Timestamp"},
             {"data": "url", "name": "URL"},
-            {"data": "action", "name": "Action", className: "table_center_text",
+            {"data": "action", "name": "Action", "className": "table_center_text",
                 render: function (data, type, row) {
 
                     let action = row["action"]
@@ -553,7 +553,7 @@ function OpenTracelog() {
             },
             {"data": "hash", "name": "Hash"},
             {"data": "user", "name": "User"},
-            {"data": "result", "name": "Result", className: "table_center_text",
+            {"data": "result", "name": "Result", "className": "table_center_text",
                 render: function (data, type, row) {
 
                     let result = row["result"]
@@ -575,7 +575,7 @@ function OpenTracelog() {
                 }
             },
             {
-                "data": "status_code", "name": "Status code", className: "table_center_text",
+                "data": "status_code", "name": "Status code", "className": "table_center_text",
                 render: function (data, type, row) {
 
                     let status_code = row["status_code"]
@@ -587,7 +587,7 @@ function OpenTracelog() {
                     }
                 }
             },
-            {"data": "reason", "name": "Reason"},
+            {"data": "reason", "name": "Reason", "className": "wrap_content"},
         ],
         "search": {
             "regex": true
