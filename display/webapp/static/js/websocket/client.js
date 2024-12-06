@@ -44,6 +44,7 @@ $(document).ready(function () {
                 msg["data"].forEach(item => {
 
                     let img_content = $("#img_content_" + msg["tab_hash"] + '_' + item.sc_id)
+                    let defaced_button = $("#defaced_" + msg["tab_hash"] + '_' + item.sc_id)
                     let mod_time = $("#mod_time_" + msg["tab_hash"] + '_' + item.sc_id)
 
                     if (item.hasOwnProperty('sc_src')) {
@@ -61,6 +62,20 @@ $(document).ready(function () {
                     if (item.changed === "1") {
                         if (img_content.hasClass('red-src')) {
                             img_content.removeClass('red-src');
+                        }
+                    }
+
+                    if (item.defaced === "1") {
+                        SetDefaced(defaced_button, "1");
+                        if (!img_content.hasClass('assessed_defaced')) {
+                            img_content.addClass('assessed_defaced');
+                        }
+                    }
+
+                    if (item.defaced === "0") {
+                        SetDefaced(defaced_button, "0");
+                        if (img_content.hasClass('assessed_defaced')) {
+                            img_content.removeClass('assessed_defaced');
                         }
                     }
 
@@ -121,6 +136,7 @@ $(document).ready(function () {
             let tab_content = $("#content_" + msg["tab_hash"])
 
             let img_content = $("#img_content_" + msg["tab_hash"] + '_' + msg["url_screenshot"].sc_id)
+            let defaced_button = $("#defaced_" + msg["tab_hash"] + '_' + msg["url_screenshot"].sc_id)
             let mod_time = $("#mod_time_" + msg["tab_hash"] + '_' + msg["url_screenshot"].sc_id)
 
             if (msg["url_screenshot"].hasOwnProperty('sc_src')) {
@@ -138,6 +154,20 @@ $(document).ready(function () {
             if (msg["url_screenshot"].changed === "1") {
                 if (img_content.hasClass('red-src')) {
                     img_content.removeClass('red-src');
+                }
+            }
+
+            if (msg["url_screenshot"].defaced === "1") {
+                SetDefaced(defaced_button, "1");
+                if (!img_content.hasClass('assessed_defaced')) {
+                    img_content.addClass('assessed_defaced');
+                }
+            }
+
+            if (msg["url_screenshot"].defaced === "0") {
+                SetDefaced(defaced_button, "0");
+                if (img_content.hasClass('assessed_defaced')) {
+                    img_content.removeClass('assessed_defaced');
                 }
             }
 

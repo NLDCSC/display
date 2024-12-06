@@ -1,10 +1,13 @@
 import logging
 
 from flask import copy_current_request_context, request, render_template
-from flask_login import login_required
+from flask_login import login_required, current_user
+
+# noinspection PyUnresolvedReferences
 from flask_socketio import emit, disconnect, join_room, leave_room, call
 from nldcsc.loggers.app_logger import AppLogger
 from socketio.exceptions import TimeoutError as SocketIOTimeOutError
+from sqlalchemy import select
 
 from display.celery_app.display_daemon import (
     create_custom_screenshot,
@@ -12,10 +15,16 @@ from display.celery_app.display_daemon import (
 )
 from display.core.clients.client_pool import ClientPool
 from display.core.connections.client_connection import ClientConnection
+from display.core.database_logging.trace_log import TraceLogEntry
+from display.core.general.constants import (
+    tracelog_action,
+    tracelog_result,
+)
 from display.core.parsers.display_config_parser import DisplayConfigParser
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
 from display.core.screenshots.utils import getB64_screenshot
-from display.webapp.run import socketio
+from display.webapp.app.models import DefacementTracker
+from display.webapp.run import socketio, db
 
 logging.setLoggerClass(AppLogger)
 
@@ -28,6 +37,7 @@ logger = logging.getLogger(__name__)
 clients = ClientPool()
 
 display_config_parser = DisplayConfigParser()
+sh = ScreenShotHandler()
 
 
 # noinspection PyUnresolvedReferences
@@ -147,8 +157,6 @@ def do_disconnect() -> None:
 def do_change_display_tab(data: dict) -> None:
     global clients
 
-    sh = ScreenShotHandler()
-
     req_client = clients.get(request.sid)
 
     if req_client.current_tab is not None:
@@ -215,7 +223,6 @@ def do_get_hash_screenshot(
     req_client = clients.get(request.sid)
 
     if req_client.current_tab_hash == tab_hash:
-        sh = ScreenShotHandler()
 
         url_screenshot = sh.get_hash_screenshot(url_hash=url_hash)
 
@@ -322,8 +329,6 @@ def do_create_custom_screenshot(data: dict) -> None:
 def do_see_custom_screenshot(req_data: dict) -> None:
     logger.info(f"Client: {request.sid} is requesting to see custom screenshot...")
 
-    sh = ScreenShotHandler()
-
     sh.set_timestamp_to_picture(filename=req_data["data"])
 
     data = getB64_screenshot(filename=req_data["data"], with_timestamp=True)
@@ -340,3 +345,38 @@ def do_see_custom_screenshot(req_data: dict) -> None:
     )
 
     logger.info(f"Request from Client: {request.sid} is send...")
+
+
+# noinspection PyUnresolvedReferences
+@socketio.on("set_defaced", namespace="/display")
+@login_required
+def do_set_defaced(req_data: dict) -> None:
+    logger.info(
+        f"Client: {request.sid} is setting {req_data['data']} "
+        f"to {'defaced' if int(req_data['data-state']) ==1 else 'not defaced'}..."
+    )
+
+    picture_hash = sh.get_picture_hash(req_data["data"])
+    def_tracker: DefacementTracker = db.session.scalar(
+        select(DefacementTracker).filter(DefacementTracker.picture_hash == picture_hash)
+    )
+
+    if def_tracker is None:
+        def_tracker = DefacementTracker(
+            hash=req_data["data"], picture_hash=picture_hash, created=int(time.time())
+        )
+
+    def_tracker.force = 1
+    def_tracker.defaced = int(req_data["data-state"])
+
+    TraceLogEntry(
+        url=sh.get_url_by_hash(req_data["data"]),
+        user=current_user.username,
+        hash=req_data["data"],
+        action=tracelog_action.DEFACEMENT,
+        result=tracelog_result.OK,
+        reason=f"Defacement: {True if def_tracker.defaced == 1 else False} -> Manually set defacement!",
+    ).save()
+
+    db.session.add(def_tracker)
+    db.session.commit()

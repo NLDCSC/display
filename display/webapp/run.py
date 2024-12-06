@@ -88,6 +88,10 @@ def create_app(version):
 
     app.register_blueprint(auth_blueprint, url_prefix=app.config["WEB_ROOT"])
 
+    from display.webapp.admin import admin as admin_blueprint
+
+    app.register_blueprint(admin_blueprint, url_prefix=app.config["WEB_ROOT"])
+
     from display.webapp.api import api_bp as api_blueprint
 
     app.register_blueprint(api_blueprint, url_prefix=f"{app.config['WEB_ROOT']}/api")

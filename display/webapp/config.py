@@ -45,7 +45,7 @@ class Config(object):
     LOG_FILE_PATH: str = os.getenv("LOG_FILE_PATH", "/app/data/logs/")
     LOG_FILE_NAME: str = os.getenv("LOG_FILE_NAME", "certexmon.log")
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
-    LOG_PURGE_TIME: int = int(os.getenv("LOG_PURGE_TIME", 730))  # in days
+    LOG_PURGE_TIME: int = int(os.getenv("LOG_PURGE_TIME", 4))  # in days
 
     SYSLOG_ENABLE: bool = getenv_bool("SYSLOG_ENABLE", "False")
     GELF_SYSLOG: bool = getenv_bool("GELF_SYSLOG", "True")
@@ -103,7 +103,7 @@ class Config(object):
         "SCREENSHOT_EVIDENCE_ENABLED", "True"
     )
 
-    TAB_ROTATE_TIMER: int = int(os.getenv("TAB_ROTATE_TIMER", 90))
+    TAB_ROTATE_TIMER: int = int(os.getenv("TAB_ROTATE_TIMER", 90))  # in seconds
 
     SSO_LOGIN_ENABLE: bool = getenv_bool("SSO_LOGIN_ENABLE", "False")
     SSO_ISSUER: str = os.getenv("SSO_ISSUER", "http://localhost:8000")
@@ -116,6 +116,7 @@ class Config(object):
     )
 
     ALLOWED_USER_GROUPS: List[str] = getenv_list("ALLOWED_USER_GROUPS", [])
+    ALLOWED_ADMIN_GROUPS: List[str] = getenv_list("ALLOWED_ADMIN_GROUPS", [])
 
     # DAEMON TASK STORAGE SETTINGS
     CELERY_TASK_FAILED_ERROR_CODE: int = int(
@@ -130,3 +131,13 @@ class Config(object):
     CELERY_RESULT_EXPIRES: int = int(
         os.getenv("CELERY_RESULT_EXPIRES", 300)
     )  # in seconds
+
+    DISPLAY_ASSUME_NO_TEXT_DEFACED: bool = getenv_bool(
+        "DISPLAY_ASSUME_NO_TEXT_DEFACED", "True"
+    )
+    DISPLAY_GRAPH_TIME_RANGE: int = int(
+        os.getenv("DISPLAY_GRAPH_TIME_RANGE", 4)
+    )  # in hours
+    DISPLAY_DEFACEMENT_PURGE_TIME: int = int(
+        os.getenv("DISPLAY_DEFACEMENT_PURGE_TIME", 2)
+    )  # in days

@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 config = Config()
 
 display_config_parser = DisplayConfigParser()
+sh = ScreenShotHandler()
 
 
 @home.route("/")
@@ -86,8 +87,6 @@ def get_status_nodes():
 @login_required
 def get_screenshot(filename):
     try:
-        sh = ScreenShotHandler()
-
         sh.set_timestamp_to_picture(filename=filename)
 
         data = send_from_directory(
@@ -125,8 +124,6 @@ def get_timeline_data(url_hash):
 @home.route("/timeline/<url_hash>")
 @login_required
 def timeline(url_hash):
-    sh = ScreenShotHandler()
-
     timeline_url = sh.get_url_by_hash(the_hash=url_hash)
 
     last_screenshot_time = get_mod_time(filename=url_hash)
@@ -143,10 +140,7 @@ def timeline(url_hash):
 @login_required
 def get_last_screenshot(filename):
     try:
-        data = send_from_directory(
-            current_app.config["SCREENSHOT_LOCATION"], f"{filename}.png"
-        )
-        return data
+        return get_screenshot(filename=filename)
     except Exception:
         return send_from_directory(current_app.static_folder, "img/noScreenShot.png")
 
@@ -154,18 +148,12 @@ def get_last_screenshot(filename):
 @home.route("/timeline/get_picture/<path:url_hash>/<path:filename>")
 @login_required
 def get_timeline_picture(url_hash, filename):
-    data = send_from_directory(
-        current_app.config["TIMELINE_LOCATION"], f"{url_hash}/{filename}.png"
-    )
-    return data
+    return download_picture(url_hash=url_hash, filename=filename)
 
 
 @home.route("/timeline/download_picture/<path:url_hash>/<path:filename>")
 @login_required
 def download_picture(url_hash, filename):
-
-    sh = ScreenShotHandler()
-
     data = sh.set_timestamp_to_picture(
         filename=os.path.join(
             current_app.config["TIMELINE_LOCATION"], f"{url_hash}/{filename}.png"

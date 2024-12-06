@@ -92,3 +92,22 @@ function resizeCutColumns() {
   // }
 
 }
+
+function setWaitCursor(el = null) {
+
+    if (el !== null) {
+        $(el).css({"cursor": "wait"})
+    }
+
+    $("#content-wrapper").addClass("waiting")
+
+}
+
+function removeWaitCursor(el = null) {
+    if (el !== null) {
+        $(el).css({"cursor": "default"})
+    }
+
+    $("#content-wrapper").removeClass("waiting")
+
+}

@@ -38,22 +38,40 @@ def sso_callback():
         abort(401)
 
     allowed_resources = config.ALLOWED_USER_GROUPS
+    allowed_resources.extend(config.ALLOWED_ADMIN_GROUPS)
 
     user_allowed = False
+    admin_allowed = False
     for each in resources:
         if each in allowed_resources:
+            if each in config.ALLOWED_ADMIN_GROUPS:
+                admin_allowed = True
+                break
             user_allowed = True
             break
 
-    if not user_allowed:
+    if not user_allowed and not admin_allowed:
+        logger.info(f"User: {username} is not allowed to login via OIDC....")
         sso.logout()
         abort(401)
 
     account = db.session.scalar(select(Users).filter(Users.username == username))
 
+    if user_allowed:
+        # not yet in group; fetching group id
+        new_group = db.session.scalar(select(Groups).filter(Groups.name == "user"))
+        group_id = new_group.id
+    else:
+        # thus admin
+        new_group = db.session.scalar(select(Groups).filter(Groups.name == "admin"))
+        group_id = new_group.id
+
     if account:
         # password validation is done by oidc; just log the user in
         account.last_login = int(time.time())
+
+        # set account group membership
+        account.group_member[0].group = group_id
 
         db.session.add(account)
         db.session.commit()
@@ -78,10 +96,6 @@ def sso_callback():
 
         db.session.add(new_user)
         db.session.commit()
-
-        # not yet in group; fetching group id
-        new_group = db.session.scalar(select(Groups).filter(Groups.name == "user"))
-        group_id = new_group.id
 
         db.session.add(GroupMembers(group=group_id, user=new_user.id))
         db.session.commit()

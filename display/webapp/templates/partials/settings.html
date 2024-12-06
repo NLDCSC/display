@@ -1,0 +1,53 @@
+<div class="popup_settings">
+    <h3>Settings:</h3>
+    <button class="popup-close" id="btn_settings">&times;</button>
+    <hr class="ruler">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="settings_switches">
+                <button id="clear_timeline" class="btn btn-outline-warning float-right">Clear timeline</button>
+                <button id="clear_screenshot" class="btn btn-outline-warning float-right mr-2">Clear screenshots</button>
+                <button id="clear_texts" class="btn btn-outline-danger float-right mr-4">Clear defacement texts</button>
+            </div>
+        </div>
+    </div>
+    <hr class="ruler">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="settings_form_wrapper">
+                <form id="defacement_form" action="">
+                    <div id="form-list" class="form-group">
+                        <div class="row">
+                            <div class="form-group col-md-11 mb-0 pb-0">
+                                <label>Defacement texts:</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="row">
+                            <div class="col-md-10">
+                                <div id="error_text" class="error error-text"></div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-outline-success float-right">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="form-template" class="d-none">
+    <div class="form-row item-entry">
+        <div class="form-group col-md-11 mb-1">
+            <label for="entry_field" class="d-none">Text</label>
+            <input id="entry_field" name="entry_field" class="form-control" placeholder="" required>
+        </div>
+        <div class="form-group col-md-1 mb-1">
+            <button type="button" class="btn btn-danger remove-btn mt-1 float-right">-</button>
+            <button type="button" class="btn btn-success add-btn mt-1 mr-1 float-right">+</button>
+        </div>
+    </div>
+</div>

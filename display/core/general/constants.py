@@ -18,8 +18,24 @@ tracelog_result = namedtuple(
 
 tracelog_action = namedtuple(
     "tracelog_action",
-    "SCREENSHOT EVIDENCE OD_SCREENSHOT STATE_CHANGE TIMELINE OD_EVIDENCE",
-)("SCREENSHOT", "EVIDENCE", "OD SCREENSHOT", "STATE CHANGE", "TIMELINE", "OD EVIDENCE")
+    [
+        "SCREENSHOT",
+        "EVIDENCE",
+        "OD_SCREENSHOT",
+        "STATE_CHANGE",
+        "TIMELINE",
+        "OD_EVIDENCE",
+        "DEFACEMENT",
+    ],
+)(
+    "SCREENSHOT",
+    "EVIDENCE",
+    "OD SCREENSHOT",
+    "STATE CHANGE",
+    "TIMELINE",
+    "OD EVIDENCE",
+    "DEFACEMENT",
+)
 
 task_result = namedtuple("task_result", ["SUCCESS", "FAILURE"])(0, 1)
 

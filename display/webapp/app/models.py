@@ -13,6 +13,7 @@ from nldcsc.flask_plugins.flask_sqlalchemy import (
     str_100,
     big_int_pk,
     str_30,
+    str_text,
 )
 from nldcsc.generic.times import timestampTOdatetimestring
 from sqlalchemy import ForeignKey
@@ -299,3 +300,37 @@ class Tracelog(ModelDefault):
 
     def __repr__(self):
         return f"<< Tracelog: {self.id} / {self.url_hash} >>"
+
+
+class TemplateTexts(ModelDefault):
+    __tablename__ = "templatetexts"
+    id: Mapped[int_pk]
+    text: Mapped[str_text]
+
+    def __repr__(self):
+        return f"<< TemplateTexts >>"
+
+
+class Defacements(ModelDefault):
+    __tablename__ = "defacements"
+    id: Mapped[big_int_pk]
+    hash: Mapped[str_30] = mapped_column(index=True)
+    header: Mapped[str_30] = mapped_column(index=True)
+    created_at: Mapped[int] = mapped_column(default=0, index=True)
+    count: Mapped[int] = mapped_column(default=0, index=True)
+
+    def __repr__(self):
+        return f"<< Defacements >>"
+
+
+class DefacementTracker(ModelDefault):
+    __tablename__ = "defacementtracker"
+    id: Mapped[big_int_pk]
+    hash: Mapped[str_30] = mapped_column(index=True)
+    picture_hash: Mapped[str_128] = mapped_column(index=True)
+    defaced: Mapped[int] = mapped_column(default=0, index=True)
+    created_at: Mapped[int] = mapped_column(default=0, index=True)
+    force: Mapped[int] = mapped_column(default=0)
+
+    def __repr__(self):
+        return f"<< DefacementTracker >>"

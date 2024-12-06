@@ -1,0 +1,111 @@
+{% extends "chart_base.html" %}
+
+{% block head_css %}
+    <link href="{{ url_for('static', filename='css/bootstrap/bootstrap.min.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static', filename='css/defacement_chart.min.css') }}" rel="stylesheet"/>
+{% endblock %}
+
+{% block head_scripts %}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/plotly/plotly.min.js') }}"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title mb-0">Defacements</h4>
+        </div>
+        <div class="card-body">
+            <div id="defacement_chart"></div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block body_scripts %}
+    <script>
+        var layout = {
+            paper_bgcolor: "#191c24",
+            plot_bgcolor: "#191c24",
+            modebar: {
+                bgcolor: "#191c24"
+            },
+            legend: {
+                font: {
+                    color: '#ffffff'
+                }
+            },
+            xaxis: {
+                gridcolor: '#3a3939',
+                color: '#ffffff',
+                title: {
+                    text: "Time"
+                }
+            },
+            yaxis: {
+                gridcolor: '#3a3939',
+                color: '#ffffff',
+                range: [0, 30],
+                title: {
+                    text: "Defacements"
+                }
+            },
+            shapes: [
+                {
+                    type: 'line',
+                    xref: 'paper',
+                    x0: 0,
+                    y0: {{ target_count }},
+                    x1: 1,
+                    y1: {{ target_count }},
+                    line:{
+                        color: '#d50000',
+                        width: 2,
+                        dash:'dot'
+                    },
+                    label: {
+                        text: "Total Web-targets",
+                        font: {
+                            color: '#d50000'
+                        }
+                    }
+                }
+            ]
+        };
+
+        var options = {
+            displaylogo: false,
+            displayModeBar: true,
+            modeBarButtonsToRemove: ['lasso2d', "select2d"],
+            responsive: true,
+            modeBarButtons: [[{
+                name: 'Download chart',
+                icon: Plotly.Icons.camera,
+                click: function (gd) {
+                    Plotly.downloadImage(gd, {
+                        filename: 'defacements_graph',
+                        format: 'png',
+                        width: gd._fullLayout.width,
+                        height: gd._fullLayout.height,
+                    })
+                }
+            }, 'zoom2d', 'pan2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d'
+            ], []]
+        }
+
+        {% if scatter_data is defined %}
+            var data = [
+                {% for each in scatter_data %}
+                    {
+                        x: [{% for dtg in each.x %}"{{ dtg|timestamptodatetime }}"{% if not loop.last %}, {% endif %}{% endfor %}],
+                        y: {{ each.y }},
+                        type: "{{ each.type }}",
+                        name: "{{ each.name }}",
+                    }{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ];
+        {% else %}
+            var data = [];
+        {% endif %}
+
+        Plotly.newPlot('defacement_chart', data, layout, options);
+    </script>
+{% endblock %}
