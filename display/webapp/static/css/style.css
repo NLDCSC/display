@@ -623,9 +623,10 @@ table#display-tracelog.table.table-striped.table-dark.dataTable.no-footer thead 
   background: #212529;
 }
 
-table#display-tracelog.table.table-striped.table-dark.no-footer.dataTable thead tr th.table_center_text.sorting {
-  text-align: center;
+.table_center_text.sorting {
+  text-align: center !important;
 }
+
 
 .set-pointer {
   cursor: pointer;
@@ -659,6 +660,10 @@ table#display-tracelog.table.table-striped.table-dark.no-footer.dataTable thead 
     white-space: pre-wrap !important;
     word-break: break-all !important;
 }
+
+/******************/
+/*     WIDTHS     */
+/******************/
 
 .w-5 {
     width: 5%;
@@ -730,4 +735,39 @@ table#display-tracelog.table.table-striped.table-dark.no-footer.dataTable thead 
 
 .mvh-15 {
     min-height: 15vh;
+}
+
+/******************/
+/*   DATATABLES   */
+/******************/
+
+.dt-length select {
+    min-width: 65px;
+    border: 0;
+    color: #4b5564;
+    height: calc(2.25rem + 2px);
+    font-weight: 400;
+    font-size: .875rem;
+    background-color: #2a3038;
+    border-radius: 2px;
+    line-height: 1;
+    background-clip: padding-box;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    box-shadow: none;
+}
+
+.dt-bootstrap5  label {
+    font-weight: 400;
+    white-space: nowrap;
+    text-align: left;
+    font-size: .8125rem;
+}
+
+.dt-bootstrap5 .dt-info {
+    font-size: .875rem;
+    color: rgb(108, 117, 125);
+}
+
+div.dt-paging {
+    font-size: 12px;
 }

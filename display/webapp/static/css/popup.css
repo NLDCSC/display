@@ -186,7 +186,7 @@ hr.ruler {
 }
 
 .table_center_text {
-  text-align: center;
+  text-align: center !important;
 }
 
 .badge-statuscode {

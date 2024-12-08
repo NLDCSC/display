@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block head_css %}
-    <link href="{{ url_for('static', filename='css/datatables/dataTables.bootstrap5.min.css') }}" rel="stylesheet"/>
+    <link href="{{ url_for('static', filename='css/datatables/datatables.min.css') }}" rel="stylesheet"/>
     <link href="{{ url_for('static', filename='css/sweetalert2/bootstrap-4.min.css') }}" rel="stylesheet"/>
     <link href="{{ url_for('static', filename='css/scroll_tabs/jquery.scrolling-tabs.min.css') }}" rel="stylesheet"/>
     <link href="{{ url_for('static', filename='css/modal.min.css') }}" rel="stylesheet"/>
@@ -10,8 +10,7 @@
 {% endblock %}
 
 {% block head_scripts %}
-    <script type="text/javascript" src="{{ url_for('static', filename='js/datatables/jquery.dataTables.min.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='js/datatables/dataTables.bootstrap5.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/datatables/datatables.min.js') }}"></script>
 
     <script type="text/javascript" src="{{ url_for('static', filename='js/sweetalert2/sweetalert2.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='js/display.min.js') }}"></script>
