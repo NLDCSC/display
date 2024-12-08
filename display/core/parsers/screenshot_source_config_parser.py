@@ -60,12 +60,12 @@ def get_direct_screenshot_source_config_file(
 ) -> dict[str, List[str]]:
     if config_location is None:
 
-        if not os.path.exists(config.CONFIG_PATH):
-            os.mkdir(config.CONFIG_PATH)
+        if not os.path.exists(config.DISPLAY_CONFIG_PATH):
+            os.mkdir(config.DISPLAY_CONFIG_PATH)
 
         try:
             with open(
-                os.path.join(config.CONFIG_PATH, config.SCREENSHOT_SOURCE_CONFIG_FILE),
+                os.path.join(config.DISPLAY_CONFIG_PATH, config.SCREENSHOT_SOURCE_CONFIG_FILE),
                 "r",
             ) as f:
                 screenshot_config_json = json.loads(f.read())
@@ -73,7 +73,7 @@ def get_direct_screenshot_source_config_file(
 
         except FileNotFoundError:
             with open(
-                os.path.join(config.CONFIG_PATH, config.SCREENSHOT_SOURCE_CONFIG_FILE),
+                os.path.join(config.DISPLAY_CONFIG_PATH, config.SCREENSHOT_SOURCE_CONFIG_FILE),
                 "w",
             ) as f:
                 f.write(json.dumps({"none": ["none"]}))
