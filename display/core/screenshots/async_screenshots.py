@@ -11,8 +11,7 @@ from typing import List
 
 import aiohttp
 from nldcsc.loggers.app_logger import AppLogger
-from sqlalchemy import select, create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import select
 
 from display.apis.splash.splash_api import SplashApi
 from display.core.database_logging.trace_log import TraceLogEntry

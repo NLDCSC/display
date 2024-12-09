@@ -2,7 +2,6 @@ import logging
 
 from flask import copy_current_request_context, request, render_template
 from flask_login import login_required, current_user
-
 # noinspection PyUnresolvedReferences
 from flask_socketio import emit, disconnect, join_room, leave_room, call
 from nldcsc.loggers.app_logger import AppLogger

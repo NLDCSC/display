@@ -7,7 +7,6 @@ from urllib.parse import parse_qs
 from flask import request
 from nldcsc.loggers.app_logger import AppLogger
 from sqlalchemy import delete, select
-from tenacity import retry_unless_exception_type
 
 from . import admin
 from ..app.models import TemplateTexts
