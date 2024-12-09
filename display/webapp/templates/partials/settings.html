@@ -69,7 +69,7 @@
     <div class="form-row item-entry">
         <div class="form-group col-md-11 mb-1">
             <label for="entry_field" class="d-none">Name</label>
-            <input id="entry_field" name="entry_field" class="form-control" placeholder="" required>
+            <input id="entry_field" name="entry_field" class="form-control" required>
         </div>
         <div class="form-group col-md-1 mb-1">
             <button type="button" class="btn btn-danger remove-btn mt-1 float-right">-</button>
@@ -86,7 +86,7 @@
                     <label for="name_field" class="form-center-label">Name:</label>
                 </div>
                 <div class="form-group col-md-9 mb-1">
-                    <input id="name_field" name="name_field" class="form-control" placeholder="" required>
+                    <input id="name_field" name="name_field" class="form-control" title="Name of the target" required>
                 </div>
             </div>
         </div>
@@ -96,7 +96,7 @@
                     <label for="zone_field" class="form-center-label">Zone:</label>
                 </div>
                 <div class="form-group col-md-9 mb-1">
-                    <input id="zone_field" name="zone_field" class="form-control" placeholder="" required>
+                    <input id="zone_field" name="zone_field" class="form-control" title="Name of zone where the target resides" required>
                 </div>
             </div>
             <div class="row">
@@ -104,7 +104,7 @@
                     <label for="wait_field" class="form-center-label">Wait:</label>
                 </div>
                 <div class="form-group col-md-9 mb-1">
-                    <input id="wait_field" type="number" name="wait_field" class="form-control" placeholder="" min="2" step="1" value="{{ config.SCREENSHOT_DEFAULT_WAIT }}" required>
+                    <input id="wait_field" type="number" name="wait_field" class="form-control" title="The amount of seconds to wait before taking a screenshot" min="2" step="1" value="{{ config.SCREENSHOT_DEFAULT_WAIT }}" required>
                 </div>
             </div>
         </div>
@@ -114,7 +114,7 @@
                     <label for="protocol_field" class="form-center-label">Protocol:</label>
                 </div>
                 <div class="form-group col-md-9 mb-1">
-                    <select id="protocol_field" name="protocol_field" class="form-control" required>
+                    <select id="protocol_field" name="protocol_field" class="form-control" title="Protocol to use" required>
                         <option value="http">HTTP</option>
                         <option value="https" selected>HTTPS</option>
                     </select>
@@ -125,7 +125,7 @@
                     <label for="timeout_field" class="form-center-label">Timeout:</label>
                 </div>
                 <div class="form-group col-md-9 mb-1">
-                    <input id="timeout_field" type="number" name="timeout_field" class="form-control" min="15" step="5" value="{{ config.SCREENSHOT_DEFAULT_TIMEOUT }}" placeholder="" required>
+                    <input id="timeout_field" type="number" name="timeout_field" class="form-control" title="The amount of seconds after which a timeout error is raised" min="15" step="5" value="{{ config.SCREENSHOT_DEFAULT_TIMEOUT }}" required>
                 </div>
             </div>
         </div>
@@ -135,7 +135,7 @@
                     <label for="source_field" class="form-center-label">Source:</label>
                 </div>
                 <div class="form-group col-md-9 mb-1">
-                    <select id="source_field" name="source_field" class="form-control" required>
+                    <select id="source_field" name="source_field" class="form-control" title="The source where the screenshot should be taken from" required>
                         <option value="splash" selected>Splash</option>
                         <option value="selenium">Selenium</option>
                     </select>
@@ -146,7 +146,7 @@
                     <label for="stem_field" class="form-center-label">Stem:</label>
                 </div>
                 <div class="form-group col-md-9 mb-1">
-                    <input id="stem_field" name="stem_field" class="form-control" placeholder="" required>
+                    <input id="stem_field" name="stem_field" class="form-control" title="[OPTIONAL] A alternate string to use in the url instead of the name of the target" required>
                 </div>
             </div>
         </div>

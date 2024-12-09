@@ -781,3 +781,7 @@ div.dt-paging {
   border: solid 1px #535151;
   border-radius: 5px;
 }
+
+.form-control {
+  color: #cacaca !important;
+}

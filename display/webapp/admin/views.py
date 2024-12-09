@@ -1,6 +1,7 @@
 import logging
 import os
 import shutil
+from dataclasses import asdict
 from typing import List
 from urllib.parse import parse_qs
 
@@ -13,9 +14,12 @@ from ..app.models import TemplateTexts
 from ..auth.permissions import admin_required
 from ..run import db, config
 from ...core.general.constants import msg_cats
+from ...core.parsers.display_settings_parser import DisplaySettingsParser
 
 logging.setLoggerClass(AppLogger)
 logger = logging.getLogger(__name__)
+
+settings_parser = DisplaySettingsParser()
 
 
 def parse_nested_list(param_string: str = None):
@@ -101,4 +105,13 @@ def get_clear_location(location):
 @admin.get("/display_settings")
 @admin_required
 def get_display_settings():
-    return []
+
+    settings_obj = settings_parser.get_settings_obj()
+    # noinspection PyUnresolvedReferences
+    return asdict(settings_obj)
+
+
+@admin.post("/display_settings")
+@admin_required
+def post_display_settings():
+    data = dict(request.form)

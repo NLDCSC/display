@@ -478,10 +478,17 @@ function OpenSettings(){
             if (data.length === 0) {
                 $('#settings-form-list').append($("#settings-form-template .form-row").clone())
             } else {
-                data.forEach((item) => {
+                data["targets"].forEach((item) => {
                     addSettingsFormElements();
-                    // let entity_row = $("#form-list .item-entry:last-child")
-                    // $(entity_row).find("#entry_field").val(item)
+                    let entity_row = $("#settings-form-list .item-entry:last-child")
+                    $(entity_row).find("#name_field").val(item.name)
+                    $(entity_row).find("#zone_field").val(item.zone)
+                    $(entity_row).find("#wait_field").val(item.wait)
+                    $(entity_row).find("#timeout_field").val(item.timeout)
+                    $(entity_row).find("#wait_on_id_field").val(item.wait_on_id)
+                    $(entity_row).find("#protocol_field option[value=" + item.protocol + "]").prop("selected", true)
+                    $(entity_row).find("#source_field option[value=" + item.screenshot_config + "]").prop("selected", true)
+                    $(entity_row).find("#stem_field").val(item.stem)
                 })
             }
 
@@ -496,7 +503,7 @@ function OpenSettings(){
 
                     let json = {}
 
-                    json["form-list"] = $("#defacement_form").serialize()
+                    json["form-list"] = $("#settings_form").serialize()
 
                     $.ajax({
                         method: "POST",
@@ -518,7 +525,6 @@ function OpenSettings(){
 
     $("#popup-settings").show()
 
-
     $("#clear_screenshot").off().on("click", function (event) {
         $.ajax({
             method: "GET",
@@ -528,6 +534,7 @@ function OpenSettings(){
                 showMessage(data["msg_cat"], data["msg"])
             })
     })
+
     $("#clear_timeline").off().on("click", function (event) {
         $.ajax({
             method: "GET",
@@ -537,6 +544,7 @@ function OpenSettings(){
                 showMessage(data["msg_cat"], data["msg"])
             })
     })
+
     $("#clear_texts").off().on("click", function (event) {
         $.ajax({
             method: "GET",
