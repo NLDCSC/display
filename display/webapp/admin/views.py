@@ -1,3 +1,4 @@
+import collections
 import logging
 import os
 import shutil
@@ -14,7 +15,11 @@ from ..app.models import TemplateTexts
 from ..auth.permissions import admin_required
 from ..run import db, config
 from ...core.general.constants import msg_cats
-from ...core.parsers.display_settings_parser import DisplaySettingsParser
+from ...core.parsers.display_settings_parser import (
+    DisplaySettingsParser,
+    DisplayTargetSettings,
+    DisplaySettings,
+)
 
 logging.setLoggerClass(AppLogger)
 logger = logging.getLogger(__name__)
@@ -111,7 +116,64 @@ def get_display_settings():
     return asdict(settings_obj)
 
 
+def parse_nested_entries(param_string: str = None):
+    ret_dict = collections.defaultdict(dict)
+
+    first_split = param_string.split("name_field")
+
+    for entry in first_split:
+        if entry != "":
+            parsed_data = parse_qs(f"name_field{entry}")
+
+            if "wait_on_id_field" in parsed_data:
+                wait_on_id = parsed_data["wait_on_id"][0]
+            else:
+                wait_on_id = ""
+
+            if "stem_field" in parsed_data:
+                stem = parsed_data["stem_field"][0]
+            else:
+                stem = ""
+
+            ret_dict[parsed_data["name_field"]] = {
+                "name": parsed_data["name_field"][0],
+                "zone": parsed_data["zone_field"][0],
+                "wait": parsed_data["wait_field"][0],
+                "timeout": parsed_data["timeout_field"][0],
+                "wait_on_id": wait_on_id,
+                "protocol": parsed_data["protocol_field"][0],
+                "stem": stem,
+                "screenshot_config": parsed_data["source_field"][0],
+            }
+
+    return dict(ret_dict)
+
+
 @admin.post("/display_settings")
 @admin_required
 def post_display_settings():
     data = dict(request.form)
+
+    entries = parse_nested_entries(data["form-list"])
+
+    data_target_list = []
+
+    for entry in entries:
+        data_target_list.append(DisplayTargetSettings(**entry))
+
+    ds = DisplaySettings(targets=data_target_list)
+
+    if settings_parser.write_to_settings(ds):
+
+        if settings_parser.write_to_configs(ds):
+            return {
+                "msg_cat": msg_cats.OK,
+                "msg": "Settings saved and new configs created!",
+            }
+        else:
+            return {
+                "msg_cat": msg_cats.NOK,
+                "msg": "Settings saved, but no new configs created!",
+            }
+    else:
+        return {"msg_cat": msg_cats.NOK, "msg": "Settings could not be saved!"}
