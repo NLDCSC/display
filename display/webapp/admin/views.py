@@ -7,6 +7,7 @@ from urllib.parse import parse_qs
 from flask import request
 from nldcsc.loggers.app_logger import AppLogger
 from sqlalchemy import delete, select
+from tenacity import retry_unless_exception_type
 
 from . import admin
 from ..app.models import TemplateTexts
@@ -96,3 +97,9 @@ def get_clear_location(location):
         return {"msg_cat": msg_cats.OK, "msg": "Directory / DB cleared!"}
     except OSError as err:
         return {"msg_cat": msg_cats.NOK, "msg": f"{err}"}
+
+
+@admin.get("/display_settings")
+@admin_required
+def get_display_settings():
+    return []

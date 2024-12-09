@@ -426,7 +426,6 @@ function OpenSettings(){
                 })
             }
 
-            $("#popup-settings").show()
             $('#defacement_form')
                 .off()
                 .on("submit", function (event){
@@ -457,6 +456,68 @@ function OpenSettings(){
                 });
 
         })
+
+    let settings_form_list = $("#settings-form-list")
+
+    // first clear the form...
+    settings_form_list.empty()
+
+    settings_form_list.html(`
+        <div class="row">
+            <div class="form-group col-md-3 mb-0 pb-0">
+                <label>Targets:</label>
+            </div>
+        </div>
+    `)
+
+    $.ajax({
+        method: "GET",
+        url: BasePath + "display_settings",
+    })
+        .done(function (data) {
+            if (data.length === 0) {
+                $('#settings-form-list').append($("#settings-form-template .form-row").clone())
+            } else {
+                data.forEach((item) => {
+                    addSettingsFormElements();
+                    // let entity_row = $("#form-list .item-entry:last-child")
+                    // $(entity_row).find("#entry_field").val(item)
+                })
+            }
+
+            $('#settings_form')
+                .off()
+                .on("submit", function (event){
+                    event.preventDefault()
+
+                    let _this = this;
+
+                    setWaitCursor(this);
+
+                    let json = {}
+
+                    json["form-list"] = $("#defacement_form").serialize()
+
+                    $.ajax({
+                        method: "POST",
+                        url: BasePath + "display_settings",
+                        data: json,
+                    })
+                        .done(function( data ) {
+                            showMessage(data["msg_cat"], data["msg"])
+                        })
+                        .fail(function( data ) {
+                            showMessage("error", "Failed saving settings!")
+                        })
+                        .always(function( data ) {
+                            removeWaitCursor(_this);
+                        });
+                });
+
+        })
+
+    $("#popup-settings").show()
+
 
     $("#clear_screenshot").off().on("click", function (event) {
         $.ajax({
@@ -1156,6 +1217,16 @@ function addFormElements() {
 
 function removeFormElements() {
     if ($('#form-list .form-row').length > 1){
+        $(this).parents('.form-row').remove();
+    }
+}
+
+function addSettingsFormElements() {
+    $('#settings-form-list').append($("#settings-form-template .form-row").clone())
+}
+
+function removeSettingsFormElements() {
+    if ($('#settings-form-list .form-row').length > 1){
         $(this).parents('.form-row').remove();
     }
 }

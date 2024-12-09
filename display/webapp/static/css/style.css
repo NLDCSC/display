@@ -771,3 +771,13 @@ table#display-tracelog.table.table-striped.table-dark.dataTable.no-footer thead 
 div.dt-paging {
     font-size: 12px;
 }
+
+.form-center-label {
+  margin: auto;
+  vertical-align: bottom !important;
+}
+
+.settings-item-entry {
+  border: solid 1px #535151;
+  border-radius: 5px;
+}

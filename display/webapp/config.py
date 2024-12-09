@@ -148,3 +148,4 @@ class Config(object):
     # GENERAL SETTINGS
     DISPLAY_TEAM_COUNT: int = int(os.getenv("DISPLAY_TEAM_COUNT", 28))
     DISPLAY_GT_START_AT: int = int(os.getenv("DISPLAY_GT_START_AT", 25))
+    DISPLAY_ROOT_DOMAIN: str = os.getenv("DISPLAY_ROOT_DOMAIN", "test.com")

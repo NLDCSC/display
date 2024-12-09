@@ -37,17 +37,122 @@
             </div>
         </div>
     </div>
+    <hr class="ruler">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="settings_config_wrapper">
+                <form id="settings_form" action="">
+                    <div id="settings-form-list" class="form-group">
+                        <div class="row">
+                            <div class="form-group col-md-3 mb-0 pb-0">
+                                <label>Targets:</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="row">
+                            <div class="col-md-10">
+                                <div id="settings_error_text" class="error error-text"></div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-outline-success float-right">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div id="form-template" class="d-none">
     <div class="form-row item-entry">
         <div class="form-group col-md-11 mb-1">
-            <label for="entry_field" class="d-none">Text</label>
+            <label for="entry_field" class="d-none">Name</label>
             <input id="entry_field" name="entry_field" class="form-control" placeholder="" required>
         </div>
         <div class="form-group col-md-1 mb-1">
             <button type="button" class="btn btn-danger remove-btn mt-1 float-right">-</button>
             <button type="button" class="btn btn-success add-btn mt-1 mr-1 float-right">+</button>
+        </div>
+    </div>
+</div>
+
+<div id="settings-form-template" class="d-none">
+    <div class="form-row item-entry mb-1 p-2 settings-item-entry">
+        <div class="form-group col-md-3 mb-0">
+            <div class="row">
+                <div class="form-group col-md-3 mb-1">
+                    <label for="name_field" class="form-center-label">Name:</label>
+                </div>
+                <div class="form-group col-md-9 mb-1">
+                    <input id="name_field" name="name_field" class="form-control" placeholder="" required>
+                </div>
+            </div>
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            <div class="row">
+                <div class="form-group col-md-3 mb-1">
+                    <label for="zone_field" class="form-center-label">Zone:</label>
+                </div>
+                <div class="form-group col-md-9 mb-1">
+                    <input id="zone_field" name="zone_field" class="form-control" placeholder="" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-3 mb-1">
+                    <label for="wait_field" class="form-center-label">Wait:</label>
+                </div>
+                <div class="form-group col-md-9 mb-1">
+                    <input id="wait_field" type="number" name="wait_field" class="form-control" placeholder="" min="2" step="1" value="{{ config.SCREENSHOT_DEFAULT_WAIT }}" required>
+                </div>
+            </div>
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            <div class="row">
+                <div class="form-group col-md-3 mb-1">
+                    <label for="protocol_field" class="form-center-label">Protocol:</label>
+                </div>
+                <div class="form-group col-md-9 mb-1">
+                    <select id="protocol_field" name="protocol_field" class="form-control" required>
+                        <option value="http">HTTP</option>
+                        <option value="https" selected>HTTPS</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-3 mb-1">
+                    <label for="timeout_field" class="form-center-label">Timeout:</label>
+                </div>
+                <div class="form-group col-md-9 mb-1">
+                    <input id="timeout_field" type="number" name="timeout_field" class="form-control" min="15" step="5" value="{{ config.SCREENSHOT_DEFAULT_TIMEOUT }}" placeholder="" required>
+                </div>
+            </div>
+        </div>
+        <div class="form-group col-md-4 mb-0">
+            <div class="row">
+                <div class="form-group col-md-3 mb-1">
+                    <label for="source_field" class="form-center-label">Source:</label>
+                </div>
+                <div class="form-group col-md-9 mb-1">
+                    <select id="source_field" name="source_field" class="form-control" required>
+                        <option value="splash" selected>Splash</option>
+                        <option value="selenium">Selenium</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-3 mb-1">
+                    <label for="stem_field" class="form-center-label">Stem:</label>
+                </div>
+                <div class="form-group col-md-9 mb-1">
+                    <input id="stem_field" name="stem_field" class="form-control" placeholder="" required>
+                </div>
+            </div>
+        </div>
+        <div class="form-group col-md-1 mb-0">
+            <button type="button" class="btn btn-danger settings-remove-btn mt-1 float-right">-</button>
+            <button type="button" class="btn btn-success settings-add-btn mt-1 mr-1 float-right">+</button>
         </div>
     </div>
 </div>
