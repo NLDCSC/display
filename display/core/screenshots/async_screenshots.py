@@ -11,8 +11,7 @@ from typing import List
 
 import aiohttp
 from nldcsc.loggers.app_logger import AppLogger
-from sqlalchemy import select, create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import select
 
 from display.apis.splash.splash_api import SplashApi
 from display.core.database_logging.trace_log import TraceLogEntry
@@ -57,7 +56,7 @@ class AsyncScreenshots(object):
         self.set_tab_to_screenshotsource_mapping()
 
         self.map_screenshot_sources = {
-            "default": "workload",
+            "splash": "workload",
             "selenium": "selenium_workload",
         }
 
@@ -81,7 +80,7 @@ class AsyncScreenshots(object):
                         raise TypeError(f"Expecting list; got: {type(urls)}")
                 else:
                     if isinstance(urls, list):
-                        getattr(self, self.map_screenshot_sources["default"]).extend(
+                        getattr(self, self.map_screenshot_sources["splash"]).extend(
                             urls
                         )
                     else:

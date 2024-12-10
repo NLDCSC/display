@@ -60,11 +60,9 @@ class Config(object):
     SYSLOG_SERVER: str = os.getenv("SYSLOG_SERVER", "172.16.1.1")
     SYSLOG_PORT: int = int(os.getenv("SYSLOG_PORT", 5140))
 
-    CONFIG_PATH: str = os.getenv("CONFIG_PATH", "/app/data/config/")
-    CONFIG_FILE: str = os.getenv("CONFIG_FILE", "config.json")
-    SCREENSHOT_SOURCE_CONFIG_FILE: str = os.getenv(
-        "SCREENSHOT_SOURCE_CONFIG_FILE", "screenshot_config.json"
-    )
+    DISPLAY_CONFIG_PATH: str = os.getenv("DISPLAY_CONFIG_PATH", "/app/data/config/")
+    DISPLAY_CONFIG_FILE: str = os.getenv("DISPLAY_CONFIG_FILE", "config.json")
+    DISPLAY_SETTINGS_FILE: str = os.getenv("DISPLAY_SETTINGS_FILE", "settings.yml")
 
     SPLASH_HOST: str = os.getenv("SPLASH_HOST", "ha_proxy")
     SPLASH_PORT: int = int(os.getenv("SPLASH_PORT", 8050))
@@ -80,9 +78,6 @@ class Config(object):
     CACHE_KEY_PREFIX: str = os.getenv("CACHE_KEY_PREFIX", "display_cache")
     CACHE_DEFAULT_TIMEOUT: int = int(os.getenv("CACHE_DEFAULT_TIMEOUT", 1800))
 
-    SCREENSHOT_LOCATION: str = os.getenv(
-        "SCREENSHOT_LOCATION", "/app/data/screenshots/"
-    )
     TIMELINE_LOCATION: str = os.getenv("TIMELINE_LOCATION", "/app/data/timeline")
     DAYS_TO_KEEP_TIMELINE_SCREENSHOTS: int = int(
         os.getenv("DAYS_TO_KEEP_TIMELINE_SCREENSHOTS", 5)
@@ -93,18 +88,26 @@ class Config(object):
         "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/109.0",
     )
 
+    # SCREENSHOT SETTINGS
+    SCREENSHOT_LOCATION: str = os.getenv(
+        "SCREENSHOT_LOCATION", "/app/data/screenshots/"
+    )
+    SCREENSHOT_SOURCE_CONFIG_FILE: str = os.getenv(
+        "SCREENSHOT_SOURCE_CONFIG_FILE", "screenshot_config.json"
+    )
     SCREENSHOT_REFRESH: int = int(os.getenv("SCREENSHOT_REFRESH", 30))
     SCREENSHOT_CHUNK_SIZE: int = int(os.getenv("SCREENSHOT_CHUNK_SIZE", 6))
     SCREENSHOT_NODES: int = int(os.getenv("SCREENSHOT_NODES", 5))
-
     SCREENSHOT_HEADER_TABS: bool = getenv_bool("SCREENSHOT_HEADER_TABS", "True")
-
     SCREENSHOT_EVIDENCE_ENABLED: bool = getenv_bool(
         "SCREENSHOT_EVIDENCE_ENABLED", "True"
     )
+    SCREENSHOT_DEFAULT_WAIT: int = int(os.getenv("SCREENSHOT_DEFAULT_WAIT", 2))
+    SCREENSHOT_DEFAULT_TIMEOUT: int = int(os.getenv("SCREENSHOT_DEFAULT_TIMEOUT", 15))
 
     TAB_ROTATE_TIMER: int = int(os.getenv("TAB_ROTATE_TIMER", 90))  # in seconds
 
+    # SSO SETTINGS
     SSO_LOGIN_ENABLE: bool = getenv_bool("SSO_LOGIN_ENABLE", "False")
     SSO_ISSUER: str = os.getenv("SSO_ISSUER", "http://localhost:8000")
     SSO_CLIENT_ID: str = os.getenv("SSO_CLIENT_ID", "sso-client")
@@ -114,7 +117,6 @@ class Config(object):
     SSO_SCOPES: List[str] = getenv_list(
         "SSO_SCOPES", ["openid", "resources", "profile"]
     )
-
     ALLOWED_USER_GROUPS: List[str] = getenv_list("ALLOWED_USER_GROUPS", [])
     ALLOWED_ADMIN_GROUPS: List[str] = getenv_list("ALLOWED_ADMIN_GROUPS", [])
 
@@ -132,6 +134,7 @@ class Config(object):
         os.getenv("CELERY_RESULT_EXPIRES", 300)
     )  # in seconds
 
+    # DEFACEMENT SETTINGS
     DISPLAY_ASSUME_NO_TEXT_DEFACED: bool = getenv_bool(
         "DISPLAY_ASSUME_NO_TEXT_DEFACED", "True"
     )
@@ -141,3 +144,9 @@ class Config(object):
     DISPLAY_DEFACEMENT_PURGE_TIME: int = int(
         os.getenv("DISPLAY_DEFACEMENT_PURGE_TIME", 2)
     )  # in days
+
+    # GENERAL SETTINGS
+    DISPLAY_TEAM_COUNT: int = int(os.getenv("DISPLAY_TEAM_COUNT", 28))
+    DISPLAY_TEAM_START_AT: int = int(os.getenv("DISPLAY_TEAM_START_AT", 1))
+    DISPLAY_GT_START_AT: int = int(os.getenv("DISPLAY_GT_START_AT", 25))
+    DISPLAY_ROOT_DOMAIN: str = os.getenv("DISPLAY_ROOT_DOMAIN", "test.com")

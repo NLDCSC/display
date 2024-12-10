@@ -27,8 +27,8 @@ config = Config()
 class Target(Validations):
     url: str
     header: str
-    wait: int = 2
-    timeout: int = 15
+    wait: int = config.SCREENSHOT_DEFAULT_WAIT
+    timeout: int = config.SCREENSHOT_DEFAULT_TIMEOUT
     wait_on_id: str = ""
     team: str = "blue"
     alt_header: Optional[str] = field(
@@ -178,7 +178,10 @@ class DisplayConfig:
     def get_display_source_chunk(self, number=0, chunk_size=1):
         ds = self.display_sources()
 
-        chunk_list = list(chunks(list(ds.keys()), chunk_size))
+        try:
+            chunk_list = list(chunks(list(ds.keys()), chunk_size))
+        except ZeroDivisionError:
+            return {}
 
         ret_data = {}
 
@@ -193,25 +196,31 @@ class DisplayConfig:
 
 @cache.cache(ttl=config.CACHE_DEFAULT_TIMEOUT)
 def get_display_config_file(
-    config_location: str = None,
+    config_location: Path = None,
 ) -> dict[str, List[dict[str, str | int]]]:
     return get_direct_display_config_file(config_location=config_location)
 
 
 def get_direct_display_config_file(
-    config_location: str = None,
+    config_location: Path = None,
 ) -> dict[str, List[dict[str, str | int]]]:
     if config_location is None:
-        if not os.path.exists(config.CONFIG_PATH):
-            os.mkdir(config.CONFIG_PATH)
+        if not os.path.exists(config.DISPLAY_CONFIG_PATH):
+            os.mkdir(config.DISPLAY_CONFIG_PATH)
 
         try:
-            with open(os.path.join(config.CONFIG_PATH, config.CONFIG_FILE), "r") as f:
+            with open(
+                os.path.join(config.DISPLAY_CONFIG_PATH, config.DISPLAY_CONFIG_FILE),
+                "r",
+            ) as f:
                 config_json = json.loads(f.read())
 
             return config_json
         except FileNotFoundError:
-            with open(os.path.join(config.CONFIG_PATH, config.CONFIG_FILE), "w") as f:
+            with open(
+                os.path.join(config.DISPLAY_CONFIG_PATH, config.DISPLAY_CONFIG_FILE),
+                "w",
+            ) as f:
                 f.write(json.dumps({"none": [{}]}))
 
             display_sources = {"none": [{}]}

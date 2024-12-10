@@ -292,15 +292,26 @@ def do_rebuild_request() -> None:
     selector_data = render_template("partials/tab_selector.html", **locals())
 
     logger.info(f"Client: {req_client.sid} is rebuilding page...")
-
-    emit(
-        "rebuild_page",
-        {
-            "data": {"content": html_data, "tab_selector": selector_data},
-            "tab": ScreenShotHandler.get_hash(req_client.current_tab.encode("utf-8")),
-        },
-        to=request.sid,
-    )
+    try:
+        sel_tab = ScreenShotHandler.get_hash(req_client.current_tab.encode("utf-8"))
+        emit(
+            "rebuild_page",
+            {
+                "data": {"content": html_data, "tab_selector": selector_data},
+                "tab": sel_tab,
+            },
+            to=request.sid,
+        )
+    except AttributeError:
+        # no tab has been selected (coming from an empty config?); fallback first tab by setting tab to None
+        emit(
+            "rebuild_page",
+            {
+                "data": {"content": html_data, "tab_selector": selector_data},
+                "tab": None,
+            },
+            to=request.sid,
+        )
 
     logger.info(f"Client details: {req_client.client_details()}")
 

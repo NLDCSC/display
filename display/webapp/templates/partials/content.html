@@ -146,6 +146,9 @@
 </ul>
 
 <div class="tab-content" id="myTabContent">
+    {% if all_display_sources|length == 0 %}
+        <div class="no-config">Configuration is empty; go to settings (admin only!) to provide one...</div>
+    {% endif %}
     {% include "partials/template_row.html" %}
     <div id="tab_change_loading">
         <div class="loading-container">
@@ -163,4 +166,5 @@
             {% include "partials/content_rows.html" %}
         </div>
     {% endfor %}
+
 </div>

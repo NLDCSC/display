@@ -69,7 +69,7 @@ def index():
 @home.get("/status/nodes")
 @login_required
 def get_status_nodes():
-
+    logger.info("Fetching node status...")
     node_status = rediswrap.get("node_status")
 
     if node_status is not None:
@@ -78,6 +78,7 @@ def get_status_nodes():
         od = collections.OrderedDict(sorted(node_status["data"].items()))
         node_status["data"] = od
     else:
+        logger.info("No node status found, returning empty dict.")
         node_status = {}
 
     return render_template("partials/node_status.html", node_status=node_status)
@@ -86,6 +87,7 @@ def get_status_nodes():
 @home.route("/screenshot/<path:filename>")
 @login_required
 def get_screenshot(filename):
+    logger.info(f"Fetching screenshot from: {filename}")
     try:
         sh.set_timestamp_to_picture(filename=filename)
 
@@ -104,6 +106,7 @@ def get_screenshot(filename):
 
 
 def get_timeline_data(url_hash):
+    logger.info(f"Fetching timeline data for hash: {url_hash}")
     ret_data = []
 
     # cap the timeline_data to the first 250 items

@@ -37,17 +37,207 @@
             </div>
         </div>
     </div>
+    <hr class="ruler">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="settings_config_wrapper">
+                <form id="settings_form" action="">
+                    <div id="settings-general" class="form-group">
+                        <div class="row">
+                            <div class="form-group col-md-3 mb-0 pb-0">
+                                <label>General settings:</label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group col-md-4 mb-1">
+                                <div class="row">
+                                    <div class="form-group col-md-3 mb-1">
+                                        <label for="team_count_field" class="form-center-label">Total teams:</label>
+                                    </div>
+                                    <div class="form-group col-md-9 mb-1">
+                                        <input id="team_count_field" type="number" name="general_settings" class="form-control" title="Total amount of teams" min="1" step="1" value="{{ config.DISPLAY_TEAM_COUNT }}" required>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group col-md-3 mb-1">
+                                        <label for="team_start_at_field" class="form-center-label">Teams start at:</label>
+                                    </div>
+                                    <div class="form-group col-md-9 mb-1">
+                                        <input id="team_start_at_field" type="number" name="general_settings" class="form-control" title="Team numbers start at" min="1" step="1" value="{{ config.DISPLAY_TEAM_START_AT }}" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-4 mb-1">
+                                <div class="row">
+                                    <div class="form-group col-md-3 mb-1">
+                                        <label for="gt_start_at_field" class="form-center-label">GT start at:</label>
+                                    </div>
+                                    <div class="form-group col-md-9 mb-1">
+                                        <input id="gt_start_at_field" type="number" name="general_settings" class="form-control" title="This team number upwards shall be marked as 'Green team'" min="1" step="1" value="{{ config.DISPLAY_GT_START_AT }}" required>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group col-md-3 mb-1">
+                                        <label for="gt_start_at_field" class="form-center-label">Filter teams:</label>
+                                    </div>
+                                    <div class="form-group col-md-9 mb-1">
+                                        <div class="row">
+                                            <div class="form-group col-md-6 mb-1">
+                                                <input id="filter_start_field" type="number" name="general_settings" class="form-control" title="This team number upwards shall be filtered from BT range" min="0" step="1" value="0">
+                                            </div>
+                                            <div class="form-group col-md-6 mb-1">
+                                                <input id="filter_end_field" type="number" name="general_settings" class="form-control" title="Upper number that shall be filtered from BT range" min="0" step="1" value="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-4 mb-1">
+                                <div class="row">
+                                    <div class="form-group col-md-3 mb-1">
+                                        <label for="root_domain_field" class="form-center-label">Root domain:</label>
+                                    </div>
+                                    <div class="form-group col-md-9 mb-1">
+                                        <input id="root_domain_field" name="general_settings" class="form-control" title="Root domain of the targets" value="{{ config.DISPLAY_ROOT_DOMAIN }}" required>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group col-md-3 mb-1">
+                                        <label for="gt_start_at_field" class="form-center-label">Team numbers:</label>
+                                    </div>
+                                    <div class="form-group col-md-9 mb-1">
+                                        <button id="team_blue" type="button" class="btn btn-primary add-btn m-0 float-left">...</button>
+                                        <button id="team_blue_filter" type="button" class="btn btn-primary add-btn m-0 ml-2 float-left">...</button>
+                                        <button id="team_green" type="button" class="btn btn-success add-btn m-0 ml-2 float-left">...</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="settings-form-list" class="form-group">
+                        <div class="row">
+                            <div class="form-group col-md-3 mb-0 pb-0">
+                                <label>Target settings:</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="row">
+                            <div class="col-md-10">
+                                <div id="settings_error_text" class="error error-text"></div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-outline-success float-right">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div id="form-template" class="d-none">
     <div class="form-row item-entry">
         <div class="form-group col-md-11 mb-1">
-            <label for="entry_field" class="d-none">Text</label>
-            <input id="entry_field" name="entry_field" class="form-control" placeholder="" required>
+            <label for="entry_field" class="d-none">Name</label>
+            <input id="entry_field" name="entry_field" class="form-control" required>
         </div>
         <div class="form-group col-md-1 mb-1">
             <button type="button" class="btn btn-danger remove-btn mt-1 float-right">-</button>
             <button type="button" class="btn btn-success add-btn mt-1 mr-1 float-right">+</button>
+        </div>
+    </div>
+</div>
+
+<div id="settings-form-template" class="d-none">
+    <div class="form-row item-entry mb-1 pb-1 settings-item-entry">
+        <div class="form-group col-md-12 mb-0 target-settings-header">
+            <div class="row">
+                <div class="form-group col-md-11 mb-0 pl-4 target-header">New target</div>
+                <div class="form-group col-md-1 mb-0">
+                    <button type="button" class="btn btn-danger settings-remove-btn float-right p-1">-</button>
+                    <button type="button" class="btn btn-success settings-add-btn mr-1 float-right p-1">+</button>
+                </div>
+            </div>
+        </div>
+        <div class="form-group col-md-4 mb-0 mt-2">
+            <div class="row">
+                <div class="form-group col-md-3 mb-1">
+                    <label for="name_field" class="form-center-label">Name:</label>
+                </div>
+                <div class="form-group col-md-9 mb-1">
+                    <input id="name_field" name="name_field" class="form-control" title="Name of the target" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-3 mb-1">
+                    <label for="stem_field" class="form-center-label">Stem:</label>
+                </div>
+                <div class="form-group col-md-9 mb-1">
+                    <input id="stem_field" name="stem_field" class="form-control" title="[OPTIONAL] A alternate string to use in the url instead of the name of the target">
+                </div>
+            </div>
+        </div>
+        <div class="form-group col-md-2 mb-0 mt-2">
+            <div class="row">
+                <div class="form-group col-md-3 mb-1">
+                    <label for="zone_field" class="form-center-label">Zone:</label>
+                </div>
+                <div class="form-group col-md-9 mb-1">
+                    <input id="zone_field" name="zone_field" class="form-control" title="Name of zone where the target resides" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-3 mb-1">
+                    <label for="wait_field" class="form-center-label">Wait:</label>
+                </div>
+                <div class="form-group col-md-9 mb-1">
+                    <input id="wait_field" type="number" name="wait_field" class="form-control" title="The amount of seconds to wait before taking a screenshot" min="2" step="1" value="{{ config.SCREENSHOT_DEFAULT_WAIT }}" required>
+                </div>
+            </div>
+        </div>
+        <div class="form-group col-md-2 mb-0 mt-2">
+            <div class="row">
+                <div class="form-group col-md-3 mb-1">
+                    <label for="protocol_field" class="form-center-label">Protocol:</label>
+                </div>
+                <div class="form-group col-md-9 mb-1">
+                    <select id="protocol_field" name="protocol_field" class="form-control" title="Protocol to use" required>
+                        <option value="http">HTTP</option>
+                        <option value="https" selected>HTTPS</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-3 mb-1">
+                    <label for="timeout_field" class="form-center-label">Timeout:</label>
+                </div>
+                <div class="form-group col-md-9 mb-1">
+                    <input id="timeout_field" type="number" name="timeout_field" class="form-control" title="The amount of seconds after which a timeout error is raised" min="15" step="5" value="{{ config.SCREENSHOT_DEFAULT_TIMEOUT }}" required>
+                </div>
+            </div>
+        </div>
+        <div class="form-group col-md-4 mb-0 mt-2">
+            <div class="row">
+                <div class="form-group col-md-3 mb-1">
+                    <label for="source_field" class="form-center-label">Source:</label>
+                </div>
+                <div class="form-group col-md-9 mb-1">
+                    <select id="source_field" name="source_field" class="form-control" title="The source where the screenshot should be taken from" required>
+                        <option value="splash" selected>Splash</option>
+                        <option value="selenium">Selenium</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-3 mb-1">
+                    <label for="wait_on_id_field" class="form-center-label">Wait on ID:</label>
+                </div>
+                <div class="form-group col-md-9 mb-1">
+                    <input id="wait_on_id_field" name="wait_on_id_field" class="form-control" title="[OPTIONAL] Wait for a specific DOM ID before taking a screenshot">
+                </div>
+            </div>
         </div>
     </div>
 </div>

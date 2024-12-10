@@ -426,7 +426,6 @@ function OpenSettings(){
                 })
             }
 
-            $("#popup-settings").show()
             $('#defacement_form')
                 .off()
                 .on("submit", function (event){
@@ -458,6 +457,88 @@ function OpenSettings(){
 
         })
 
+    let settings_form_list = $("#settings-form-list")
+
+    // first clear the form...
+    settings_form_list.empty()
+
+    settings_form_list.html(`
+        <div class="row">
+            <div class="form-group col-md-3 mb-0 pb-0">
+                <label>Target settings:</label>
+            </div>
+        </div>
+    `)
+
+    $.ajax({
+        method: "GET",
+        url: BasePath + "display_settings",
+    })
+        .done(function (data) {
+            if (data["targets"].length === 0) {
+                $('#settings-form-list').append($("#settings-form-template .form-row").clone())
+            } else {
+                data["targets"].forEach((item) => {
+                    addSettingsFormElements();
+                    let entity_row = $("#settings-form-list .item-entry:last-child")
+                    $(entity_row).find("#name_field").val(item.name)
+                    $(entity_row).find("#zone_field").val(item.zone)
+                    $(entity_row).find("#wait_field").val(item.wait)
+                    $(entity_row).find("#timeout_field").val(item.timeout)
+                    $(entity_row).find("#wait_on_id_field").val(item.wait_on_id)
+                    $(entity_row).find("#protocol_field option[value=" + item.protocol + "]").prop("selected", true)
+                    $(entity_row).find("#source_field option[value=" + item.screenshot_config + "]").prop("selected", true)
+                    $(entity_row).find("#stem_field").val(item.stem)
+                })
+                $("#team_count_field").val(data["team_settings"].display_team_count)
+                $("#team_start_at_field").val(data["team_settings"].display_team_start_at)
+                $("#filter_start_field").val(data["team_settings"].display_filter_start)
+                $("#filter_end_field").val(data["team_settings"].display_filter_end)
+                $("#gt_start_at_field").val(data["team_settings"].display_gt_start_at)
+                $("#root_domain_field").val(data["team_settings"].display_root_domain)
+                updateTeamCounters()
+                updateAllTargetHeader()
+            }
+
+            $('#settings_form')
+                .off()
+                .on("submit", function (event){
+                    event.preventDefault()
+
+                    let _this = this;
+
+                    setWaitCursor(this);
+
+                    let json = {}
+
+                    json["form-list"] = $('#settings_form :not(input[name=general_settings])').serialize();
+                    json["display_team_count"] = $("#team_count_field").val()
+                    json["display_team_start_at"] = $("#team_start_at_field").val()
+                    json["display_filter_start"] = $("#filter_start_field").val()
+                    json["display_filter_end"] = $("#filter_end_field").val()
+                    json["display_gt_start_at"] = $("#gt_start_at_field").val()
+                    json["display_root_domain"] = $("#root_domain_field").val()
+
+                    $.ajax({
+                        method: "POST",
+                        url: BasePath + "display_settings",
+                        data: json,
+                    })
+                        .done(function( data ) {
+                            showMessage(data["msg_cat"], data["msg"])
+                        })
+                        .fail(function( data ) {
+                            showMessage("error", "Failed saving settings!")
+                        })
+                        .always(function( data ) {
+                            removeWaitCursor(_this);
+                        });
+                });
+
+        })
+
+    $("#popup-settings").show()
+
     $("#clear_screenshot").off().on("click", function (event) {
         $.ajax({
             method: "GET",
@@ -467,6 +548,7 @@ function OpenSettings(){
                 showMessage(data["msg_cat"], data["msg"])
             })
     })
+
     $("#clear_timeline").off().on("click", function (event) {
         $.ajax({
             method: "GET",
@@ -476,6 +558,7 @@ function OpenSettings(){
                 showMessage(data["msg_cat"], data["msg"])
             })
     })
+
     $("#clear_texts").off().on("click", function (event) {
         $.ajax({
             method: "GET",
@@ -1158,4 +1241,132 @@ function removeFormElements() {
     if ($('#form-list .form-row').length > 1){
         $(this).parents('.form-row').remove();
     }
+}
+
+function addSettingsFormElements() {
+    $('#settings-form-list').append($("#settings-form-template .form-row").clone())
+}
+
+function removeSettingsFormElements() {
+    if ($('#settings-form-list .form-row').length > 1){
+        $(this).parents('.form-row').remove();
+    }
+}
+
+function pad (str, max) {
+    str = str.toString();
+    return str.length < max ? pad("0" + str, max) : str;
+}
+
+function handleLimitChange() {
+    let filter_start = $('#filter_start_field');
+    let filter_end = $('#filter_end_field');
+    let limit = parseInt(filter_start.val());
+
+    if (parseInt(filter_end.val()) < limit) {
+        filter_end.val(limit);
+    }
+    filter_end.attr('min', limit);
+}
+
+function updateTeamCounters() {
+    let total_value = parseInt($("#team_count_field").val())
+    let team_start = parseInt($("#team_start_at_field").val())
+    let gt_start = parseInt($("#gt_start_at_field").val())
+
+    let filter_start = parseInt($("#filter_start_field").val())
+    let filter_end = parseInt($("#filter_end_field").val())
+
+    let btn_tb = $("#team_blue")
+    let btn_tb_filter = $("#team_blue_filter")
+    let btn_tg = $("#team_green")
+
+    if (filter_start === 0 || filter_end === 0){
+        btn_tb_filter.hide()
+        if (total_value < gt_start) {
+            btn_tg.hide()
+            btn_tb.show()
+            btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + total_value - 1), 2))
+        } else if (gt_start === team_start + 1) {
+            btn_tb.show()
+            btn_tg.show()
+            btn_tb.text("BT" + pad(team_start, 2))
+            btn_tg.text("GT" + pad(team_start, 2) + "-" + "GT" + pad((team_start + total_value - 1), 2))
+        } else if (gt_start === total_value) {
+            btn_tb.show()
+            btn_tg.show()
+            btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + gt_start - 2), 2))
+            btn_tg.text("GT" + pad((team_start + total_value - 1), 2))
+        } else if (gt_start === team_start) {
+            btn_tb.hide()
+            btn_tg.show()
+            btn_tg.text("GT" + pad(team_start, 2) + "-" + "GT" + pad((team_start + total_value - 1), 2))
+        } else {
+            btn_tb.show()
+            btn_tg.show()
+            btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + gt_start - 2), 2))
+            btn_tg.text("GT" + pad((team_start + gt_start - 1), 2) + "-" + "GT" + pad((team_start + total_value - 1), 2))
+        }
+    } else {
+        btn_tb.show()
+        btn_tb_filter.show()
+        btn_tg.show()
+
+        if ((team_start + filter_end -1) === (team_start + gt_start - 3)){
+            btn_tb_filter.show()
+            btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + filter_start - 2), 2))
+            btn_tb_filter.text("BT" + pad((team_start + filter_end), 2))
+            btn_tg.text("GT" + pad((team_start + gt_start - 1), 2) + "-" + "GT" + pad((team_start + total_value - 1), 2))
+        } else if ((team_start + filter_end -1) >= (team_start + gt_start - 2)) {
+            btn_tb_filter.hide()
+            btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + filter_start - 2), 2))
+            btn_tg.text("GT" + pad((team_start + gt_start - 1), 2) + "-" + "GT" + pad((team_start + total_value - 1), 2))
+        } else {
+            btn_tb_filter.show()
+            btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + filter_start - 2), 2))
+            btn_tb_filter.text("BT" + pad((team_start + filter_end), 2) + "-" + "BT" + pad((team_start + gt_start - 2), 2))
+            btn_tg.text("GT" + pad((team_start + gt_start - 1), 2) + "-" + "GT" + pad((team_start + total_value - 1), 2))
+        }
+    }
+}
+
+function updateTargetHeader(evt) {
+    let target_elm = $(evt.target);
+
+    let target_container = target_elm.closest(".form-group").prev().parent().parent().parent()
+    let target_header = target_container.find(".target-header")
+
+    let name_field = target_container.find("#name_field")
+    let stem_field = target_container.find("#stem_field")
+    let zone_field = target_container.find("#zone_field")
+    let protocol_field = target_container.find("#protocol_field")
+
+    if (stem_field.val() !== ""){
+        target_header.text(protocol_field.val() + "://" + stem_field.val() + "." + zone_field.val() + ".xx." + $("#root_domain_field").val())
+    } else {
+        target_header.text(protocol_field.val() + "://" + name_field.val() + "." + zone_field.val() + ".xx." + $("#root_domain_field").val())
+    }
+
+}
+
+function updateAllTargetHeader() {
+    let settings_form = $("#settings_form")
+
+    let all_entries = settings_form.find(".settings-item-entry")
+
+    all_entries.each(function (index) {
+        let target_header = $(this).find(".target-header")
+
+        let name_field = $(this).find("#name_field")
+        let stem_field = $(this).find("#stem_field")
+        let zone_field = $(this).find("#zone_field")
+        let protocol_field = $(this).find("#protocol_field")
+
+        if (stem_field.val() !== ""){
+            target_header.text(protocol_field.val() + "://" + stem_field.val() + "." + zone_field.val() + ".xx." + $("#root_domain_field").val())
+        } else {
+            target_header.text(protocol_field.val() + "://" + name_field.val() + "." + zone_field.val() + ".xx." + $("#root_domain_field").val())
+        }
+    })
+
 }
