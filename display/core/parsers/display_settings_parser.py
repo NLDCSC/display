@@ -45,6 +45,10 @@ def exclude_default_timeout(value):
     return value == config.SCREENSHOT_DEFAULT_TIMEOUT
 
 
+def exclude_default_source(value):
+    return value == "splash"
+
+
 @dataclass_json
 @dataclass
 class DisplayTargetSettings:
@@ -68,7 +72,7 @@ class DisplayTargetSettings:
         metadata=json_config(exclude=exclude_optional_dict), default=None
     )
     screenshot_config: Optional[str] = field(
-        metadata=json_config(exclude=exclude_optional_dict), default=None
+        metadata=json_config(exclude=exclude_default_source), default="splash"
     )
 
 
@@ -233,7 +237,15 @@ class DisplaySettingsParser(object):
         if store_file_location is not None:
             file_location_store = store_file_location
         else:
-            file_location_store = self.settings_location
+            file_location_store = (
+                self.settings_location
+                if self.settings_location is not None
+                else Path(
+                    os.path.join(
+                        config.DISPLAY_CONFIG_PATH, config.DISPLAY_SETTINGS_FILE
+                    )
+                )
+            )
 
         try:
             with open(file_location_store, "w") as f:
@@ -281,6 +293,8 @@ class DisplaySettingsParser(object):
 
             if invalidate_cache:
                 self.display_config_parser.invalidate_config_file_cache()
+
+            return True
         except FileNotFoundError:
             raise
         except PermissionError:

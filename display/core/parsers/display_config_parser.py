@@ -206,12 +206,18 @@ def get_direct_display_config_file(
             os.mkdir(config.DISPLAY_CONFIG_PATH)
 
         try:
-            with open(os.path.join(config.DISPLAY_CONFIG_PATH, config.DISPLAY_CONFIG_FILE), "r") as f:
+            with open(
+                os.path.join(config.DISPLAY_CONFIG_PATH, config.DISPLAY_CONFIG_FILE),
+                "r",
+            ) as f:
                 config_json = json.loads(f.read())
 
             return config_json
         except FileNotFoundError:
-            with open(os.path.join(config.DISPLAY_CONFIG_PATH, config.DISPLAY_CONFIG_FILE), "w") as f:
+            with open(
+                os.path.join(config.DISPLAY_CONFIG_PATH, config.DISPLAY_CONFIG_FILE),
+                "w",
+            ) as f:
                 f.write(json.dumps({"none": [{}]}))
 
             display_sources = {"none": [{}]}

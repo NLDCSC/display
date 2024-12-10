@@ -34,6 +34,7 @@ def parse_nested_list(param_string: str = None):
 
     for entry in first_split:
         if entry != "":
+            logger.info(f"Parsing defacement text entry for: {entry}")
             parsed_data = parse_qs(f"entry_field{entry}")
 
             ret_list.extend(parsed_data["entry_field"])
@@ -57,10 +58,13 @@ def post_defacement_texts():
 
     db.session.commit()
 
+    logger.info("Defacement texts saved!")
+
     return {"msg_cat": msg_cats.OK, "msg": "Defacement texts saved!"}
 
 
 def get_all_template_texts_obj() -> List[TemplateTexts]:
+    logger.info(f"Fetching defacement texts from database...")
     all_texts = db.session.scalars(select(TemplateTexts)).all()
     return all_texts
 
@@ -82,7 +86,7 @@ def clear_directory(directory_path):
                 shutil.rmtree(file_path)
         logger.info(f"All files deleted successfully in {directory_path}")
     except OSError:
-        logger.info(f"Error occurred while deleting files in {directory_path}")
+        logger.error(f"Error occurred while deleting files in {directory_path}")
 
 
 @admin.get("/clear/<location>")
@@ -97,20 +101,22 @@ def get_clear_location(location):
         elif location == "timeline":
             clear_directory(config.TIMELINE_LOCATION)
         else:
+            logger.warning(f"{location} is not configured to be cleared!")
             return {
                 "msg_cat": msg_cats.NOK,
                 "msg": f"{location} is not configured to be cleared!",
             }
 
+        logger.info("Directory / DB cleared!")
         return {"msg_cat": msg_cats.OK, "msg": "Directory / DB cleared!"}
     except OSError as err:
+        logger.exception(err)
         return {"msg_cat": msg_cats.NOK, "msg": f"{err}"}
 
 
 @admin.get("/display_settings")
 @admin_required
 def get_display_settings():
-
     settings_obj = settings_parser.get_settings_obj()
     # noinspection PyUnresolvedReferences
     return asdict(settings_obj)
@@ -120,31 +126,34 @@ def parse_nested_entries(param_string: str = None):
     ret_dict = collections.defaultdict(dict)
 
     first_split = param_string.split("name_field")
+    try:
+        for entry in first_split:
+            if entry != "":
+                logger.info(f"Parsing settings entry for: {entry}")
+                parsed_data = parse_qs(f"name_field{entry}")
 
-    for entry in first_split:
-        if entry != "":
-            parsed_data = parse_qs(f"name_field{entry}")
+                if "wait_on_id_field" in parsed_data:
+                    wait_on_id = parsed_data["wait_on_id_field"][0]
+                else:
+                    wait_on_id = ""
 
-            if "wait_on_id_field" in parsed_data:
-                wait_on_id = parsed_data["wait_on_id"][0]
-            else:
-                wait_on_id = ""
+                if "stem_field" in parsed_data:
+                    stem = parsed_data["stem_field"][0]
+                else:
+                    stem = ""
 
-            if "stem_field" in parsed_data:
-                stem = parsed_data["stem_field"][0]
-            else:
-                stem = ""
-
-            ret_dict[parsed_data["name_field"]] = {
-                "name": parsed_data["name_field"][0],
-                "zone": parsed_data["zone_field"][0],
-                "wait": parsed_data["wait_field"][0],
-                "timeout": parsed_data["timeout_field"][0],
-                "wait_on_id": wait_on_id,
-                "protocol": parsed_data["protocol_field"][0],
-                "stem": stem,
-                "screenshot_config": parsed_data["source_field"][0],
-            }
+                ret_dict[parsed_data["name_field"][0]] = {
+                    "name": parsed_data["name_field"][0],
+                    "zone": parsed_data["zone_field"][0],
+                    "wait": int(parsed_data["wait_field"][0]),
+                    "timeout": int(parsed_data["timeout_field"][0]),
+                    "wait_on_id": wait_on_id,
+                    "protocol": parsed_data["protocol_field"][0],
+                    "stem": stem,
+                    "screenshot_config": parsed_data["source_field"][0],
+                }
+    except Exception:
+        raise
 
     return dict(ret_dict)
 
@@ -154,26 +163,50 @@ def parse_nested_entries(param_string: str = None):
 def post_display_settings():
     data = dict(request.form)
 
-    entries = parse_nested_entries(data["form-list"])
+    try:
+        entries = parse_nested_entries(data["form-list"])
+    except Exception as err:
+        logger.exception(err)
+        return {"msg_cat": msg_cats.NOK, "msg": f"{err}"}
+
+    logger.info(f"Recieved {len(entries)} entries...")
 
     data_target_list = []
 
-    for entry in entries:
-        data_target_list.append(DisplayTargetSettings(**entry))
+    try:
+        for entry in entries:
+            data_target_list.append(DisplayTargetSettings(**entries[entry]))
 
-    ds = DisplaySettings(targets=data_target_list)
+        ds = DisplaySettings(targets=data_target_list)
+    except Exception as err:
+        logger.exception(err)
+        return {
+            "msg_cat": msg_cats.NOK,
+            "msg": "Error occurred while parsing display settings",
+        }
 
-    if settings_parser.write_to_settings(ds):
-
-        if settings_parser.write_to_configs(ds):
-            return {
-                "msg_cat": msg_cats.OK,
-                "msg": "Settings saved and new configs created!",
-            }
+    logger.info("Writing new settings to settings file...")
+    try:
+        if settings_parser.write_to_settings(ds):
+            logger.info("Writing new configs file...")
+            if settings_parser.write_to_configs(ds):
+                logger.info("Settings saved and new configs created!")
+                return {
+                    "msg_cat": msg_cats.OK,
+                    "msg": "Settings saved and new configs created!",
+                }
+            else:
+                logger.warning("Settings saved, but no new configs created!")
+                return {
+                    "msg_cat": msg_cats.NOK,
+                    "msg": "Settings saved, but no new configs created!",
+                }
         else:
-            return {
-                "msg_cat": msg_cats.NOK,
-                "msg": "Settings saved, but no new configs created!",
-            }
-    else:
-        return {"msg_cat": msg_cats.NOK, "msg": "Settings could not be saved!"}
+            logger.error("Settings could not be saved!")
+            return {"msg_cat": msg_cats.NOK, "msg": "Settings could not be saved!"}
+    except Exception as err:
+        logger.exception(err)
+        return {
+            "msg_cat": msg_cats.NOK,
+            "msg": "Error occurred while saving settings / config",
+        }
