@@ -180,6 +180,15 @@
         $(document).on("click", ".settings-add-btn", addSettingsFormElements);
         $(document).on("click", ".settings-remove-btn", removeSettingsFormElements);
 
+        $(document).on("change", "#team_count_field", updateTeamCounters);
+        $(document).on("change", "#team_start_at_field", updateTeamCounters);
+        $(document).on("change", "#gt_start_at_field", updateTeamCounters);
+        $(document).on("change", "#filter_start_field", updateTeamCounters);
+        $(document).on("change", "#filter_start_field", handleLimitChange);
+        $(document).on("change", "#filter_end_field", updateTeamCounters);
+
+        $(document).on("change", "#name_field", updateTargetHeader);
+
     </script>
 
 {% endblock %}

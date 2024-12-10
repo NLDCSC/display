@@ -180,6 +180,9 @@ def post_display_settings():
 
         team_settings = TeamSettings(
             display_team_count=int(data["display_team_count"]),
+            display_team_start_at=int(data["display_team_start_at"]),
+            display_filter_start=int(data["display_filter_start"]),
+            display_filter_end=int(data["display_filter_end"]),
             display_gt_start_at=int(data["display_gt_start_at"]),
             display_root_domain=data["display_root_domain"],
         )

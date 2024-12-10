@@ -83,6 +83,18 @@ class TeamSettings:
         metadata=json_config(exclude=exclude_optional_dict),
         default=config.DISPLAY_TEAM_COUNT,
     )
+    display_team_start_at: Optional[int] = field(
+        metadata=json_config(exclude=exclude_optional_dict),
+        default=config.DISPLAY_TEAM_START_AT,
+    )
+    display_filter_start: Optional[int] = field(
+        metadata=json_config(exclude=exclude_optional_dict),
+        default=0,
+    )
+    display_filter_end: Optional[int] = field(
+        metadata=json_config(exclude=exclude_optional_dict),
+        default=0,
+    )
     display_gt_start_at: Optional[int] = field(
         metadata=json_config(exclude=exclude_optional_dict),
         default=config.DISPLAY_GT_START_AT,
@@ -111,6 +123,13 @@ class DisplaySettings:
                     if self.team_settings.display_team_count is not None
                     else config.DISPLAY_TEAM_COUNT
                 )
+                team_start_at = (
+                    self.team_settings.display_team_start_at
+                    if self.team_settings.display_team_start_at is not None
+                    else config.DISPLAY_TEAM_START_AT
+                )
+                team_filter_start = self.team_settings.display_filter_start
+                team_filter_end = self.team_settings.display_filter_end
                 start_green = (
                     self.team_settings.display_gt_start_at
                     if self.team_settings.display_gt_start_at is not None
@@ -123,16 +142,28 @@ class DisplaySettings:
                 )
             else:
                 total_teams = config.DISPLAY_TEAM_COUNT
+                team_start_at = config.DISPLAY_TEAM_START_AT
+                team_filter_start = 0
+                team_filter_end = 0
                 start_green = config.DISPLAY_GT_START_AT
                 display_root_domain = config.DISPLAY_ROOT_DOMAIN
 
-            for i in range(1, total_teams + 1):
+            for i in range(team_start_at, total_teams + 1):
+
+                if team_filter_start != 0 and team_filter_end != 0:
+                    if team_filter_start <= i <= team_filter_end:
+                        continue
+
                 # noinspection PyUnresolvedReferences
                 target_dict[each.name].append(
                     Target(
                         url=f"{each.protocol}://{each.name if each.stem is None else each.stem}.{each.zone}"
                         f".{'{:02d}'.format(i)}.{display_root_domain}",
-                        header=f"BT{'{:02d}'.format(i)}",
+                        header=(
+                            f"BT{'{:02d}'.format(i)}"
+                            if i <= start_green - 1
+                            else f"GT{'{:02d}'.format(i)}"
+                        ),
                         wait=each.wait,
                         timeout=each.timeout,
                         wait_on_id=each.wait_on_id,

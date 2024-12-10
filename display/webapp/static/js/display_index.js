@@ -491,8 +491,12 @@ function OpenSettings(){
                     $(entity_row).find("#stem_field").val(item.stem)
                 })
                 $("#team_count_field").val(data["team_settings"].display_team_count)
+                $("#team_start_at_field").val(data["team_settings"].display_team_start_at)
+                $("#filter_start_field").val(data["team_settings"].display_filter_start)
+                $("#filter_end_field").val(data["team_settings"].display_filter_end)
                 $("#gt_start_at_field").val(data["team_settings"].display_gt_start_at)
                 $("#root_domain_field").val(data["team_settings"].display_root_domain)
+                updateTeamCounters()
             }
 
             $('#settings_form')
@@ -508,6 +512,9 @@ function OpenSettings(){
 
                     json["form-list"] = $('#settings_form :not(input[name=general_settings])').serialize();
                     json["display_team_count"] = $("#team_count_field").val()
+                    json["display_team_start_at"] = $("#team_start_at_field").val()
+                    json["display_filter_start"] = $("#filter_start_field").val()
+                    json["display_filter_end"] = $("#filter_end_field").val()
                     json["display_gt_start_at"] = $("#gt_start_at_field").val()
                     json["display_root_domain"] = $("#root_domain_field").val()
 
@@ -1243,4 +1250,96 @@ function removeSettingsFormElements() {
     if ($('#settings-form-list .form-row').length > 1){
         $(this).parents('.form-row').remove();
     }
+}
+
+function pad (str, max) {
+    str = str.toString();
+    return str.length < max ? pad("0" + str, max) : str;
+}
+
+function handleLimitChange() {
+    let filter_start = $('#filter_start_field');
+    let filter_end = $('#filter_end_field');
+    let limit = parseInt(filter_start.val());
+
+    if (parseInt(filter_end.val()) < limit) {
+        filter_end.val(limit);
+    }
+    filter_end.attr('min', limit);
+}
+
+function updateTeamCounters() {
+    let total_value = parseInt($("#team_count_field").val())
+    let team_start = parseInt($("#team_start_at_field").val())
+    let gt_start = parseInt($("#gt_start_at_field").val())
+
+    let filter_start = parseInt($("#filter_start_field").val())
+    let filter_end = parseInt($("#filter_end_field").val())
+
+    let btn_tb = $("#team_blue")
+    let btn_tb_filter = $("#team_blue_filter")
+    let btn_tg = $("#team_green")
+
+    if (filter_start === 0 || filter_end === 0){
+        btn_tb_filter.hide()
+        if (total_value < gt_start) {
+            btn_tg.hide()
+            btn_tb.show()
+            btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + total_value - 1), 2))
+        } else if (gt_start === team_start + 1) {
+            btn_tb.show()
+            btn_tg.show()
+            btn_tb.text("BT" + pad(team_start, 2))
+            btn_tg.text("GT" + pad(team_start, 2) + "-" + "GT" + pad((team_start + total_value - 1), 2))
+        } else if (gt_start === total_value) {
+            btn_tb.show()
+            btn_tg.show()
+            btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + gt_start - 2), 2))
+            btn_tg.text("GT" + pad((team_start + total_value - 1), 2))
+        } else if (gt_start === team_start) {
+            btn_tb.hide()
+            btn_tg.show()
+            btn_tg.text("GT" + pad(team_start, 2) + "-" + "GT" + pad((team_start + total_value - 1), 2))
+        } else {
+            btn_tb.show()
+            btn_tg.show()
+            btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + gt_start - 2), 2))
+            btn_tg.text("GT" + pad((team_start + gt_start - 1), 2) + "-" + "GT" + pad((team_start + total_value - 1), 2))
+        }
+    } else {
+        btn_tb.show()
+        btn_tb_filter.show()
+        btn_tg.show()
+
+        if ((team_start + filter_end -1) === (team_start + gt_start - 3)){
+            btn_tb_filter.show()
+            btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + filter_start - 2), 2))
+            btn_tb_filter.text("BT" + pad((team_start + filter_end), 2))
+            btn_tg.text("GT" + pad((team_start + gt_start - 1), 2) + "-" + "GT" + pad((team_start + total_value - 1), 2))
+        } else if ((team_start + filter_end -1) >= (team_start + gt_start - 2)) {
+            btn_tb_filter.hide()
+            btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + filter_start - 2), 2))
+            btn_tg.text("GT" + pad((team_start + gt_start - 1), 2) + "-" + "GT" + pad((team_start + total_value - 1), 2))
+        } else {
+            btn_tb_filter.show()
+            btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + filter_start - 2), 2))
+            btn_tb_filter.text("BT" + pad((team_start + filter_end), 2) + "-" + "BT" + pad((team_start + gt_start - 2), 2))
+            btn_tg.text("GT" + pad((team_start + gt_start - 1), 2) + "-" + "GT" + pad((team_start + total_value - 1), 2))
+        }
+    }
+}
+
+function updateTargetHeader(evt) {
+    let target_elm = $(evt.target);
+
+    let target_container = target_elm.closest(".form-group .col-md-4").prev()
+    let target_header = target_container.find(".target-header")
+
+    let parent_container = target_container.parent()
+    let name_field = parent_container.find("#name_field")
+    let zone_field = parent_container.find("#zone_field")
+    let protocol_field = parent_container.find("#protocol_field")
+
+    target_header.text(protocol_field.val() + "://" + name_field.val() + "." + zone_field.val() + ".xx." + $("#root_domain_field").val())
+
 }
