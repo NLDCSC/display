@@ -497,6 +497,7 @@ function OpenSettings(){
                 $("#gt_start_at_field").val(data["team_settings"].display_gt_start_at)
                 $("#root_domain_field").val(data["team_settings"].display_root_domain)
                 updateTeamCounters()
+                updateAllTargetHeader()
             }
 
             $('#settings_form')
@@ -1332,14 +1333,40 @@ function updateTeamCounters() {
 function updateTargetHeader(evt) {
     let target_elm = $(evt.target);
 
-    let target_container = target_elm.closest(".form-group .col-md-4").prev()
+    let target_container = target_elm.closest(".form-group").prev().parent().parent().parent()
     let target_header = target_container.find(".target-header")
 
-    let parent_container = target_container.parent()
-    let name_field = parent_container.find("#name_field")
-    let zone_field = parent_container.find("#zone_field")
-    let protocol_field = parent_container.find("#protocol_field")
+    let name_field = target_container.find("#name_field")
+    let stem_field = target_container.find("#stem_field")
+    let zone_field = target_container.find("#zone_field")
+    let protocol_field = target_container.find("#protocol_field")
 
-    target_header.text(protocol_field.val() + "://" + name_field.val() + "." + zone_field.val() + ".xx." + $("#root_domain_field").val())
+    if (stem_field.val() !== ""){
+        target_header.text(protocol_field.val() + "://" + stem_field.val() + "." + zone_field.val() + ".xx." + $("#root_domain_field").val())
+    } else {
+        target_header.text(protocol_field.val() + "://" + name_field.val() + "." + zone_field.val() + ".xx." + $("#root_domain_field").val())
+    }
+
+}
+
+function updateAllTargetHeader() {
+    let settings_form = $("#settings_form")
+
+    let all_entries = settings_form.find(".settings-item-entry")
+
+    all_entries.each(function (index) {
+        let target_header = $(this).find(".target-header")
+
+        let name_field = $(this).find("#name_field")
+        let stem_field = $(this).find("#stem_field")
+        let zone_field = $(this).find("#zone_field")
+        let protocol_field = $(this).find("#protocol_field")
+
+        if (stem_field.val() !== ""){
+            target_header.text(protocol_field.val() + "://" + stem_field.val() + "." + zone_field.val() + ".xx." + $("#root_domain_field").val())
+        } else {
+            target_header.text(protocol_field.val() + "://" + name_field.val() + "." + zone_field.val() + ".xx." + $("#root_domain_field").val())
+        }
+    })
 
 }
