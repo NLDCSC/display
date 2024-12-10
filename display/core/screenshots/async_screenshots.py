@@ -56,7 +56,7 @@ class AsyncScreenshots(object):
         self.set_tab_to_screenshotsource_mapping()
 
         self.map_screenshot_sources = {
-            "default": "workload",
+            "splash": "workload",
             "selenium": "selenium_workload",
         }
 
@@ -80,7 +80,7 @@ class AsyncScreenshots(object):
                         raise TypeError(f"Expecting list; got: {type(urls)}")
                 else:
                     if isinstance(urls, list):
-                        getattr(self, self.map_screenshot_sources["default"]).extend(
+                        getattr(self, self.map_screenshot_sources["splash"]).extend(
                             urls
                         )
                     else:

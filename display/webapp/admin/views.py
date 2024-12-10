@@ -140,7 +140,7 @@ def parse_nested_entries(param_string: str = None):
                 if "stem_field" in parsed_data:
                     stem = parsed_data["stem_field"][0]
                 else:
-                    stem = ""
+                    stem = None
 
                 ret_dict[parsed_data["name_field"][0]] = {
                     "name": parsed_data["name_field"][0],
@@ -169,7 +169,7 @@ def post_display_settings():
         logger.exception(err)
         return {"msg_cat": msg_cats.NOK, "msg": f"{err}"}
 
-    logger.info(f"Recieved {len(entries)} entries...")
+    logger.info(f"Received {len(entries)} entries...")
 
     data_target_list = []
 
