@@ -785,3 +785,9 @@ div.dt-paging {
 .form-control {
   color: #cacaca !important;
 }
+
+.no-config {
+  margin: auto;
+  text-align: center;
+  font-weight: bold;
+}

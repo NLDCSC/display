@@ -138,11 +138,15 @@ class ScreenShotHandler(object):
         return ret_data
 
     def get_picture_hash(self, picture_hash: str) -> str:
-        with open(
-            os.path.join(self.config.SCREENSHOT_LOCATION, f"{picture_hash}.png"), "rb"
-        ) as f:
-            # noinspection InsecureHash
-            return hashlib.md5(f.read()).hexdigest()
+        try:
+            with open(
+                os.path.join(self.config.SCREENSHOT_LOCATION, f"{picture_hash}.png"),
+                "rb",
+            ) as f:
+                # noinspection InsecureHash
+                return hashlib.md5(f.read()).hexdigest()
+        except FileNotFoundError:
+            return ""
 
     def is_defaced(self, picture_hash: str) -> int:
         with self.db_session.begin() as session:

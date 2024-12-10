@@ -80,13 +80,16 @@ class DisplayTargetSettings:
 @dataclass
 class TeamSettings:
     display_team_count: Optional[int] = field(
-        metadata=json_config(exclude=exclude_optional_dict), default=None
+        metadata=json_config(exclude=exclude_optional_dict),
+        default=config.DISPLAY_TEAM_COUNT,
     )
     display_gt_start_at: Optional[int] = field(
-        metadata=json_config(exclude=exclude_optional_dict), default=None
+        metadata=json_config(exclude=exclude_optional_dict),
+        default=config.DISPLAY_GT_START_AT,
     )
     display_root_domain: Optional[str] = field(
-        metadata=json_config(exclude=exclude_optional_dict), default=None
+        metadata=json_config(exclude=exclude_optional_dict),
+        default=config.DISPLAY_ROOT_DOMAIN,
     )
 
 
@@ -230,6 +233,10 @@ class DisplaySettingsParser(object):
             targets=target_settings_list, team_settings=team_settings_obj
         )
 
+    @staticmethod
+    def invalidate_settings_cache() -> None:
+        get_display_settings_file.invalidate()
+
     def write_to_settings(
         self, input_obj: DisplaySettings, store_file_location: Path = None
     ) -> bool:
@@ -258,6 +265,7 @@ class DisplaySettingsParser(object):
                         explicit_start=True,
                     )
                 )
+            self.invalidate_settings_cache()
             return True
         except FileNotFoundError:
             raise

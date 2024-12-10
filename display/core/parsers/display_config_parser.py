@@ -178,7 +178,10 @@ class DisplayConfig:
     def get_display_source_chunk(self, number=0, chunk_size=1):
         ds = self.display_sources()
 
-        chunk_list = list(chunks(list(ds.keys()), chunk_size))
+        try:
+            chunk_list = list(chunks(list(ds.keys()), chunk_size))
+        except ZeroDivisionError:
+            return {}
 
         ret_data = {}
 

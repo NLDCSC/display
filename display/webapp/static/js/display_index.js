@@ -465,7 +465,7 @@ function OpenSettings(){
     settings_form_list.html(`
         <div class="row">
             <div class="form-group col-md-3 mb-0 pb-0">
-                <label>Targets:</label>
+                <label>Target settings:</label>
             </div>
         </div>
     `)
@@ -475,7 +475,7 @@ function OpenSettings(){
         url: BasePath + "display_settings",
     })
         .done(function (data) {
-            if (data.length === 0) {
+            if (data["targets"].length === 0) {
                 $('#settings-form-list').append($("#settings-form-template .form-row").clone())
             } else {
                 data["targets"].forEach((item) => {
@@ -490,6 +490,9 @@ function OpenSettings(){
                     $(entity_row).find("#source_field option[value=" + item.screenshot_config + "]").prop("selected", true)
                     $(entity_row).find("#stem_field").val(item.stem)
                 })
+                $("#team_count_field").val(data["team_settings"].display_team_count)
+                $("#gt_start_at_field").val(data["team_settings"].display_gt_start_at)
+                $("#root_domain_field").val(data["team_settings"].display_root_domain)
             }
 
             $('#settings_form')
@@ -503,7 +506,10 @@ function OpenSettings(){
 
                     let json = {}
 
-                    json["form-list"] = $("#settings_form").serialize()
+                    json["form-list"] = $('#settings_form :not(input[name=general_settings])').serialize();
+                    json["display_team_count"] = $("#team_count_field").val()
+                    json["display_gt_start_at"] = $("#gt_start_at_field").val()
+                    json["display_root_domain"] = $("#root_domain_field").val()
 
                     $.ajax({
                         method: "POST",

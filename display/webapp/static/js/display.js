@@ -51,12 +51,17 @@ function getColumnCount(){
 
 function resizeEnd() {
   // console.log("Current bootstrap breakpoint:" + getBootstrapBreakpoint())
-  let check_visible = $('button[id^="tab_"]:visible').filter(".active")
+  try {
+    let check_visible = $('button[id^="tab_"]:visible').filter(".active")
 
-  let data_hash = check_visible[0].attributes['data-hash'].nodeValue
-  JustifyTabContent(data_hash);
-  $('.template-row').hide();
-  $('.img-wrap').show();
+    let data_hash = check_visible[0].attributes['data-hash'].nodeValue
+    JustifyTabContent(data_hash);
+    $('.template-row').hide();
+    $('.img-wrap').show();
+  } catch (e) {
+    $('.template-row').hide();
+  }
+
 }
 
 function resizeCutColumns() {
@@ -95,19 +100,19 @@ function resizeCutColumns() {
 
 function setWaitCursor(el = null) {
 
-    if (el !== null) {
-        $(el).css({"cursor": "wait"})
-    }
+  if (el !== null) {
+    $(el).css({"cursor": "wait"})
+  }
 
-    $("#content-wrapper").addClass("waiting")
+  $("#content-wrapper").addClass("waiting")
 
 }
 
 function removeWaitCursor(el = null) {
-    if (el !== null) {
-        $(el).css({"cursor": "default"})
-    }
+  if (el !== null) {
+    $(el).css({"cursor": "default"})
+  }
 
-    $("#content-wrapper").removeClass("waiting")
+  $("#content-wrapper").removeClass("waiting")
 
 }

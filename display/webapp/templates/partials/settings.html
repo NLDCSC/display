@@ -42,10 +42,49 @@
         <div class="col-md-12">
             <div class="settings_config_wrapper">
                 <form id="settings_form" action="">
+                    <div id="settings-general" class="form-group">
+                        <div class="row">
+                            <div class="form-group col-md-3 mb-0 pb-0">
+                                <label>General settings:</label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group col-md-4 mb-1">
+                                <div class="row">
+                                    <div class="form-group col-md-3 mb-1">
+                                        <label for="team_count_field" class="form-center-label">Total teams:</label>
+                                    </div>
+                                    <div class="form-group col-md-9 mb-1">
+                                        <input id="team_count_field" type="number" name="general_settings" class="form-control" title="Total amount of teams" min="1" step="1" value="{{ config.DISPLAY_TEAM_COUNT }}" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-4 mb-1">
+                                <div class="row">
+                                    <div class="form-group col-md-3 mb-1">
+                                        <label for="gt_start_at_field" class="form-center-label">GT start at:</label>
+                                    </div>
+                                    <div class="form-group col-md-9 mb-1">
+                                        <input id="gt_start_at_field" type="number" name="general_settings" class="form-control" title="This team number upwards shall be marked as 'Green team'" min="1" step="1" value="{{ config.DISPLAY_GT_START_AT }}" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-4 mb-1">
+                                <div class="row">
+                                    <div class="form-group col-md-3 mb-1">
+                                        <label for="root_domain_field" class="form-center-label">Root domain:</label>
+                                    </div>
+                                    <div class="form-group col-md-9 mb-1">
+                                        <input id="root_domain_field" name="general_settings" class="form-control" title="Root domain of the targets" value="{{ config.DISPLAY_ROOT_DOMAIN }}" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div id="settings-form-list" class="form-group">
                         <div class="row">
                             <div class="form-group col-md-3 mb-0 pb-0">
-                                <label>Targets:</label>
+                                <label>Target settings:</label>
                             </div>
                         </div>
                     </div>

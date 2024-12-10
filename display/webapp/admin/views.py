@@ -19,6 +19,7 @@ from ...core.parsers.display_settings_parser import (
     DisplaySettingsParser,
     DisplayTargetSettings,
     DisplaySettings,
+    TeamSettings,
 )
 
 logging.setLoggerClass(AppLogger)
@@ -177,7 +178,13 @@ def post_display_settings():
         for entry in entries:
             data_target_list.append(DisplayTargetSettings(**entries[entry]))
 
-        ds = DisplaySettings(targets=data_target_list)
+        team_settings = TeamSettings(
+            display_team_count=int(data["display_team_count"]),
+            display_gt_start_at=int(data["display_gt_start_at"]),
+            display_root_domain=data["display_root_domain"],
+        )
+
+        ds = DisplaySettings(targets=data_target_list, team_settings=team_settings)
     except Exception as err:
         logger.exception(err)
         return {
