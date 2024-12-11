@@ -152,10 +152,11 @@ class DisplaySettings:
 
                 if team_filter_start != 0 and team_filter_end != 0:
                     if team_filter_start != team_filter_end:
-                        if team_filter_start == 1:
-                            if i == team_start_at:
-                                continue
-                        if (team_start_at + team_filter_start + 1) <= i <= (team_start_at + team_filter_end):
+                        if (
+                            (team_start_at + team_filter_start)
+                            <= i
+                            <= (team_start_at + team_filter_end)
+                        ):
                             continue
                     else:
                         if i == team_filter_start + team_start_at:
@@ -174,7 +175,11 @@ class DisplaySettings:
                         wait=each.wait,
                         timeout=each.timeout,
                         wait_on_id=each.wait_on_id,
-                        team="blue" if i <= (team_start_at + start_green - 2) else "green",
+                        team=(
+                            "blue"
+                            if i <= (team_start_at + start_green - 2)
+                            else "green"
+                        ),
                     ).to_dict()
                 )
                 i += 1

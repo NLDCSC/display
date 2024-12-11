@@ -11,7 +11,7 @@ from nldcsc.loggers.app_logger import AppLogger
 from sqlalchemy import delete, select
 
 from . import admin
-from ..app.models import TemplateTexts
+from ..app.models import TemplateTexts, Tracelog
 from ..auth.permissions import admin_required
 from ..run import db, config
 from ...core.general.constants import msg_cats
@@ -101,6 +101,9 @@ def get_clear_location(location):
             db.session.commit()
         elif location == "timeline":
             clear_directory(config.TIMELINE_LOCATION)
+        elif location == "logging":
+            db.session.execute(delete(Tracelog).filter())
+            db.session.commit()
         else:
             logger.warning(f"{location} is not configured to be cleared!")
             return {
@@ -108,8 +111,11 @@ def get_clear_location(location):
                 "msg": f"{location} is not configured to be cleared!",
             }
 
-        logger.info("Directory / DB cleared!")
-        return {"msg_cat": msg_cats.OK, "msg": "Directory / DB cleared!"}
+        logger.info(f"Directory / DB cleared for location: {location}!")
+        return {
+            "msg_cat": msg_cats.OK,
+            "msg": f"{str(location).title()} directory / DB cleared!",
+        }
     except OSError as err:
         logger.exception(err)
         return {"msg_cat": msg_cats.NOK, "msg": f"{err}"}

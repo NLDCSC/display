@@ -570,6 +570,16 @@ function OpenSettings(){
                 showMessage(data["msg_cat"], data["msg"])
             })
     })
+
+    $("#clear_logging").off().on("click", function (event) {
+        $.ajax({
+            method: "GET",
+            url: BasePath + "clear/logging",
+        })
+            .done(function( data ) {
+                showMessage(data["msg_cat"], data["msg"])
+            })
+    })
 }
 
 function OpenNodeStatus(){
@@ -1328,15 +1338,14 @@ function updateTeamCounters() {
         btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + filter_start - 2), 2))
         btn_tb_filter.text("BT" + pad((team_start + filter_end + 1), 2) + "-" + "BT" + pad((team_start + gt_start - 2), 2))
 
-        if (filter_start === 1 && filter_end === 1){
-            btn_tb_filter.hide()
-            btn_tb.text("BT" + pad(team_start + 1, 2) + "-" + "BT" + pad((team_start + gt_start - 2), 2))
-        } else if (filter_start === 1 && filter_end > 1){
-            btn_tb.text("BT" + pad(team_start + 1, 2))
+        if (filter_start === 1 && filter_end > 1){
+            btn_tb.text("BT" + pad(team_start, 2))
         } else if (filter_start === filter_end) {
-            btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + filter_start - 1), 2))
-        } else if ((team_start + filter_end - 1) >= (team_start + gt_start - 2)) {
-            btn_tb_filter.hide()
+            if (filter_start === 1){
+                btn_tb.text("BT" + pad(team_start, 2))
+            } else {
+                btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + filter_start - 1), 2))
+            }
         } else {
             btn_tb_filter.show()
             btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + filter_start - 1), 2))
