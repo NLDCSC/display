@@ -148,11 +148,18 @@ class DisplaySettings:
                 start_green = config.DISPLAY_GT_START_AT
                 display_root_domain = config.DISPLAY_ROOT_DOMAIN
 
-            for i in range(team_start_at, total_teams + 1):
+            for i in range(team_start_at, (team_start_at + total_teams)):
 
                 if team_filter_start != 0 and team_filter_end != 0:
-                    if team_filter_start <= i <= team_filter_end:
-                        continue
+                    if team_filter_start != team_filter_end:
+                        if team_filter_start == 1:
+                            if i == team_start_at:
+                                continue
+                        if (team_start_at + team_filter_start + 1) <= i <= (team_start_at + team_filter_end):
+                            continue
+                    else:
+                        if i == team_filter_start + team_start_at:
+                            continue
 
                 # noinspection PyUnresolvedReferences
                 target_dict[each.name].append(
@@ -161,13 +168,13 @@ class DisplaySettings:
                         f".{'{:02d}'.format(i)}.{display_root_domain}",
                         header=(
                             f"BT{'{:02d}'.format(i)}"
-                            if i <= start_green - 1
+                            if i <= (team_start_at + start_green - 2)
                             else f"GT{'{:02d}'.format(i)}"
                         ),
                         wait=each.wait,
                         timeout=each.timeout,
                         wait_on_id=each.wait_on_id,
-                        team="blue" if i <= start_green - 1 else "green",
+                        team="blue" if i <= (team_start_at + start_green - 2) else "green",
                     ).to_dict()
                 )
                 i += 1

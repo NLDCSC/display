@@ -497,6 +497,7 @@ function OpenSettings(){
                 $("#gt_start_at_field").val(data["team_settings"].display_gt_start_at)
                 $("#root_domain_field").val(data["team_settings"].display_root_domain)
                 updateTeamCounters()
+                handleLimitChange()
                 updateAllTargetHeader()
             }
 
@@ -1274,8 +1275,20 @@ function updateTeamCounters() {
     let team_start = parseInt($("#team_start_at_field").val())
     let gt_start = parseInt($("#gt_start_at_field").val())
 
-    let filter_start = parseInt($("#filter_start_field").val())
-    let filter_end = parseInt($("#filter_end_field").val())
+    let filter_start_elm = $("#filter_start_field")
+    let filter_end_elm = $("#filter_end_field")
+
+    let filter_start = parseInt(filter_start_elm.val())
+    let filter_end = parseInt(filter_end_elm.val())
+
+    // setting max values for filter based on gt_start - 2
+    filter_start_elm.attr('max', gt_start - 2);
+    filter_end_elm.attr('max', gt_start - 2);
+
+    if (filter_start - filter_end === 1) {
+        // filter start is just pressed and filter end minimum has not moved yet... so set variable += 1
+        filter_end += 1
+    }
 
     let btn_tb = $("#team_blue")
     let btn_tb_filter = $("#team_blue_filter")
@@ -1287,20 +1300,20 @@ function updateTeamCounters() {
             btn_tg.hide()
             btn_tb.show()
             btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + total_value - 1), 2))
-        } else if (gt_start === team_start + 1) {
+        } else if (gt_start === 1) {
+            btn_tb.hide()
+            btn_tg.show()
+            btn_tg.text("GT" + pad(team_start, 2) + "-" + "GT" + pad((team_start + total_value - 1), 2))
+        } else if (gt_start === 2) {
             btn_tb.show()
             btn_tg.show()
             btn_tb.text("BT" + pad(team_start, 2))
-            btn_tg.text("GT" + pad(team_start, 2) + "-" + "GT" + pad((team_start + total_value - 1), 2))
+            btn_tg.text("GT" + pad(team_start + 1, 2) + "-" + "GT" + pad((team_start + total_value - 1), 2))
         } else if (gt_start === total_value) {
             btn_tb.show()
             btn_tg.show()
             btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + gt_start - 2), 2))
             btn_tg.text("GT" + pad((team_start + total_value - 1), 2))
-        } else if (gt_start === team_start) {
-            btn_tb.hide()
-            btn_tg.show()
-            btn_tg.text("GT" + pad(team_start, 2) + "-" + "GT" + pad((team_start + total_value - 1), 2))
         } else {
             btn_tb.show()
             btn_tg.show()
@@ -1312,19 +1325,38 @@ function updateTeamCounters() {
         btn_tb_filter.show()
         btn_tg.show()
 
-        if ((team_start + filter_end -1) === (team_start + gt_start - 3)){
-            btn_tb_filter.show()
-            btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + filter_start - 2), 2))
-            btn_tb_filter.text("BT" + pad((team_start + filter_end), 2))
-            btn_tg.text("GT" + pad((team_start + gt_start - 1), 2) + "-" + "GT" + pad((team_start + total_value - 1), 2))
-        } else if ((team_start + filter_end -1) >= (team_start + gt_start - 2)) {
+        btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + filter_start - 2), 2))
+        btn_tb_filter.text("BT" + pad((team_start + filter_end + 1), 2) + "-" + "BT" + pad((team_start + gt_start - 2), 2))
+
+        if (filter_start === 1 && filter_end === 1){
             btn_tb_filter.hide()
-            btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + filter_start - 2), 2))
-            btn_tg.text("GT" + pad((team_start + gt_start - 1), 2) + "-" + "GT" + pad((team_start + total_value - 1), 2))
+            btn_tb.text("BT" + pad(team_start + 1, 2) + "-" + "BT" + pad((team_start + gt_start - 2), 2))
+        } else if (filter_start === 1 && filter_end > 1){
+            btn_tb.text("BT" + pad(team_start + 1, 2))
+        } else if (filter_start === filter_end) {
+            btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + filter_start - 1), 2))
+        } else if ((team_start + filter_end - 1) >= (team_start + gt_start - 2)) {
+            btn_tb_filter.hide()
         } else {
             btn_tb_filter.show()
-            btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + filter_start - 2), 2))
-            btn_tb_filter.text("BT" + pad((team_start + filter_end), 2) + "-" + "BT" + pad((team_start + gt_start - 2), 2))
+            btn_tb.text("BT" + pad(team_start, 2) + "-" + "BT" + pad((team_start + filter_start - 1), 2))
+        }
+
+        if (filter_end === gt_start - 2) {
+            btn_tb_filter.hide()
+        } else {
+            btn_tb_filter.show()
+        }
+        if (filter_end === gt_start - 3) {
+            btn_tb_filter.show()
+            btn_tb_filter.text("BT" + pad((team_start + filter_end + 1), 2))
+        }
+
+        if (gt_start === total_value) {
+            btn_tb.show()
+            btn_tg.show()
+            btn_tg.text("GT" + pad((team_start + total_value - 1), 2))
+        } else {
             btn_tg.text("GT" + pad((team_start + gt_start - 1), 2) + "-" + "GT" + pad((team_start + total_value - 1), 2))
         }
     }
