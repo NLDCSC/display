@@ -580,6 +580,16 @@ function OpenSettings(){
                 showMessage(data["msg_cat"], data["msg"])
             })
     })
+
+    $("#clear_config_cache").off().on("click", function (event) {
+        $.ajax({
+            method: "GET",
+            url: BasePath + "clear/config_cache",
+        })
+            .done(function( data ) {
+                showMessage(data["msg_cat"], data["msg"])
+            })
+    })
 }
 
 function OpenNodeStatus(){
