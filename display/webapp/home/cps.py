@@ -2,13 +2,21 @@ import hashlib
 import os
 
 from flask import current_app
-from jinja2 import pass_eval_context
+from jinja2 import pass_eval_context, pass_environment
 from nldcsc.generic.times import timestampTOdatetimestring
 
 from . import home
 from ..config import Config
 
 config = Config()
+
+
+@pass_environment
+@home.app_template_test()
+def greenteam(env, val: str) -> bool:
+    if val.startswith("GT"):
+        return True
+    return False
 
 
 @pass_eval_context

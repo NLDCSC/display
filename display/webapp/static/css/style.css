@@ -208,8 +208,12 @@
 .nav-tabs .nav-link.active,
 .nav-tabs .nav-item.show .nav-link {
   color: #fff;
-  background-color: #33601e;
+  background-color: #9b9208;
   border-color: #2c2e33 #2c2e33 #191c24;
+}
+
+.nav-link.green_team {
+  background-color: #33601e;
 }
 
 .tab-content {
