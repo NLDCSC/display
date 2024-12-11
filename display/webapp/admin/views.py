@@ -15,17 +15,21 @@ from ..app.models import TemplateTexts, Tracelog
 from ..auth.permissions import admin_required
 from ..run import db, config
 from ...core.general.constants import msg_cats
+from ...core.parsers.display_config_parser import DisplayConfigParser
 from ...core.parsers.display_settings_parser import (
     DisplaySettingsParser,
     DisplayTargetSettings,
     DisplaySettings,
     TeamSettings,
 )
+from ...core.parsers.screenshot_source_config_parser import ScreenshotSourceConfigParser
 
 logging.setLoggerClass(AppLogger)
 logger = logging.getLogger(__name__)
 
 settings_parser = DisplaySettingsParser()
+display_config_parser = DisplayConfigParser()
+screenshot_source_config_parser = ScreenshotSourceConfigParser()
 
 
 def parse_nested_list(param_string: str = None):
@@ -104,6 +108,10 @@ def get_clear_location(location):
         elif location == "logging":
             db.session.execute(delete(Tracelog).filter())
             db.session.commit()
+        elif location == "config_cache":
+            settings_parser.invalidate_settings_cache()
+            display_config_parser.invalidate_config_file_cache()
+            screenshot_source_config_parser.invalidate_config_file_cache()
         else:
             logger.warning(f"{location} is not configured to be cleared!")
             return {
@@ -111,10 +119,10 @@ def get_clear_location(location):
                 "msg": f"{location} is not configured to be cleared!",
             }
 
-        logger.info(f"Directory / DB cleared for location: {location}!")
+        logger.info(f"Cleared location: {location}!")
         return {
             "msg_cat": msg_cats.OK,
-            "msg": f"{str(location).title()} directory / DB cleared!",
+            "msg": f"{str(location).title()} cleared!",
         }
     except OSError as err:
         logger.exception(err)

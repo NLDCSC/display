@@ -221,9 +221,9 @@ def get_direct_display_config_file(
                 os.path.join(config.DISPLAY_CONFIG_PATH, config.DISPLAY_CONFIG_FILE),
                 "w",
             ) as f:
-                f.write(json.dumps({"none": [{}]}))
+                f.write(json.dumps({}))
 
-            display_sources = {"none": [{}]}
+            display_sources = {}
             return display_sources
     else:
         try:
