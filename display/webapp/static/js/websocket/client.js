@@ -268,6 +268,7 @@ $(document).ready(function () {
                     SetAllEventListeners();
                 });
         }
+        JustifyTabContent(msg["tab"]);
 
         flashcontainer.fadeOut("slow");
     });
