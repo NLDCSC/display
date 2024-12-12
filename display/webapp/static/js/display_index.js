@@ -1119,7 +1119,7 @@ function CreateCustomEvidence(evt) {
 
     window.socket.emit("create_custom_evidence", {"data": screenshot_id, "tab-hash": tab_hash});
 
-    showMessage("success", "Create evidence request send!");
+    showMessage("success", "Create evidence request queued!");
 }
 
 function CreateCustomScreenshot(evt) {
@@ -1130,7 +1130,7 @@ function CreateCustomScreenshot(evt) {
 
     window.socket.emit("create_custom_screenshot", {"data": screenshot_id, "tab-hash": tab_hash});
 
-    showMessage("success", "Create screenshot request send!");
+    showMessage("success", "Create screenshot request queued!");
 }
 
 function OpenScreenshot(evt) {

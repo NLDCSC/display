@@ -4,3 +4,7 @@ class DisplayError(Exception):
 
 class DisplayClientTypeError(DisplayError):
     pass
+
+
+class DisplayLockAlreadyExistsError(DisplayError):
+    pass

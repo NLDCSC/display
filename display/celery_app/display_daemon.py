@@ -67,6 +67,8 @@ from display.core.parsers.screenshot_source_config_parser import (
     ScreenshotSourceConfigParser,
 )
 from display.core.defacements.defacement_assessment import DefacementAssessment
+from display.core.locks.sync_lock import task_lock
+from display.errors.display_errors import DisplayLockAlreadyExistsError
 
 from pyvirtualdisplay.smartdisplay import SmartDisplay
 from nldcsc.loggers.app_logger import AppLogger
@@ -816,60 +818,72 @@ def create_custom_evidence(data: dict):
 def create_custom_screenshot(data: dict):
     logger = get_task_logger(__name__)
 
-    logger.info(f"Starting custom screenshot creation on {data}!")
+    try:
+        with task_lock(
+            redis_client=redis_client,
+            lock_str=data["data"],
+            lock_dur=config.SCREENSHOT_REFRESH,
+            kill_on_completion=False,
+        ) as lock:
+            logger.info(lock)
 
-    sh = ScreenShotHandler()
+            logger.info(f"Starting custom screenshot creation on {data}!")
 
-    url_data = sh.get_data_by_hash(data["data"])
+            sh = ScreenShotHandler()
 
-    display_sources = {sh.get_tab_by_hash(data["data"])[0]: [url_data]}
+            url_data = sh.get_data_by_hash(data["data"])
 
-    TraceLogEntry(
-        url=sh.get_url_by_hash(data["data"]),
-        user="DAEMON",
-        hash=data["data"],
-        action=tracelog_action.OD_SCREENSHOT,
-        result=tracelog_result.REQUESTED,
-        reason="User requested to create a custom screenshot",
-    ).save()
+            display_sources = {sh.get_tab_by_hash(data["data"])[0]: [url_data]}
 
-    logger.info(f"Hash mapped to url: {display_sources}!")
+            TraceLogEntry(
+                url=sh.get_url_by_hash(data["data"]),
+                user="DAEMON",
+                hash=data["data"],
+                action=tracelog_action.OD_SCREENSHOT,
+                result=tracelog_result.REQUESTED,
+                reason="User requested to create a custom screenshot",
+            ).save()
 
-    ss = AsyncScreenshots(incoming_workload=display_sources)
+            logger.info(f"Hash mapped to url: {display_sources}!")
 
-    if hasattr(ss, "selenium_workload"):
-        if len(ss.selenium_workload) != 0:
-            for each in ss.selenium_workload:
-                for target, urls in each.items():
-                    push_to_nodes.delay(urls)
+            ss = AsyncScreenshots(incoming_workload=display_sources)
 
-    if hasattr(ss, "workload"):
-        if len(ss.workload) != 0:
-            ss.process_async()
+            if hasattr(ss, "selenium_workload"):
+                if len(ss.selenium_workload) != 0:
+                    for each in ss.selenium_workload:
+                        for target, urls in each.items():
+                            push_to_nodes.delay(urls)
 
-            logger.info(f"Finished taking screenshot; processing....")
+            if hasattr(ss, "workload"):
+                if len(ss.workload) != 0:
+                    ss.process_async()
 
-            try:
-                for source in display_sources:
-                    tab_data = sh.get_changed_data_from_custom_screenshots(
-                        the_hash=data["data"]
-                    )
-                    socketio.emit(
-                        "push_all_screenshots",
-                        {
-                            "data": tab_data,
-                            "tab_hash": sh.get_tabhash_by_tabname(source),
-                        },
-                        to=source,
-                        namespace="/display",
-                    )
-                    handle_changes_for_timeline.delay(data=tab_data, csc=True)
-            except Exception as err:
-                logger.error(
-                    f"Error processing screenshot.... --> Produced error: {err}"
-                )
+                    logger.info(f"Finished taking screenshot; processing....")
 
-    logger.info(f"Finished processing custom screenshot...")
+                    try:
+                        for source in display_sources:
+                            tab_data = sh.get_changed_data_from_custom_screenshots(
+                                the_hash=data["data"]
+                            )
+                            socketio.emit(
+                                "push_all_screenshots",
+                                {
+                                    "data": tab_data,
+                                    "tab_hash": sh.get_tabhash_by_tabname(source),
+                                },
+                                to=source,
+                                namespace="/display",
+                            )
+                            handle_changes_for_timeline.delay(data=tab_data, csc=True)
+                    except Exception as err:
+                        logger.error(
+                            f"Error processing screenshot.... --> Produced error: {err}"
+                        )
+
+            logger.info(f"Finished processing custom screenshot...")
+    except DisplayLockAlreadyExistsError as err:
+        logger.info(f"{err}")
+        return {data["data"]: "LOCKED"}
 
 
 @app.task(

@@ -11,18 +11,20 @@ from typing import List
 
 import aiohttp
 from aiohttp import ClientConnectorDNSError, ClientConnectionError
-from nldcsc.flask_plugins.flask_redis import FlaskRedis
 from nldcsc.loggers.app_logger import AppLogger
+from redis import asyncio as aioredis
 from sqlalchemy import select
 
 from display.apis.splash.splash_api import SplashApi
 from display.core.database_logging.trace_log import TraceLogEntry
 from display.core.defacements.defacement_assessment import DefacementAssessment
 from display.core.general.constants import tracelog_action, tracelog_result
+from display.core.locks.async_lock import async_task_lock
 from display.core.parsers.screenshot_source_config_parser import (
     ScreenshotSourceConfigParser,
 )
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
+from display.errors.display_errors import DisplayLockAlreadyExistsError
 from display.webapp.app.models import TemplateTexts, DefacementTracker
 from display.webapp.config import Config
 
@@ -97,9 +99,10 @@ class AsyncScreenshots(object):
         self.splash_api = SplashApi(
             baseurl=f"{config.SPLASH_PROTOCOL}://{config.SPLASH_HOST}:{config.SPLASH_PORT}",
             user_agent=config.USER_AGENT,
+            verify=False,
         )
 
-        self.redis_client = FlaskRedis(init_standalone=True).redis_client
+        self.redis_client = aioredis.from_url(config.REDIS_URL)
 
         self.screenshotHandler = ScreenShotHandler()
 
@@ -261,6 +264,9 @@ class AsyncScreenshots(object):
                             if v == "ERROR":
                                 # set to error pic
                                 self.store_error_picture(k)
+                            if v == "LOCKED":
+                                # lock set; ignoring
+                                continue
                         elif isinstance(v, dict):
                             # dict with normal and evidence keys
                             if not evidence_shot:
@@ -392,45 +398,55 @@ class AsyncScreenshots(object):
     def minify_current_screenshot(self, hash: str) -> None:
         self.screenshotHandler.limit_img_size(filename=hash)
 
-    # noinspection PyAsyncCall
     async def fetch(self, session, entry):
         url_hash = self.screenshotHandler.get_hash(entry["url"].encode("utf-8"))
-        ret_dict = {}
         try:
-            async with session.get(
-                self.splash_api.get_render_url(
-                    entry["url"], entry["wait"], entry["timeout"]
-                )
-            ) as response:
-                data = await response.content.read()
-                ret_dict = {url_hash: data}
-        except ClientConnectorDNSError as err:
-            self.logger.error(
-                f"Could not connect to splash cluster; dns name could not be resolved -> {err}"
-            )
-            self.redis_client.set("splash_cluster_status", 0)
-            ret_dict = {url_hash: "ERROR"}
-        except ClientConnectionError as err:
-            self.logger.error(f"Could not connect to splash cluster;-> {err}")
-            self.redis_client.set("splash_cluster_status", 0)
-            ret_dict = {url_hash: "ERROR"}
-        except Exception as err:
-            self.logger.error(
-                f"Error getting {entry['url']} data.... Error observed: {err}"
-            )
-            TraceLogEntry(
-                url=entry["url"],
-                hash=url_hash,
-                action=tracelog_action.SCREENSHOT,
-                result=tracelog_result.UNK,
-                reason=err,
-            ).save()
-            self.redis_client.set("splash_cluster_status", 0)
-            ret_dict = {url_hash: "ERROR"}
-        else:
-            self.redis_client.set("splash_cluster_status", 1)
+            async with async_task_lock(
+                redis_client=self.redis_client,
+                lock_str=url_hash,
+                lock_dur=config.SCREENSHOT_REFRESH,
+                kill_on_completion=False,
+            ) as lock:
+                self.logger.info(lock)
+                try:
+                    async with session.get(
+                        self.splash_api.get_render_url(
+                            entry["url"], entry["wait"], entry["timeout"]
+                        )
+                    ) as response:
+                        data = await response.content.read()
+                        ret_dict = {url_hash: data}
+                except ClientConnectorDNSError as err:
+                    self.logger.error(
+                        f"Could not connect to splash cluster; dns name could not be resolved -> {err}"
+                    )
+                    await self.redis_client.set("splash_cluster_status", 0)
+                    ret_dict = {url_hash: "ERROR"}
+                except ClientConnectionError as err:
+                    self.logger.error(f"Could not connect to splash cluster;-> {err}")
+                    await self.redis_client.set("splash_cluster_status", 0)
+                    ret_dict = {url_hash: "ERROR"}
+                except Exception as err:
+                    self.logger.error(
+                        f"Error getting {entry['url']} data.... Error observed: {err}"
+                    )
+                    TraceLogEntry(
+                        url=entry["url"],
+                        hash=url_hash,
+                        action=tracelog_action.SCREENSHOT,
+                        result=tracelog_result.UNK,
+                        reason=err,
+                    ).save()
+                    await self.redis_client.set("splash_cluster_status", 0)
+                    ret_dict = {url_hash: "ERROR"}
+                else:
+                    await self.redis_client.set("splash_cluster_status", 1)
 
-        return ret_dict
+            self.logger.info(f"Taking screenshot of {url_hash} complete!")
+            return ret_dict
+        except DisplayLockAlreadyExistsError as err:
+            self.logger.info(f"{err}")
+            return {url_hash: "LOCKED"}
 
     async def fetch_all(self, loop):
         sem = asyncio.Semaphore(100)
