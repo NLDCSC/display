@@ -11,7 +11,7 @@ from nldcsc.loggers.app_logger import AppLogger
 from sqlalchemy import delete, select
 
 from . import admin
-from ..app.models import TemplateTexts, Tracelog
+from ..app.models import TemplateTexts, Tracelog, Defacements, DefacementTracker
 from ..auth.permissions import admin_required
 from ..run import db, config
 from ...core.general.constants import msg_cats
@@ -107,6 +107,10 @@ def get_clear_location(location):
             clear_directory(config.TIMELINE_LOCATION)
         elif location == "logging":
             db.session.execute(delete(Tracelog).filter())
+            db.session.commit()
+        elif location == "defacement_tracker":
+            db.session.execute(delete(Defacements).filter())
+            db.session.execute(delete(DefacementTracker).filter())
             db.session.commit()
         elif location == "config_cache":
             settings_parser.invalidate_settings_cache()

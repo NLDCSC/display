@@ -192,8 +192,8 @@ $(document).ready(function () {
                 if (window.FULL_SCREEN === true) {
                     AdjustLayoutFullscreen();
                 }
+                JustifyTabContent(msg["tab_hash"]);
             }
-            JustifyTabContent(msg["tab_hash"]);
         }
 
     });

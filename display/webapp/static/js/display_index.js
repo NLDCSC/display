@@ -590,6 +590,16 @@ function OpenSettings(){
                 showMessage(data["msg_cat"], data["msg"])
             })
     })
+
+    $("#clear_defacement_tracker").off().on("click", function (event) {
+        $.ajax({
+            method: "GET",
+            url: BasePath + "clear/defacement_tracker",
+        })
+            .done(function( data ) {
+                showMessage(data["msg_cat"], data["msg"])
+            })
+    })
 }
 
 function OpenNodeStatus(){
