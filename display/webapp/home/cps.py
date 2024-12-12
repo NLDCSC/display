@@ -19,6 +19,14 @@ def greenteam(env, val: str) -> bool:
     return False
 
 
+@pass_environment
+@home.app_template_test()
+def blueteam(env, val: str) -> bool:
+    if val.startswith("BT"):
+        return True
+    return False
+
+
 @pass_eval_context
 @home.app_template_filter()
 def md5(eval_ctx, value):

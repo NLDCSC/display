@@ -1,5 +1,5 @@
 <div class="popup_status">
-    <h2>Display node status:</h2>
+    <h2>Display status:</h2>
     <button class="popup-close" id="btn_close2">&times;</button>
     <hr class="ruler">
     {% if node_status|length > 0 %}
@@ -15,6 +15,9 @@
             </div>
             <div class="col-4">
                 <h6>Workers up: <span id="node-count" class="badge badge-success node_ping_status">{{ count.value }}</span></h6>
+            </div>
+            <div class="col-4">
+                <span id="splash-cluster-status" class="badge {% if splash_cluster_status == 1 %}badge-success{% else %}badge-danger{% endif %} float-right pb-1 pt-1">Splash cluster</span>
             </div>
         </div>
         <table id="node_status_table" class="table table-striped table-dark">

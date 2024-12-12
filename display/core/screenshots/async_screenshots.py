@@ -10,6 +10,8 @@ from pathlib import Path
 from typing import List
 
 import aiohttp
+from aiohttp import ClientConnectorDNSError, ClientConnectionError
+from nldcsc.flask_plugins.flask_redis import FlaskRedis
 from nldcsc.loggers.app_logger import AppLogger
 from sqlalchemy import select
 
@@ -96,6 +98,8 @@ class AsyncScreenshots(object):
             baseurl=f"{config.SPLASH_PROTOCOL}://{config.SPLASH_HOST}:{config.SPLASH_PORT}",
             user_agent=config.USER_AGENT,
         )
+
+        self.redis_client = FlaskRedis(init_standalone=True).redis_client
 
         self.screenshotHandler = ScreenShotHandler()
 
@@ -239,7 +243,7 @@ class AsyncScreenshots(object):
                                     session.commit()
 
                             else:
-                                # no picture assume un-caught error for now!
+                                # no picture assume error for now!
                                 self.store_error_picture(k)
 
                                 the_result = json.loads(v)
@@ -388,8 +392,10 @@ class AsyncScreenshots(object):
     def minify_current_screenshot(self, hash: str) -> None:
         self.screenshotHandler.limit_img_size(filename=hash)
 
+    # noinspection PyAsyncCall
     async def fetch(self, session, entry):
         url_hash = self.screenshotHandler.get_hash(entry["url"].encode("utf-8"))
+        ret_dict = {}
         try:
             async with session.get(
                 self.splash_api.get_render_url(
@@ -397,9 +403,19 @@ class AsyncScreenshots(object):
                 )
             ) as response:
                 data = await response.content.read()
-                return {url_hash: data}
+                ret_dict = {url_hash: data}
+        except ClientConnectorDNSError as err:
+            self.logger.error(
+                f"Could not connect to splash cluster; dns name could not be resolved -> {err}"
+            )
+            self.redis_client.set("splash_cluster_status", 0)
+            ret_dict = {url_hash: "ERROR"}
+        except ClientConnectionError as err:
+            self.logger.error(f"Could not connect to splash cluster;-> {err}")
+            self.redis_client.set("splash_cluster_status", 0)
+            ret_dict = {url_hash: "ERROR"}
         except Exception as err:
-            self.logger.warning(
+            self.logger.error(
                 f"Error getting {entry['url']} data.... Error observed: {err}"
             )
             TraceLogEntry(
@@ -409,7 +425,12 @@ class AsyncScreenshots(object):
                 result=tracelog_result.UNK,
                 reason=err,
             ).save()
-            return {url_hash: "ERROR"}
+            self.redis_client.set("splash_cluster_status", 0)
+            ret_dict = {url_hash: "ERROR"}
+        else:
+            self.redis_client.set("splash_cluster_status", 1)
+
+        return ret_dict
 
     async def fetch_all(self, loop):
         sem = asyncio.Semaphore(100)

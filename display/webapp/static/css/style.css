@@ -216,6 +216,14 @@
   background-color: #33601e;
 }
 
+.nav-link.blue_team {
+  background-color: #1e3b60;
+}
+
+.nav-link.target {
+  background-color: #601e1e;
+}
+
 .tab-content {
   padding: 1rem;
 }

@@ -113,7 +113,7 @@
 </div>
 
 <div id="popup-node" class="overlay">
-    {% include "partials/node_status.html" %}
+    {% include "partials/display_status.html" %}
 </div>
 
 <div id="popup-tracelog" class="overlay">
@@ -137,7 +137,7 @@
 <ul class="nav nav-tabs" id="myTab" role="tablist">
     {% for key in all_display_sources %}
         <li class="nav-item" role="presentation">
-            <button class="nav-link{% if key is greenteam %} green_team{% endif %}{% if loop.first %} active{% endif %}" id="tab_{{ key|md5 }}" data-name="{{ key }}"
+            <button class="nav-link{% if key is greenteam %} green_team{% elif key is blueteam %} blue_team{% else %} target{% endif %}{% if loop.first %} active{% endif %}" id="tab_{{ key|md5 }}" data-name="{{ key }}"
                     data-hash="{{ key|md5 }}" data-bs-toggle="tab" data-bs-target="#content_{{ key|md5 }}"
                     type="button" role="tab" aria-controls="home" aria-selected="true">
                 {{ key }}</button>

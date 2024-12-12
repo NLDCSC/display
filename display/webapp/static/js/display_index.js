@@ -595,7 +595,7 @@ function OpenSettings(){
 function OpenNodeStatus(){
 
     $.ajax({
-        url: BasePath + "status/nodes",
+        url: BasePath + "status",
     })
         .done(function( data ) {
             $("#popup-node").html(data)
@@ -793,7 +793,7 @@ function SetTabContentFilter(tab_value = null) {
 
         let column_count = getColumnCount()
 
-        console.log("column_count: " + column_count)
+        //console.log("column_count: " + column_count)
 
         if (filtered_contents.length !== 0){
             filtered_contents.each(function (item_id){

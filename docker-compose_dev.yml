@@ -117,7 +117,7 @@ services:
         GID: ${HOST_GID:-1000}
     develop:
       watch:
-        - action: sync
+        - action: sync+restart
           path: ./display/
           target: /app/display/
           ignore:

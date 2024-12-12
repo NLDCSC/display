@@ -38,14 +38,15 @@ $(document).ready(function () {
 
         if ("data" in msg) {
 
-            let tab_content = $("#content_" + msg["tab_hash"])
+            let tab_hash = msg["tab_hash"]
+            let tab_content = $("#content_" + tab_hash)
 
             try {
                 msg["data"].forEach(item => {
 
-                    let img_content = $("#img_content_" + msg["tab_hash"] + '_' + item.sc_id)
-                    let defaced_button = $("#defaced_" + msg["tab_hash"] + '_' + item.sc_id)
-                    let mod_time = $("#mod_time_" + msg["tab_hash"] + '_' + item.sc_id)
+                    let img_content = $("#img_content_" + tab_hash + '_' + item.sc_id)
+                    let defaced_button = $("#defaced_" + tab_hash + '_' + item.sc_id)
+                    let mod_time = $("#mod_time_" + tab_hash + '_' + item.sc_id)
 
                     if (item.hasOwnProperty('sc_src')) {
                         img_content.attr("src", item.sc_src);
@@ -95,6 +96,7 @@ $(document).ready(function () {
             tab_content.removeClass("grey_out")
 
             SetAllEventListeners();
+            JustifyTabContent(tab_hash);
 
         } else if ("html_data" in msg) {
 
@@ -119,6 +121,7 @@ $(document).ready(function () {
             })
 
             SetAllEventListeners();
+            JustifyTabContent(tab_hash);
         }
 
         $('.template-row').hide();
@@ -190,7 +193,7 @@ $(document).ready(function () {
                     AdjustLayoutFullscreen();
                 }
             }
-
+            JustifyTabContent(msg["tab_hash"]);
         }
 
     });

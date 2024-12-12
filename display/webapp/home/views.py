@@ -66,10 +66,10 @@ def index():
     return render_template("pages/index.html", header="Display", **locals())
 
 
-@home.get("/status/nodes")
+@home.get("/status")
 @login_required
-def get_status_nodes():
-    logger.info("Fetching node status...")
+def get_status():
+    logger.info("Fetching display status...")
     node_status = rediswrap.get("node_status")
 
     if node_status is not None:
@@ -81,7 +81,16 @@ def get_status_nodes():
         logger.info("No node status found, returning empty dict.")
         node_status = {}
 
-    return render_template("partials/node_status.html", node_status=node_status)
+    splash_cluster_status = rediswrap.get("splash_cluster_status")
+
+    if splash_cluster_status is None:
+        splash_cluster_status = 1
+
+    return render_template(
+        "partials/display_status.html",
+        node_status=node_status,
+        splash_cluster_status=int(splash_cluster_status),
+    )
 
 
 @home.route("/screenshot/<path:filename>")
