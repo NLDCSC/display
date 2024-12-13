@@ -187,6 +187,8 @@
         $(document).on("change", "#filter_start_field", handleLimitChange);
         $(document).on("change", "#filter_end_field", updateTeamCounters);
 
+        $(document).on("change", "#root_domain_field", updateAllTargetHeader);
+
         $(document).on("change", "#name_field", updateTargetHeader);
         $(document).on("change", "#zone_field", updateTargetHeader);
         $(document).on("change", "#stem_field", updateTargetHeader);
