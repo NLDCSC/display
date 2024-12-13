@@ -214,7 +214,7 @@ services:
     security_opt:
       - seccomp:unconfined
     volumes:
-      - mysql_data:/var/lib/mysql
+      - "mysql_data:/var/lib/mysql"
     networks:
       backend:
         ipv4_address: 172.16.30.5
