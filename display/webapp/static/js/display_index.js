@@ -417,7 +417,7 @@ function OpenSettings(){
     })
         .done(function (data) {
             if (data.length === 0) {
-                $('#form-list').append($("#form-template .form-row").clone())
+                form_list.append($("#form-template .form-row").clone())
             } else {
                 data.forEach((item) => {
                     addFormElements();
@@ -567,6 +567,14 @@ function OpenSettings(){
         })
             .done(function( data ) {
                 form_list.empty()
+                form_list.html(`
+                        <div className="row">
+                            <div className="form-group col-md-11 mb-0 pb-0">
+                                <label>Defacement texts:</label>
+                            </div>
+                        </div>
+                `)
+                form_list.append($("#form-template .form-row").clone())
                 showMessage(data["msg_cat"], data["msg"])
             })
     })
