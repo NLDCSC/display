@@ -768,7 +768,8 @@ def execute_on_node(entries, scroll_percent=0):
                             }
                         )
 
-                    except Exception:
+                    except Exception as err:
+                        logger.error(f"Exception on {entry['url']} screenshot: {err}")
                         ret_data.append({url_hash: "ERROR"})
 
                 logger.info("Done taking screenshots, returning data!")
