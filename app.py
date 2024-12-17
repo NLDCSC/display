@@ -22,10 +22,10 @@ logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
 app, socketio = create_app(version=__version__)
 
-logger = logging.getLogger("display")
+if __name__ == "__main__":
+    logger = logging.getLogger("display")
 
-logger.info(f"Initialized display version {__version__}")
-logger.info("Running async mode: {}".format(socketio.async_mode))
-logger.info("Starting display server...")
-
-socketio.run(app, host="0.0.0.0", port=5050)
+    logger.info(f"Initialized display version {__version__}")
+    logger.info("Running async mode: {}".format(socketio.async_mode))
+    logger.info("Starting display server...")
+    socketio.run(app, host="0.0.0.0", port=5050)

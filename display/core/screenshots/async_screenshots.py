@@ -51,9 +51,13 @@ class AsyncScreenshots(object):
         self.logger = logging.getLogger(__name__)
 
         self.screenshot_source_parser = ScreenshotSourceConfigParser()
-        self.screenshot_config = (
-            self.screenshot_source_parser.get_screenshot_source_config_obj()
-        )
+        try:
+            self.screenshot_config = (
+                self.screenshot_source_parser.get_screenshot_source_config_obj()
+            )
+        except Exception as e:
+            self.logger.error(e)
+
         self._screen_shot_sources = self.screenshot_config.screenshot_sources()
 
         self.tab_to_screenshotsource_mapping = defaultdict()

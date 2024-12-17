@@ -32,14 +32,16 @@ class ScreenShotHandler(object):
         self.logger = logging.getLogger(__name__)
 
         self.display_config_parser = DisplayConfigParser()
-        self.display_config = self.display_config_parser.get_display_config_obj()
-
-        self._hash_to_url_mapping = self.display_config.hash_to_url
-        self._hash_to_data_mapping = self.display_config.hash_to_data()
-        self._hash_to_header_mapping = self.display_config.hash_to_header
-        self._hash_to_tab_mapping = self.display_config.hash_to_tab()
-        self._tab_to_hash_list = self.display_config.hashes_per_tab()
-        self._tabname_to_tabhash = self.display_config.target_group_to_hash
+        try:
+            self.display_config = self.display_config_parser.get_display_config_obj()
+            self._hash_to_url_mapping = self.display_config.hash_to_url
+            self._hash_to_data_mapping = self.display_config.hash_to_data()
+            self._hash_to_header_mapping = self.display_config.hash_to_header
+            self._hash_to_tab_mapping = self.display_config.hash_to_tab()
+            self._tab_to_hash_list = self.display_config.hashes_per_tab()
+            self._tabname_to_tabhash = self.display_config.target_group_to_hash
+        except Exception as e:
+            self.logger.error(e)
 
         self.current_wd = os.path.dirname(os.path.abspath(__file__))
 
