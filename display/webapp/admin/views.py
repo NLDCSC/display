@@ -136,9 +136,13 @@ def get_clear_location(location):
 @admin.get("/display_settings")
 @admin_required
 def get_display_settings():
-    settings_obj = settings_parser.get_settings_obj()
-    # noinspection PyUnresolvedReferences
-    return asdict(settings_obj)
+    try:
+        settings_obj = settings_parser.get_settings_obj()
+        # noinspection PyUnresolvedReferences
+        return asdict(settings_obj)
+    except Exception as err:
+        logger.exception(err)
+        return {}
 
 
 def parse_nested_entries(param_string: str = None):
