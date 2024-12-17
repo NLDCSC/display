@@ -1318,8 +1318,14 @@ function updateTeamCounters() {
     let filter_end = parseInt(filter_end_elm.val())
 
     // setting max values for filter based on gt_start - 2
-    filter_start_elm.attr('max', gt_start - 2);
-    filter_end_elm.attr('max', gt_start - 2);
+    let max_value = 0
+
+    if (!gt_start - 2 < 0) {
+        max_value = gt_start - 2
+    }
+
+    filter_start_elm.attr('max', max_value);
+    filter_end_elm.attr('max', max_value);
 
     if (filter_start - filter_end === 1) {
         // filter start is just pressed and filter end minimum has not moved yet... so set variable += 1
