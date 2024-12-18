@@ -112,11 +112,16 @@ class Config(object):
     SSO_ISSUER: str = os.getenv("SSO_ISSUER", "http://localhost:8000")
     SSO_CLIENT_ID: str = os.getenv("SSO_CLIENT_ID", "sso-client")
     SSO_CLIENT_SECRET: str = os.getenv("SSO_CLIENT_SECRET", "secret!")
+
     SSO_CALLBACK_ENDPOINT: str = os.getenv("SSO_CALLBACK_ENDPOINT", "sso_callback")
     SSO_OVERWRITE_REDIRECT_URI: str = os.getenv("SSO_OVERWRITE_REDIRECT_URI", None)
     SSO_SCOPES: List[str] = getenv_list(
         "SSO_SCOPES", ["openid", "resources", "profile"]
     )
+    SSO_USERNAME_ATTRIBUTE: str = os.getenv("SSO_USERNAME_ATTRIBUTE", "preferred_username")
+    SSO_FULLNAME_ATTRIBUTE: str = os.getenv("SSO_FULLNAME_ATTRIBUTE", "name")
+    SSO_USERGROUPS_ATTRIBUTE: str = os.getenv("SSO_USERGROUPS_ATTRIBUTE", "resources")
+
     ALLOWED_USER_GROUPS: List[str] = getenv_list("ALLOWED_USER_GROUPS", [])
     ALLOWED_ADMIN_GROUPS: List[str] = getenv_list("ALLOWED_ADMIN_GROUPS", [])
 

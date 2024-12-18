@@ -21,19 +21,19 @@ logger = logging.getLogger(__name__)
 @sso.require_login
 def sso_callback():
     try:
-        username = sso.user_getfield("preferred_username")
-        fullname = sso.user_getfield("name")
+        username = sso.user_getfield(config.SSO_USERNAME_ATTRIBUTE)
+        fullname = sso.user_getfield(config.SSO_FULLNAME_ATTRIBUTE)
     except AttributeError:
         logger.error(
-            f"Missing 'preferred_username' and / or 'name' in access / ID token; these are required!"
+            f"Missing 'preferred_username' and / or 'name' in user info; these are required!"
         )
         sso.logout()
         abort(401)
 
     try:
-        resources = sso.user_getfield("resources")
+        resources = sso.access_token_getfield(config.SSO_USERGROUPS_ATTRIBUTE)
     except AttributeError:
-        logger.error("Missing resources in OIDC ID token")
+        logger.error("Missing resources in OIDC ACCESS token")
         sso.logout()
         abort(401)
 
