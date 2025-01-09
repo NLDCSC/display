@@ -48,7 +48,6 @@ def sso_callback():
                 admin_allowed = True
                 break
             user_allowed = True
-            break
 
     if not user_allowed and not admin_allowed:
         logger.info(f"User: {username} is not allowed to login via OIDC....")
@@ -57,11 +56,11 @@ def sso_callback():
 
     account = db.session.scalar(select(Users).filter(Users.username == username))
 
-    if user_allowed:
+    if user_allowed and not admin_allowed:
         # not yet in group; fetching group id
         new_group = db.session.scalar(select(Groups).filter(Groups.name == "user"))
         group_id = new_group.id
-    else:
+    elif admin_allowed:
         # thus admin
         new_group = db.session.scalar(select(Groups).filter(Groups.name == "admin"))
         group_id = new_group.id
