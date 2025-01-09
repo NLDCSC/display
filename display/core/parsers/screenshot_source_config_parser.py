@@ -47,6 +47,12 @@ class ScreenshotSourceConfig:
             ret_dict.update(screenshot_source.serialize())
         return ret_dict
 
+    def get_source(self, target: str) -> ScreenshotSource | None:
+        for screenshot_source in self.iterate_all():
+            if target in screenshot_source.targets:
+                return screenshot_source
+        return None
+
 
 @cache.cache(ttl=config.CACHE_DEFAULT_TIMEOUT)
 def get_screenshot_source_config_file(

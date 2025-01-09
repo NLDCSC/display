@@ -96,7 +96,7 @@ class Config(object):
         "SCREENSHOT_SOURCE_CONFIG_FILE", "screenshot_config.json"
     )
     SCREENSHOT_REFRESH: int = int(os.getenv("SCREENSHOT_REFRESH", 30))
-    SCREENSHOT_CHUNK_SIZE: int = int(os.getenv("SCREENSHOT_CHUNK_SIZE", 6))
+    SCREENSHOT_CHUNK_SIZE: int = int(os.getenv("SCREENSHOT_CHUNK_SIZE", 7))
     SCREENSHOT_NODES: int = int(os.getenv("SCREENSHOT_NODES", 5))
     SCREENSHOT_HEADER_TABS: bool = getenv_bool("SCREENSHOT_HEADER_TABS", "True")
     SCREENSHOT_EVIDENCE_ENABLED: bool = getenv_bool(
