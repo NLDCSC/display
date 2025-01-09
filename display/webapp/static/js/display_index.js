@@ -1320,7 +1320,7 @@ function updateTeamCounters() {
     // setting max values for filter based on gt_start - 2
     let max_value = 0
 
-    if (!gt_start - 2 < 0) {
+    if (!(gt_start - 2 < 0)) {
         max_value = gt_start - 2
     }
 

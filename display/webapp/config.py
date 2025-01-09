@@ -118,7 +118,9 @@ class Config(object):
     SSO_SCOPES: List[str] = getenv_list(
         "SSO_SCOPES", ["openid", "resources", "profile"]
     )
-    SSO_USERNAME_ATTRIBUTE: str = os.getenv("SSO_USERNAME_ATTRIBUTE", "preferred_username")
+    SSO_USERNAME_ATTRIBUTE: str = os.getenv(
+        "SSO_USERNAME_ATTRIBUTE", "preferred_username"
+    )
     SSO_FULLNAME_ATTRIBUTE: str = os.getenv("SSO_FULLNAME_ATTRIBUTE", "name")
     SSO_USERGROUPS_ATTRIBUTE: str = os.getenv("SSO_USERGROUPS_ATTRIBUTE", "resources")
 

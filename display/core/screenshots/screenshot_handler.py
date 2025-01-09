@@ -24,6 +24,14 @@ from display.webapp.config import Config
 
 logging.setLoggerClass(AppLogger)
 
+config = Config
+
+engine = create_engine(
+    config.SQLALCHEMY_DATABASE_URI, **{"pool_recycle": 299, "pool_timeout": 20}
+)
+
+Session = sessionmaker(engine)
+
 
 class ScreenShotHandler(object):
     def __init__(self):
@@ -44,13 +52,6 @@ class ScreenShotHandler(object):
             self.logger.error(e)
 
         self.current_wd = os.path.dirname(os.path.abspath(__file__))
-
-        engine = create_engine(
-            self.config.SQLALCHEMY_DATABASE_URI,
-            **{"pool_recycle": 299, "pool_timeout": 20},
-        )
-
-        self.db_session = sessionmaker(engine)
 
     @property
     def hash_to_url_mapping(self) -> dict[str, str]:
@@ -151,7 +152,7 @@ class ScreenShotHandler(object):
             return ""
 
     def is_defaced(self, picture_hash: str) -> int:
-        with self.db_session.begin() as session:
+        with Session.begin() as session:
             def_data = session.scalar(
                 select(DefacementTracker.defaced)
                 .filter(
