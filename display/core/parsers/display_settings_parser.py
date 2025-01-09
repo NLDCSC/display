@@ -273,7 +273,8 @@ class DisplaySettingsParser(object):
             if conf_var == "team_settings":
                 team_settings_obj = TeamSettings(**data["team_settings"])
         return DisplaySettings(
-            targets=target_settings_list, team_settings=team_settings_obj
+            targets=sorted(target_settings_list, key=lambda x: x.name),
+            team_settings=team_settings_obj,
         )
 
     @staticmethod
