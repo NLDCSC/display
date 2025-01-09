@@ -157,3 +157,7 @@ class Config(object):
     DISPLAY_TEAM_START_AT: int = int(os.getenv("DISPLAY_TEAM_START_AT", 1))
     DISPLAY_GT_START_AT: int = int(os.getenv("DISPLAY_GT_START_AT", 25))
     DISPLAY_ROOT_DOMAIN: str = os.getenv("DISPLAY_ROOT_DOMAIN", "test.com")
+
+    DISPLAY_FILTER_FROM_CHUNKS: list[str] = getenv_list(
+        "DISPLAY_FILTER_FROM_CHUNKS", ["bt", "gt"]
+    )

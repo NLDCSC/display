@@ -179,7 +179,16 @@ class DisplayConfig:
         ds = self.display_sources()
 
         try:
-            chunk_list = list(chunks(list(ds.keys()), chunk_size))
+            chunk_list = list(
+                chunks(
+                    [
+                        x
+                        for x in ds.keys()
+                        if not x[:2].lower() in config.DISPLAY_FILTER_FROM_CHUNKS
+                    ],
+                    chunk_size,
+                )
+            )
         except ZeroDivisionError:
             return {}
 
