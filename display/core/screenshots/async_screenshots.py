@@ -13,7 +13,8 @@ import aiohttp
 from aiohttp import ClientConnectorDNSError, ClientConnectionError
 from nldcsc.loggers.app_logger import AppLogger
 from redis import asyncio as aioredis
-from sqlalchemy import select
+from sqlalchemy import select, create_engine
+from sqlalchemy.orm import sessionmaker
 
 from display.apis.splash.splash_api import SplashApi
 from display.core.database_logging.trace_log import TraceLogEntry
@@ -31,6 +32,12 @@ from display.webapp.config import Config
 logging.setLoggerClass(AppLogger)
 
 config = Config()
+
+engine = create_engine(
+    config.SQLALCHEMY_DATABASE_URI, **{"pool_recycle": 299, "pool_timeout": 20}
+)
+
+Session = sessionmaker(engine)
 
 
 class AsyncScreenshots(object):
@@ -110,8 +117,6 @@ class AsyncScreenshots(object):
 
         self.screenshotHandler = ScreenShotHandler()
 
-        self.db_session = self.screenshotHandler.db_session
-
         self.defacement_assessment = DefacementAssessment(
             template_texts=self.get_template_texts()
         )
@@ -136,8 +141,9 @@ class AsyncScreenshots(object):
             "User-Agent": f"{self.user_agent}",
         }
 
-    def get_template_texts(self) -> List[TemplateTexts]:
-        with self.db_session.begin() as session:
+    @staticmethod
+    def get_template_texts() -> List[TemplateTexts]:
+        with Session.begin() as session:
             all_texts = session.scalars(select(TemplateTexts.text)).all()
         return all_texts
 
@@ -226,7 +232,7 @@ class AsyncScreenshots(object):
                                     f"Storing defacement result for {data_hash}: {result} -> {reason}"
                                 )
 
-                                with self.db_session.begin() as session:
+                                with Session.begin() as session:
                                     current_data = session.scalar(
                                         select(DefacementTracker).filter(
                                             DefacementTracker.picture_hash == data_hash
@@ -300,7 +306,7 @@ class AsyncScreenshots(object):
                                     f"Storing defacement result for {data_hash}: {result} -> {reason}"
                                 )
 
-                                with self.db_session.begin() as session:
+                                with Session.begin() as session:
                                     current_data = session.scalar(
                                         select(DefacementTracker).filter(
                                             DefacementTracker.picture_hash == data_hash
