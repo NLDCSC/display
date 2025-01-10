@@ -46,6 +46,7 @@ defacement_assessment_text = collections.namedtuple(
         "MULTI_MATCH",
         "NO_DEFACEMENT",
         "NO_TEXT_NO_DEFACEMENT",
+        "NO_ASSESSMENT",
     ],
 )(
     "No text found in screenshot; assuming defacement!",
@@ -54,6 +55,7 @@ defacement_assessment_text = collections.namedtuple(
     "Multiple Defacement texts found in screenshot (data_length mod count match)",
     "No defacement detected!",
     "No text found in screenshot; assuming NO defacement!",
+    "Picture source could not be assessed!!",
 )
 
 
@@ -75,18 +77,23 @@ class DefacementAssessment(object):
         return text
 
     def extract_text_from_image(self, image_path: Path) -> str:
-        image = cv2.imread(image_path.as_posix())
-        text = pytesseract.image_to_string(image, "eng")
+        try:
+            image = cv2.imread(image_path.as_posix())
+            text = pytesseract.image_to_string(image, "eng")
 
-        data = re.sub(self.reg_domain, "", text)
+            data = re.sub(self.reg_domain, "", text)
 
-        data = data.strip().replace("\n", "").lower().replace(" ", "")
+            data = data.strip().replace("\n", "").lower().replace(" ", "")
 
-        data = re.sub(self.reg_ex, "", data)
+            data = re.sub(self.reg_ex, "", data)
 
-        data = self.remove_non_ascii(data)
+            data = self.remove_non_ascii(data)
 
-        return data
+            return data
+        except TypeError:
+            raise
+        except Exception as e:
+            self.logger.error(e)
 
     def assess_defacement(self, assess_image_obj: ImageAssessment) -> Tuple[bool, str]:
 
@@ -121,8 +128,10 @@ class DefacementAssessment(object):
         return False, defacement_assessment_text.NO_DEFACEMENT
 
     def assess_image(self, image_path: Path) -> Tuple[bool, str]:
-
-        data = self.extract_text_from_image(image_path=image_path)
+        try:
+            data = self.extract_text_from_image(image_path=image_path)
+        except TypeError:
+            return False, defacement_assessment_text.NO_ASSESSMENT
 
         ret_obj = ImageAssessment(
             filename=image_path, data_length=len(data), results=[]

@@ -406,7 +406,6 @@ function OpenSettings(){
     form_list.html(`
             <div className="row">
                 <div className="form-group col-md-11 mb-0 pb-0">
-                    <label>Defacement texts:</label>
                 </div>
             </div>
     `)
@@ -461,14 +460,6 @@ function OpenSettings(){
 
     // first clear the form...
     settings_form_list.empty()
-
-    settings_form_list.html(`
-        <div class="row">
-            <div class="form-group col-md-3 mb-0 pb-0">
-                <label>Target settings:</label>
-            </div>
-        </div>
-    `)
 
     $.ajax({
         method: "GET",
@@ -570,7 +561,6 @@ function OpenSettings(){
                 form_list.html(`
                         <div className="row">
                             <div className="form-group col-md-11 mb-0 pb-0">
-                                <label>Defacement texts:</label>
                             </div>
                         </div>
                 `)
