@@ -33,7 +33,6 @@ logger = logging.getLogger(__name__)
 config = Config()
 
 display_config_parser = DisplayConfigParser()
-sh = ScreenShotHandler()
 
 
 @home.route("/")
@@ -97,6 +96,8 @@ def get_status():
 @login_required
 def get_screenshot(filename):
     logger.info(f"Fetching screenshot from: {filename}")
+    sh = ScreenShotHandler()
+
     try:
         sh.set_timestamp_to_picture(filename=filename)
 
@@ -136,6 +137,8 @@ def get_timeline_data(url_hash):
 @home.route("/timeline/<url_hash>")
 @login_required
 def timeline(url_hash):
+    sh = ScreenShotHandler()
+
     timeline_url = sh.get_url_by_hash(the_hash=url_hash)
 
     last_screenshot_time = get_mod_time(filename=url_hash)
@@ -166,6 +169,8 @@ def get_timeline_picture(url_hash, filename):
 @home.route("/timeline/download_picture/<path:url_hash>/<path:filename>")
 @login_required
 def download_picture(url_hash, filename):
+    sh = ScreenShotHandler()
+
     data = sh.set_timestamp_to_picture(
         filename=os.path.join(
             current_app.config["TIMELINE_LOCATION"], f"{url_hash}/{filename}.png"
