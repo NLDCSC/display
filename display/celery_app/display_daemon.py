@@ -852,18 +852,21 @@ def create_custom_screenshot(data: dict):
 
             try:
                 for source in display_sources:
+                    logger.info(f"Processing source: {source}")
                     tab_data = sh.get_changed_data_from_custom_screenshots(
                         the_hash=data["data"]
                     )
-                    socketio.emit(
-                        "push_all_screenshots",
-                        {
-                            "data": tab_data,
-                            "tab_hash": sh.get_tabhash_by_tabname(source),
-                        },
-                        to=source,
-                        namespace="/display",
-                    )
+                    changed_sources = sh.get_tab_by_hash(data["data"])
+                    for each_source in changed_sources:
+                        socketio.emit(
+                            "push_all_screenshots",
+                            {
+                                "data": tab_data,
+                                "tab_hash": sh.get_tabhash_by_tabname(each_source),
+                            },
+                            to=each_source,
+                            namespace="/display",
+                        )
                     handle_changes_for_timeline.delay(data=tab_data, csc=True)
             except Exception as err:
                 logger.error(

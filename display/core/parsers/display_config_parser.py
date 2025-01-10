@@ -150,6 +150,13 @@ class DisplayConfig:
             ret_dict[target_group.name] = target_group.target_group_hash
         return ret_dict
 
+    @property
+    def target_hash_to_group(self) -> dict[str, str]:
+        ret_dict = {}
+        for key, val in self.target_group_to_hash.items():
+            ret_dict[val] = key
+        return ret_dict
+
     def iterate_primary_only(self) -> TargetGroup:
         for x in self.target_groups:
             if not x.from_headers:

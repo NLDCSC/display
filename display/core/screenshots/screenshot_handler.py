@@ -48,6 +48,7 @@ class ScreenShotHandler(object):
             self._hash_to_tab_mapping = self.display_config.hash_to_tab()
             self._tab_to_hash_list = self.display_config.hashes_per_tab()
             self._tabname_to_tabhash = self.display_config.target_group_to_hash
+            self._tabhash_to_tabname = self.display_config.target_hash_to_group
         except Exception as e:
             self.logger.error(e)
 
@@ -76,6 +77,10 @@ class ScreenShotHandler(object):
     @property
     def tabname_to_tabhash(self) -> dict[str, str]:
         return self._tabname_to_tabhash
+
+    @property
+    def tabhash_to_tabname(self) -> dict[str, str]:
+        return self._tabhash_to_tabname
 
     @staticmethod
     def get_hash(hash_input: bytes) -> str:
@@ -114,6 +119,13 @@ class ScreenShotHandler(object):
 
         try:
             return self.tabname_to_tabhash[tab_name]
+        except KeyError:
+            return False
+
+    def get_tabname_by_tabhash(self, tab_name: str) -> str:
+
+        try:
+            return self.tabhash_to_tabname[tab_name]
         except KeyError:
             return False
 
