@@ -5,7 +5,6 @@ import logging
 import os
 import shutil
 import time
-from collections import defaultdict
 from pathlib import Path
 from typing import List
 
@@ -65,11 +64,6 @@ class AsyncScreenshots(object):
         except Exception as e:
             self.logger.error(e)
 
-        self._screen_shot_sources = self.screenshot_config.screenshot_sources()
-
-        self.tab_to_screenshotsource_mapping = defaultdict()
-        self.set_tab_to_screenshotsource_mapping()
-
         self.map_screenshot_sources = {
             "splash": "workload",
             "selenium": "selenium_workload",
@@ -83,25 +77,26 @@ class AsyncScreenshots(object):
 
         if isinstance(incoming_workload, dict):
             for key, urls in incoming_workload.items():
-                if key in self.tab_to_screenshotsource_mapping:
-                    if isinstance(urls, list):
-                        getattr(
-                            self,
-                            self.map_screenshot_sources[
-                                self.tab_to_screenshotsource_mapping[key]
-                            ],
-                        ).append({key: urls})
-                    else:
-                        raise TypeError(f"Expecting list; got: {type(urls)}")
+                if isinstance(urls, list):
+                    getattr(
+                        self,
+                        self.map_screenshot_sources[
+                            self.screenshot_config.get_source(key).name
+                        ],
+                    ).append({key: urls})
                 else:
-                    if isinstance(urls, list):
-                        getattr(self, self.map_screenshot_sources["splash"]).extend(
-                            urls
-                        )
-                    else:
-                        raise TypeError(f"Expecting list; got: {type(urls)}")
+                    raise TypeError(f"Expecting list; got: {type(urls)}")
         else:
             raise TypeError(f"Expecting dict; got: {type(incoming_workload)}")
+
+        # flatten the splash workload to a single list with dicts
+        wl_list = []
+        if hasattr(self, "workload"):
+            if len(self.workload) != 0:
+                for each in self.workload:
+                    for target, target_list in each.items():
+                        wl_list.extend(target_list)
+                self.workload = wl_list
 
         self.user_agent = config.USER_AGENT
 
@@ -124,10 +119,6 @@ class AsyncScreenshots(object):
         self.current_wd = os.path.dirname(os.path.abspath(__file__))
 
     @property
-    def screen_shot_sources(self):
-        return self._screen_shot_sources
-
-    @property
     def __default_headers(self):
         """
         Property to return the default headers
@@ -146,16 +137,6 @@ class AsyncScreenshots(object):
         with Session.begin() as session:
             all_texts = session.scalars(select(TemplateTexts.text)).all()
         return all_texts
-
-    def set_tab_to_screenshotsource_mapping(self):
-
-        for key, value in self.screen_shot_sources.items():
-            for item in value:
-                self.tab_to_screenshotsource_mapping[item] = key
-
-        self.tab_to_screenshotsource_mapping = dict(
-            self.tab_to_screenshotsource_mapping
-        )
 
     @staticmethod
     def get_file_hash(file_data: bytes) -> str:
