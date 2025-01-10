@@ -263,7 +263,26 @@ class ScreenShotHandler(object):
             if os.path.exists(evidence_path):
                 photo = Image.open(evidence_path)
             else:
-                photo = Image.open(normal_path)
+                try:
+                    photo = Image.open(normal_path)
+                except FileNotFoundError:
+                    # no picture found; storing error picture
+                    with open(
+                        os.path.join(
+                            self.current_wd, "../../webapp/static/img/noScreenShot.png"
+                        ),
+                        "rb",
+                    ) as f:
+                        data = f.read()
+
+                    self.logger.debug(f"Setting error picture for {filename}")
+                    with open(
+                        os.path.join(config.SCREENSHOT_LOCATION, f"{filename}.png"),
+                        "wb",
+                    ) as f:
+                        f.write(data)
+
+                    photo = Image.open(normal_path)
 
             url_hash = filename
         else:

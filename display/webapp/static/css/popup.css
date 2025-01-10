@@ -246,3 +246,8 @@ hr.ruler {
   text-align: center;
   font-family: "Lucida Console", "Courier New", monospace;
 }
+
+#settings-form-list {
+  overflow: auto;
+  max-height: calc(100vh - 575px);
+}
