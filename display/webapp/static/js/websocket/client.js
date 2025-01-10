@@ -174,11 +174,6 @@ $(document).ready(function () {
                 }
             }
 
-            mod_time.toggleClass("active");
-            setTimeout(function () {
-                mod_time.toggleClass("active");
-            }, 8000);
-
             if (cb) {
                 cb(client_id = socket.sid, data = msg["tab_hash"]);
             }

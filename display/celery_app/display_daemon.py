@@ -864,6 +864,16 @@ def create_custom_screenshot(data: dict):
                         to=source,
                         namespace="/display",
                     )
+                    if config.SCREENSHOT_HEADER_TABS:
+                        socketio.emit(
+                            "push_all_screenshots",
+                            {
+                                "data": tab_data,
+                                "tab_hash": data["tab-hash"],
+                            },
+                            to=sh.get_tabname_by_tabhash(data["tab-hash"]),
+                            namespace="/display",
+                        )
                     handle_changes_for_timeline.delay(data=tab_data, csc=True)
             except Exception as err:
                 logger.error(
