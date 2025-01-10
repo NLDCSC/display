@@ -923,7 +923,7 @@ def handle_changes_for_timeline(data: list, csc: bool = False):
             # check if this url is part of the selenium workload, if it isn't append to the evidence workload!
             if config.SCREENSHOT_EVIDENCE_ENABLED:
                 try:
-                    if target not in ss.screen_shot_sources["selenium"]:
+                    if ss.screenshot_config.get_source(target).name != "selenium":
                         evidence_workload.append(url_data)
                 except KeyError:
                     # selenium key is not there; so it's safe to add to the evidence workload
