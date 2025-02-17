@@ -201,6 +201,8 @@ function SetAllEventListeners() {
 
     $("#settings").off().on("click", OpenSettings)
 
+    $("#search_target").off().on("input", SearchTarget);
+
     let CheckBoxes = DOMRegex(/^cb\_/)
 
     CheckBoxes.forEach(function (elem) {
@@ -400,6 +402,10 @@ function OpenSettings(){
     $("#btn_settings").off().on("click", CloseSettings)
     let form_list = $("#form-list")
 
+    // clear the search input
+    $("#search_target").val("")
+    $("#search_filter_text").hide()
+
     // first clear the form...
     form_list.empty()
 
@@ -487,6 +493,8 @@ function OpenSettings(){
                 $("#filter_end_field").val(data["team_settings"].display_filter_end)
                 $("#gt_start_at_field").val(data["team_settings"].display_gt_start_at)
                 $("#root_domain_field").val(data["team_settings"].display_root_domain)
+
+                updateTargetCounter()
                 updateTeamCounters()
                 handleLimitChange()
                 updateAllTargetHeader()
@@ -1272,12 +1280,14 @@ function removeFormElements() {
 
 function addSettingsFormElements() {
     $('#settings-form-list').append($("#settings-form-template .form-row").clone())
+    updateTargetCounter()
 }
 
 function removeSettingsFormElements() {
     if ($('#settings-form-list .form-row').length > 1){
         $(this).parents('.form-row').remove();
     }
+    updateTargetCounter()
 }
 
 function pad (str, max) {
@@ -1431,5 +1441,35 @@ function updateAllTargetHeader() {
             target_header.text(protocol_field.val() + "://" + name_field.val() + "." + zone_field.val() + ".xx." + $("#root_domain_field").val())
         }
     })
+
+}
+
+function updateTargetCounter(){
+    $("#target_counter").text($("#settings-form-list").children().length + " Targets configured")
+}
+
+var search_timeout = null;
+
+function SearchTarget() {
+    if (search_timeout !== null) {
+        clearTimeout(search_timeout);
+    }
+
+    search_timeout = setTimeout(function () {
+        if ($("#search_target").val().length >= 2) {
+            $("#search_filter_text").show()
+            $(".target-header").filter(function () {
+                if($(this).text().toLowerCase().indexOf($("#search_target").val()) > -1){
+                    $(this).closest('.settings-item-entry').show();
+                } else {
+                    $(this).closest('.settings-item-entry').hide();
+                }
+                $("#search_filter_text").text("Filtered " + $("#settings-form-list .settings-item-entry:hidden").length + " targets")
+            });
+        } else {
+            $(".settings-item-entry").show()
+            $("#search_filter_text").hide()
+        }
+    }, 1000);
 
 }

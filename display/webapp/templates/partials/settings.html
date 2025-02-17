@@ -126,8 +126,13 @@
                     <div class="form-group">
                         <div class="row">
                             <div class="form-group col-md-3 mb-0 pb-0">
-                                <label>Target settings:</label>
+                                <label>Target settings: <span id="target_counter" class="badge badge-info menu_badge ml-4">?? Targets configured</span></label>
                             </div>
+                            <div class="form-group col-md-3 mb-0 pb-0">
+                                <label class="form-control d-none" for="search_target">Search for target: </label>
+                                <input id="search_target" type="text" class="form-control" placeholder="Search target by name (min 2 characters)" minlength="2" maxlength="15"/>
+                            </div>
+                            <span id="search_filter_text" class="ml-2 mt-2">Filtered ?? targets</span>
                         </div>
                     </div>
                     <div id="settings-form-list" class="form-group pl-3 pr-3 pb-3">

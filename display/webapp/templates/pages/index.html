@@ -134,6 +134,15 @@
 
 {% block body_scripts %}
     <script>
+        $(document).ready(function() {
+            $(window).keydown(function(event){
+                if(event.keyCode === 13) {
+                    event.preventDefault();
+                    return false;
+                }
+            });
+        });
+
         $(window).ready(function () {
             window.FULL_SCREEN = false
 

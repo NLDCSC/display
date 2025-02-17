@@ -1115,13 +1115,25 @@ def check_defacement():
             for screenshot_path in all_screenshot_paths:
                 # first check if there is an entry for this specific picture already
                 picture_hash = sh.get_picture_hash(screenshot_path.stem)
+                logger.info(f"Checking picture hash: {picture_hash}")
                 check_defacement_data: DefacementTracker = db.scalar(
                     select(DefacementTracker).filter(
                         DefacementTracker.picture_hash == picture_hash
                     )
                 )
                 if check_defacement_data is None:
+                    logger.info(
+                        f"Determine defacement result for {screenshot_path.stem}({picture_hash})"
+                    )
                     result, reason = da.assess_image(screenshot_path)
+                    defacement_entry = DefacementTracker(
+                        hash=screenshot_path.stem,
+                        picture_hash=picture_hash,
+                        defaced=result,
+                        created_at=int(time.time()),
+                    )
+                    db.add(defacement_entry)
+                    db.commit()
                     TraceLogEntry(
                         url=sh.get_url_by_hash(screenshot_path.stem),
                         user="DAEMON",
@@ -1131,6 +1143,9 @@ def check_defacement():
                         reason=f"Defacement: {result} -> {reason}",
                     ).save()
                 else:
+                    logger.info(
+                        f"Fetching defacement result for {screenshot_path.stem}({picture_hash}) from database"
+                    )
                     # the table is leading for defacement assignment; set accordingly
                     result = True if check_defacement_data.defaced == 1 else False
                     TraceLogEntry(
