@@ -210,9 +210,10 @@ class AsyncScreenshots(object):
                                                 == data_hash
                                             )
                                         )
-                                        local_cache[data_hash] = int(
-                                            current_data.defaced
-                                        )
+                                        if current_data is not None:
+                                            local_cache[data_hash] = int(
+                                                current_data.defaced
+                                            )
                                     else:
                                         cache_hit = True
                                         current_data = 1
@@ -232,6 +233,7 @@ class AsyncScreenshots(object):
                                                 )
                                             )
                                         )
+                                        local_cache[data_hash] = result
                                         self.logger.info(
                                             f"Storing defacement result for {data_hash}: {result} -> {reason}"
                                         )
@@ -260,6 +262,7 @@ class AsyncScreenshots(object):
                                                     )
                                                 )
                                             )
+                                            local_cache[data_hash] = result
                                             if not new_entry.force:
                                                 new_entry.defaced = result
                                             new_entry.created_at = int(time.time())
@@ -317,9 +320,10 @@ class AsyncScreenshots(object):
                                                 == data_hash
                                             )
                                         )
-                                        local_cache[data_hash] = int(
-                                            current_data.defaced
-                                        )
+                                        if current_data is not None:
+                                            local_cache[data_hash] = int(
+                                                current_data.defaced
+                                            )
                                     else:
                                         cache_hit = True
                                         current_data = 1
@@ -339,6 +343,7 @@ class AsyncScreenshots(object):
                                                 )
                                             )
                                         )
+                                        local_cache[data_hash] = result
                                         self.logger.info(
                                             f"Storing defacement result for {data_hash}: {result} -> {reason}"
                                         )
@@ -367,6 +372,7 @@ class AsyncScreenshots(object):
                                                     )
                                                 )
                                             )
+                                            local_cache[data_hash] = result
                                             if not new_entry.force:
                                                 new_entry.defaced = result
                                             new_entry.created_at = int(time.time())

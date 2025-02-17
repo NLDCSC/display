@@ -1125,7 +1125,8 @@ def check_defacement():
                             DefacementTracker.picture_hash == picture_hash
                         )
                     )
-                    local_cache[picture_hash] = int(check_defacement_data.defaced)
+                    if check_defacement_data is not None:
+                        local_cache[picture_hash] = int(check_defacement_data.defaced)
                 else:
                     cache_hit = True
                     check_defacement_data = 1
@@ -1135,6 +1136,7 @@ def check_defacement():
                         f"Determine defacement result for {screenshot_path.stem}({picture_hash})"
                     )
                     result, reason = da.assess_image(screenshot_path)
+                    local_cache[picture_hash] = result
                     defacement_entry = DefacementTracker(
                         hash=screenshot_path.stem,
                         picture_hash=picture_hash,
