@@ -159,6 +159,8 @@ class AsyncScreenshots(object):
 
         self.logger.info(f"Processing screenshot results: {len(results)}")
 
+        local_cache = {}
+
         for each in results:
 
             if isinstance(each, dict):
@@ -196,31 +198,43 @@ class AsyncScreenshots(object):
                                     status_code=200,
                                 ).save()
 
-                                # do defacement_assessment
-                                result, reason = (
-                                    self.defacement_assessment.assess_image(
-                                        Path(
-                                            os.path.join(
-                                                config.SCREENSHOT_LOCATION, f"{k}.png"
-                                            )
-                                        )
-                                    )
-                                )
-
                                 data_hash = self.get_file_hash(v)
 
-                                self.logger.info(
-                                    f"Storing defacement result for {data_hash}: {result} -> {reason}"
-                                )
-
                                 with Session.begin() as session:
-                                    current_data = session.scalar(
-                                        select(DefacementTracker).filter(
-                                            DefacementTracker.picture_hash == data_hash
+
+                                    if data_hash not in local_cache:
+                                        cache_hit = False
+                                        current_data = session.scalar(
+                                            select(DefacementTracker).filter(
+                                                DefacementTracker.picture_hash
+                                                == data_hash
+                                            )
                                         )
-                                    )
+                                        local_cache[data_hash] = int(
+                                            current_data.defaced
+                                        )
+                                    else:
+                                        cache_hit = True
+                                        current_data = 1
 
                                     if current_data is None:
+                                        self.logger.info(
+                                            f"Determine defacement result for {k}({data_hash})"
+                                        )
+                                        # do defacement_assessment
+                                        result, reason = (
+                                            self.defacement_assessment.assess_image(
+                                                Path(
+                                                    os.path.join(
+                                                        config.SCREENSHOT_LOCATION,
+                                                        f"{k}.png",
+                                                    )
+                                                )
+                                            )
+                                        )
+                                        self.logger.info(
+                                            f"Storing defacement result for {data_hash}: {result} -> {reason}"
+                                        )
                                         new_entry = DefacementTracker(
                                             hash=k,
                                             picture_hash=data_hash,
@@ -228,13 +242,34 @@ class AsyncScreenshots(object):
                                             created_at=int(time.time()),
                                         )
                                     else:
-                                        new_entry = current_data
-                                        if not new_entry.force:
-                                            new_entry.defaced = result
-                                        new_entry.created_at = int(time.time())
-
-                                    session.add(new_entry)
-                                    session.commit()
+                                        if not cache_hit:
+                                            self.logger.info(
+                                                f"Fetching defacement result for {k}({data_hash}) from database"
+                                            )
+                                            # ok so we've requested the database object in this run; we could append
+                                            # the data before it's saved
+                                            new_entry = current_data
+                                            # do defacement_assessment
+                                            result, reason = (
+                                                self.defacement_assessment.assess_image(
+                                                    Path(
+                                                        os.path.join(
+                                                            config.SCREENSHOT_LOCATION,
+                                                            f"{k}.png",
+                                                        )
+                                                    )
+                                                )
+                                            )
+                                            if not new_entry.force:
+                                                new_entry.defaced = result
+                                            new_entry.created_at = int(time.time())
+                                        else:
+                                            self.logger.info(
+                                                f"Fetching defacement result for {k}({data_hash}) from local cache"
+                                            )
+                                    if not cache_hit:
+                                        session.add(new_entry)
+                                        session.commit()
 
                             else:
                                 # no picture assume error for now!
@@ -270,31 +305,43 @@ class AsyncScreenshots(object):
                                     status_code=200,
                                 ).save()
 
-                                # do defacement_assessment
-                                result, reason = (
-                                    self.defacement_assessment.assess_image(
-                                        Path(
-                                            os.path.join(
-                                                config.SCREENSHOT_LOCATION, f"{k}.png"
-                                            )
-                                        )
-                                    )
-                                )
-
                                 data_hash = self.get_file_hash(v["normal"])
 
-                                self.logger.info(
-                                    f"Storing defacement result for {data_hash}: {result} -> {reason}"
-                                )
-
                                 with Session.begin() as session:
-                                    current_data = session.scalar(
-                                        select(DefacementTracker).filter(
-                                            DefacementTracker.picture_hash == data_hash
+
+                                    if data_hash not in local_cache:
+                                        cache_hit = False
+                                        current_data = session.scalar(
+                                            select(DefacementTracker).filter(
+                                                DefacementTracker.picture_hash
+                                                == data_hash
+                                            )
                                         )
-                                    )
+                                        local_cache[data_hash] = int(
+                                            current_data.defaced
+                                        )
+                                    else:
+                                        cache_hit = True
+                                        current_data = 1
 
                                     if current_data is None:
+                                        self.logger.info(
+                                            f"Determine defacement result for {k}({data_hash})"
+                                        )
+                                        # do defacement_assessment
+                                        result, reason = (
+                                            self.defacement_assessment.assess_image(
+                                                Path(
+                                                    os.path.join(
+                                                        config.SCREENSHOT_LOCATION,
+                                                        f"{k}.png",
+                                                    )
+                                                )
+                                            )
+                                        )
+                                        self.logger.info(
+                                            f"Storing defacement result for {data_hash}: {result} -> {reason}"
+                                        )
                                         new_entry = DefacementTracker(
                                             hash=k,
                                             picture_hash=data_hash,
@@ -302,13 +349,35 @@ class AsyncScreenshots(object):
                                             created_at=int(time.time()),
                                         )
                                     else:
-                                        new_entry = current_data
-                                        if not new_entry.force:
-                                            new_entry.defaced = result
-                                        new_entry.created_at = int(time.time())
+                                        if not cache_hit:
+                                            self.logger.info(
+                                                f"Fetching defacement result for {k}({data_hash}) from database"
+                                            )
+                                            # ok so we've requested the database object in this run; we could append
+                                            # the data before it's saved
+                                            new_entry = current_data
+                                            # do defacement_assessment
+                                            result, reason = (
+                                                self.defacement_assessment.assess_image(
+                                                    Path(
+                                                        os.path.join(
+                                                            config.SCREENSHOT_LOCATION,
+                                                            f"{k}.png",
+                                                        )
+                                                    )
+                                                )
+                                            )
+                                            if not new_entry.force:
+                                                new_entry.defaced = result
+                                            new_entry.created_at = int(time.time())
+                                        else:
+                                            self.logger.info(
+                                                f"Fetching defacement result for {k}({data_hash}) from local cache"
+                                            )
 
-                                    session.add(new_entry)
-                                    session.commit()
+                                    if not cache_hit:
+                                        session.add(new_entry)
+                                        session.commit()
 
                             self.store_evidence_picture(k, v["evidence"])
                             TraceLogEntry(
