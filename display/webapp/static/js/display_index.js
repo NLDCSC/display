@@ -225,6 +225,8 @@ function SetAllEventListeners() {
 
 function EnableFullScreen(){
     window.FULL_SCREEN = true
+    window.CONTENT_HEIGHT = 0
+    window.ROW_COUNT = 0
 
     DestroyScrollingTabs();
     InitScrollingTabs();
@@ -243,9 +245,20 @@ function AdjustLayoutFullscreen() {
         let all_content_rows = $(".row.content-row:visible")
 
         if (all_content_rows.length >= 5){
-            let content_row_height = 20 - all_content_rows.length + 1
+            let content_row_height = 0
+            if (window.ROW_COUNT === 0) {
+                content_row_height = 20 - all_content_rows.length + 1
+                window.ROW_COUNT = all_content_rows.length
+            } else {
+                content_row_height = 20 - window.ROW_COUNT + 1 - (window.ROW_COUNT - all_content_rows.length)
+            }
 
-            $(".content-row").css("height", content_row_height + "vh")
+            if (window.CONTENT_HEIGHT === 0) {
+                $(".content-row").css("height", content_row_height + "vh")
+                window.CONTENT_HEIGHT = content_row_height
+            } else {
+                $(".content-row").css("height", window.CONTENT_HEIGHT + "vh")
+            }
         } else {
             $(".content-row").css("height", "20vh")
         }
