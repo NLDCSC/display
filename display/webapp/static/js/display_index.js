@@ -239,7 +239,7 @@ function EnableFullScreen(){
 
 function AdjustLayoutFullscreen() {
 
-    if ($("#myTabContent").height() > window.innerHeight){
+    if ($("#DisplayContent").height() > window.innerHeight){
         let all_content_rows = $(".row.content-row:visible")
 
         let content_row_height = 20 - all_content_rows.length + 1
