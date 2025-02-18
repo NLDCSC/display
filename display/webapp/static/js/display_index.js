@@ -226,11 +226,6 @@ function SetAllEventListeners() {
 function EnableFullScreen(){
     window.FULL_SCREEN = true
 
-    let display_header = $("#display-header-row")
-    let header_content = $("#header-content-card")
-
-    display_header.hide()
-    header_content.css("padding", "0.25rem")
     DestroyScrollingTabs();
     InitScrollingTabs();
 
@@ -239,26 +234,36 @@ function EnableFullScreen(){
 
 function AdjustLayoutFullscreen() {
 
-    if ($("#DisplayContent").height() > window.innerHeight){
+    if (window.FULL_SCREEN) {
+        $("#display-header-row").hide()
+        $("#header-content-card").css("padding", "0.25rem")
+        $("#DisplayContent").css("height", "calc(100vh - 45px)")
+        $(".img-col").css("max-width", "12.5%")
+        $(".mod-time").hide()
         let all_content_rows = $(".row.content-row:visible")
 
-        let content_row_height = 20 - all_content_rows.length + 1
+        if (all_content_rows.length >= 5){
+            let content_row_height = 20 - all_content_rows.length + 1
 
-        $(".content-row").css("height", content_row_height + "vh")
+            $(".content-row").css("height", content_row_height + "vh")
+        } else {
+            $(".content-row").css("height", "20vh")
+        }
     } else {
+        $("#display-header-row").show()
+        $("#header-content-card").css("padding", "1.25rem")
         $(".content-row").css("height", "20vh")
-    }
 
+        $("#DisplayContent").css("height", "calc(100vh - 110px)")
+        $(".img-col").css("max-width", "")
+        $(".mod-time").show()
+    }
+    resizeEnd();
 }
 
 function DisableFullScreen() {
     window.FULL_SCREEN = false
 
-    let display_header = $("#display-header-row")
-    let header_content = $("#header-content-card")
-
-    display_header.show()
-    header_content.css("padding", "1.25rem")
     DestroyScrollingTabs();
     InitScrollingTabs();
 

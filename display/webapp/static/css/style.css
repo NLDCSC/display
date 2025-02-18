@@ -228,7 +228,8 @@
   padding: 1rem;
 }
 
-.mod-time.active {
+.mod-time.active,
+.sc-header.active{
   color: #ead710;
   transition: all 1.5s ease-out;
 }

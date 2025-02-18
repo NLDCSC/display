@@ -36,6 +36,10 @@ function getColumnCount(){
 
   var breakpoint = getBootstrapBreakpoint();
 
+  if (window.FULL_SCREEN) {
+      return 8
+  }
+
   if (breakpoint === "xs") {
     return 1
   } else if (breakpoint === "sm") {
