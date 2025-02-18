@@ -83,7 +83,9 @@ $(document).ready(function () {
 
                     mod_time.toggleClass("active");
                     if (window.FULL_SCREEN) {
-                        sc_header.toggleClass("active")
+                        if (!sc_header.hasClass("active")){
+                            sc_header.toggleClass("active")
+                        }
                     }
                     setTimeout(function () {
                         mod_time.toggleClass("active");
