@@ -1,7 +1,7 @@
 from typing import List
 
 from display.core.connections.client_connection import ClientConnection
-from display.errors.display_errors import DisplayClientTypeError
+from display.errors.display_errors import DisplayClientTypeError, DisplayClientMissing
 
 
 class ClientPool(object):
@@ -25,7 +25,10 @@ class ClientPool(object):
         return
 
     def get(self, client_sid: str) -> ClientConnection:
-        return self.pool[client_sid]
+        try:
+            return self.pool[client_sid]
+        except KeyError:
+            raise DisplayClientMissing
 
     def fetch_client_details(self) -> None:
         return {key: value.client_details() for (key, value) in self.pool.items()}

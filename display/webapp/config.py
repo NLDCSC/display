@@ -145,6 +145,9 @@ class Config(object):
     DISPLAY_ASSUME_NO_TEXT_DEFACED: bool = getenv_bool(
         "DISPLAY_ASSUME_NO_TEXT_DEFACED", "True"
     )
+    DISPLAY_ASSUME_TEMPLATE_AS_DEFACED: bool = getenv_bool(
+        "DISPLAY_ASSUME_TEMPLATE_AS_DEFACED", "False"
+    )
     DISPLAY_GRAPH_TIME_RANGE: int = int(
         os.getenv("DISPLAY_GRAPH_TIME_RANGE", 4)
     )  # in hours

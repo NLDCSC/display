@@ -201,6 +201,8 @@ function SetAllEventListeners() {
 
     $("#settings").off().on("click", OpenSettings)
 
+    $("#search_target").off().on("input", SearchTarget);
+
     let CheckBoxes = DOMRegex(/^cb\_/)
 
     CheckBoxes.forEach(function (elem) {
@@ -224,11 +226,6 @@ function SetAllEventListeners() {
 function EnableFullScreen(){
     window.FULL_SCREEN = true
 
-    let display_header = $("#display-header-row")
-    let header_content = $("#header-content-card")
-
-    display_header.hide()
-    header_content.css("padding", "0.25rem")
     DestroyScrollingTabs();
     InitScrollingTabs();
 
@@ -237,26 +234,36 @@ function EnableFullScreen(){
 
 function AdjustLayoutFullscreen() {
 
-    if ($("#myTabContent").height() > window.innerHeight){
+    if (window.FULL_SCREEN) {
+        $("#display-header-row").hide()
+        $("#header-content-card").css("padding", "0.25rem")
+        $("#DisplayContent").css("height", "calc(100vh - 45px)")
+        $(".img-col").css("max-width", "12.5%")
+        $(".mod-time").hide()
         let all_content_rows = $(".row.content-row:visible")
 
-        let content_row_height = 20 - all_content_rows.length + 1
+        if (all_content_rows.length >= 5){
+            let content_row_height = 20 - all_content_rows.length + 1
 
-        $(".content-row").css("height", content_row_height + "vh")
+            $(".content-row").css("height", content_row_height + "vh")
+        } else {
+            $(".content-row").css("height", "20vh")
+        }
     } else {
+        $("#display-header-row").show()
+        $("#header-content-card").css("padding", "1.25rem")
         $(".content-row").css("height", "20vh")
-    }
 
+        $("#DisplayContent").css("height", "calc(100vh - 110px)")
+        $(".img-col").css("max-width", "")
+        $(".mod-time").show()
+    }
+    resizeEnd();
 }
 
 function DisableFullScreen() {
     window.FULL_SCREEN = false
 
-    let display_header = $("#display-header-row")
-    let header_content = $("#header-content-card")
-
-    display_header.show()
-    header_content.css("padding", "1.25rem")
     DestroyScrollingTabs();
     InitScrollingTabs();
 
@@ -400,6 +407,10 @@ function OpenSettings(){
     $("#btn_settings").off().on("click", CloseSettings)
     let form_list = $("#form-list")
 
+    // clear the search input
+    $("#search_target").val("")
+    $("#search_filter_text").hide()
+
     // first clear the form...
     form_list.empty()
 
@@ -487,6 +498,8 @@ function OpenSettings(){
                 $("#filter_end_field").val(data["team_settings"].display_filter_end)
                 $("#gt_start_at_field").val(data["team_settings"].display_gt_start_at)
                 $("#root_domain_field").val(data["team_settings"].display_root_domain)
+
+                updateTargetCounter()
                 updateTeamCounters()
                 handleLimitChange()
                 updateAllTargetHeader()
@@ -1272,12 +1285,14 @@ function removeFormElements() {
 
 function addSettingsFormElements() {
     $('#settings-form-list').append($("#settings-form-template .form-row").clone())
+    updateTargetCounter()
 }
 
 function removeSettingsFormElements() {
     if ($('#settings-form-list .form-row').length > 1){
         $(this).parents('.form-row').remove();
     }
+    updateTargetCounter()
 }
 
 function pad (str, max) {
@@ -1431,5 +1446,35 @@ function updateAllTargetHeader() {
             target_header.text(protocol_field.val() + "://" + name_field.val() + "." + zone_field.val() + ".xx." + $("#root_domain_field").val())
         }
     })
+
+}
+
+function updateTargetCounter(){
+    $("#target_counter").text($("#settings-form-list").children().length + " Targets configured")
+}
+
+var search_timeout = null;
+
+function SearchTarget() {
+    if (search_timeout !== null) {
+        clearTimeout(search_timeout);
+    }
+
+    search_timeout = setTimeout(function () {
+        if ($("#search_target").val().length >= 2) {
+            $("#search_filter_text").show()
+            $(".target-header").filter(function () {
+                if($(this).text().toLowerCase().indexOf($("#search_target").val()) > -1){
+                    $(this).closest('.settings-item-entry').show();
+                } else {
+                    $(this).closest('.settings-item-entry').hide();
+                }
+                $("#search_filter_text").text("Filtered " + $("#settings-form-list .settings-item-entry:hidden").length + " targets")
+            });
+        } else {
+            $(".settings-item-entry").show()
+            $("#search_filter_text").hide()
+        }
+    }, 1000);
 
 }

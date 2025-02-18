@@ -368,7 +368,7 @@ class ScreenShotHandler(object):
         """
         Limiting input file to a maximum of approximately (give or take the tolerance) of 100 kb
         """
-        self.logger.info(f"Scaling down size for hash: {filename}")
+        self.logger.debug(f"Scaling down size for hash: {filename}")
         img = img_orig = Image.open(
             os.path.join(self.config.SCREENSHOT_LOCATION, f"{filename}.png")
         )
@@ -385,7 +385,7 @@ class ScreenShotHandler(object):
             )
 
             if size_deviation <= (100 + tolerance) / 100:
-                self.logger.info(f"Scaling fits; saving minified picture...")
+                self.logger.debug(f"Scaling fits; saving minified picture...")
                 # filesize fits
                 with open(
                     os.path.join(
@@ -394,7 +394,7 @@ class ScreenShotHandler(object):
                     "wb",
                 ) as f:
                     f.write(data)
-                self.logger.info("Scaling done!")
+                self.logger.debug("Scaling done!")
                 break
             else:
                 # filesize not good enough => adapt width and height

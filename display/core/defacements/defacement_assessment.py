@@ -47,6 +47,8 @@ defacement_assessment_text = collections.namedtuple(
         "NO_DEFACEMENT",
         "NO_TEXT_NO_DEFACEMENT",
         "NO_ASSESSMENT",
+        "TEMPLATE_AS_DEFACED",
+        "TEMPLATE_NOT_DEFACED",
     ],
 )(
     "No text found in screenshot; assuming defacement!",
@@ -56,6 +58,8 @@ defacement_assessment_text = collections.namedtuple(
     "No defacement detected!",
     "No text found in screenshot; assuming NO defacement!",
     "Picture source could not be assessed!!",
+    "Picture comes back as template, assume defaced!",
+    "Picture comes back as template, assume NOT defaced!",
 )
 
 
@@ -130,6 +134,12 @@ class DefacementAssessment(object):
     def assess_image(self, image_path: Path) -> Tuple[bool, str]:
         try:
             data = self.extract_text_from_image(image_path=image_path)
+            if data == "noscreenshotavailable":
+                # this is the template when no screenshot is available, check settings and determine result
+                if self.config.DISPLAY_ASSUME_TEMPLATE_AS_DEFACED:
+                    return True, defacement_assessment_text.TEMPLATE_AS_DEFACED
+                else:
+                    return False, defacement_assessment_text.TEMPLATE_NOT_DEFACED
         except TypeError:
             return False, defacement_assessment_text.NO_ASSESSMENT
 

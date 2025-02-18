@@ -2,6 +2,10 @@ class DisplayError(Exception):
     pass
 
 
+class DisplayClientMissing(DisplayError):
+    pass
+
+
 class DisplayClientTypeError(DisplayError):
     pass
 

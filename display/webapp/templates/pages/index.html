@@ -134,6 +134,15 @@
 
 {% block body_scripts %}
     <script>
+        $(document).ready(function() {
+            $(window).keydown(function(event){
+                if(event.keyCode === 13) {
+                    event.preventDefault();
+                    return false;
+                }
+            });
+        });
+
         $(window).ready(function () {
             window.FULL_SCREEN = false
 
@@ -158,6 +167,13 @@
         $(window).on("resize", function() {
             $('.img-wrap').hide();
             $('.template-row').show();
+            if (window.FULL_SCREEN) {
+                $("#template_item_7").show()
+                $("#template_item_8").show()
+            } else {
+                $("#template_item_7").hide()
+                $("#template_item_8").hide()
+            }
             if(this.resizeTO) clearTimeout(this.resizeTO);
             this.resizeTO = setTimeout(function() {
                 $(this).trigger('resizeEnd');

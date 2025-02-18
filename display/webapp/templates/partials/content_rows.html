@@ -4,7 +4,7 @@
         {% for each in row %}
             <div id="item_{{ key|md5 }}_{% if each["alt_header"] is defined %}{{ each['alt_header']|md5 }}{% else %}{{ each['header']|md5 }}{% endif %}" class="img-col col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2" data-pos="{{ loop.index }}" data-row="{{ top_loop }}">
                 <div class="img-wrap">
-                    <div><span class="sc-header">{% if each["alt_header"] is defined %}{{ each['alt_header']|upper }}{% else %}{{ each['header'] }}{% endif %}</span><span id="mod_time_{{ key|md5 }}_{{ each['url']|md5 }}" class="mod-time">never</span>
+                    <div><span id="sc_header_{{ key|md5 }}_{{ each['url']|md5 }}" class="sc-header">{% if each["alt_header"] is defined %}{{ each['alt_header']|upper }}{% else %}{{ each['header'] }}{% endif %}</span><span id="mod_time_{{ key|md5 }}_{{ each['url']|md5 }}" class="mod-time">never</span>
                     </div>
                     <div id="do_open-sc_{{ key|md5 }}_{{ each['url']|md5 }}" data-id="{{ each['url']|md5 }}" data-tab-hash="{{ key|md5 }}" class="display-contents" title="Open screenshot / last evidence!">
                         <img

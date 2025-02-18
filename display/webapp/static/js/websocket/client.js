@@ -47,6 +47,7 @@ $(document).ready(function () {
                     let img_content = $("#img_content_" + tab_hash + '_' + item.sc_id)
                     let defaced_button = $("#defaced_" + tab_hash + '_' + item.sc_id)
                     let mod_time = $("#mod_time_" + tab_hash + '_' + item.sc_id)
+                    let sc_header = $("#sc_header_" + tab_hash + '_' + item.sc_id)
 
                     if (item.hasOwnProperty('sc_src')) {
                         img_content.attr("src", item.sc_src);
@@ -81,8 +82,14 @@ $(document).ready(function () {
                     }
 
                     mod_time.toggleClass("active");
+                    if (window.FULL_SCREEN) {
+                        sc_header.toggleClass("active")
+                    }
                     setTimeout(function () {
                         mod_time.toggleClass("active");
+                        if (window.FULL_SCREEN) {
+                            sc_header.toggleClass("active")
+                        }
                     }, 8000);
 
                 })
@@ -97,6 +104,10 @@ $(document).ready(function () {
 
             SetAllEventListeners();
             JustifyTabContent(tab_hash);
+
+            if (window.FULL_SCREEN) {
+                AdjustLayoutFullscreen()
+            }
 
         } else if ("html_data" in msg) {
 
@@ -122,6 +133,10 @@ $(document).ready(function () {
 
             SetAllEventListeners();
             JustifyTabContent(tab_hash);
+
+            if (window.FULL_SCREEN) {
+                AdjustLayoutFullscreen()
+            }
         }
 
         $('.template-row').hide();
@@ -264,6 +279,10 @@ $(document).ready(function () {
                 });
         }
         JustifyTabContent(msg["tab"]);
+
+        if (window.FULL_SCREEN === true) {
+            AdjustLayoutFullscreen();
+        }
 
         flashcontainer.fadeOut("slow");
     });

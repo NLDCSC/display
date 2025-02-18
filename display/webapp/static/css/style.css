@@ -149,7 +149,7 @@
 }
 
 .content-wrapper {
-  padding: 0.875rem 0.75rem;
+  padding: 0;
 }
 
 .con-details {
@@ -228,7 +228,8 @@
   padding: 1rem;
 }
 
-.mod-time.active {
+.mod-time.active,
+.sc-header.active{
   color: #ead710;
   transition: all 1.5s ease-out;
 }
@@ -815,4 +816,15 @@ div.dt-paging {
   padding: 5px;
   border-top-left-radius: 5px;
   border-top-right-radius: 5px;
+}
+
+#search_filter_text {
+    color: #787777;
+    font-style: italic;
+    font-size: small;
+}
+
+#DisplayContent{
+    overflow: auto;
+    height: calc(100vh - 110px);
 }
