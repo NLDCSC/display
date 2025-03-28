@@ -1,8 +1,7 @@
 import logging
 
 from flask import copy_current_request_context, request, render_template
-from flask_login import login_required, current_user
-
+from flask_login import current_user
 # noinspection PyUnresolvedReferences
 from flask_socketio import emit, disconnect, join_room, leave_room, call
 from nldcsc.loggers.app_logger import AppLogger
@@ -41,7 +40,6 @@ display_config_parser = DisplayConfigParser()
 
 # noinspection PyUnresolvedReferences
 @socketio.on("disconnect_request", namespace="/display")
-@login_required
 def disconnect_request() -> None:
     @copy_current_request_context
     def can_disconnect() -> None:
@@ -59,14 +57,12 @@ def disconnect_request() -> None:
 
 # noinspection PyUnresolvedReferences
 @socketio.on("my_ping", namespace="/display")
-@login_required
 def ping_pong() -> None:
     emit("my_pong", to=request.sid)
 
 
 # noinspection PyUnresolvedReferences
 @socketio.on("async_mode", namespace="/display")
-@login_required
 def get_async_mode() -> None:
     logger.info(f"Async mode request from: {request.sid}")
 
@@ -90,7 +86,6 @@ def cfm_received_data(client_id: str, data: dict) -> None:
 
 # noinspection PyUnresolvedReferences
 @socketio.on("connect", namespace="/display")
-@login_required
 def connect() -> None:
     global clients
 
@@ -115,7 +110,6 @@ def connect() -> None:
 
 # noinspection PyUnresolvedReferences
 @socketio.on("active_connect", namespace="/display")
-@login_required
 def active_connect() -> None:
     global clients
 
@@ -132,7 +126,6 @@ def active_connect() -> None:
 
 # noinspection PyUnresolvedReferences
 @socketio.on("disconnect", namespace="/display")
-@login_required
 def do_disconnect() -> None:
     global clients
 
@@ -152,7 +145,6 @@ def do_disconnect() -> None:
 
 # noinspection PyUnresolvedReferences
 @socketio.on("change_display_tab", namespace="/display")
-@login_required
 def do_change_display_tab(data: dict) -> None:
     global clients
 
@@ -215,7 +207,6 @@ def do_change_display_tab(data: dict) -> None:
 
 # noinspection PyUnresolvedReferences
 @socketio.on("get_hash_screenshot", namespace="/display")
-@login_required
 def do_get_hash_screenshot(
     url_hash: str, tab_hash: str, last_element: bool = False
 ) -> None:
@@ -265,7 +256,6 @@ def do_get_hash_screenshot(
 
 # noinspection PyUnresolvedReferences
 @socketio.on("rebuild_request", namespace="/display")
-@login_required
 def do_rebuild_request() -> None:
     global clients
 
@@ -321,7 +311,6 @@ def do_rebuild_request() -> None:
 
 # noinspection PyUnresolvedReferences
 @socketio.on("create_custom_evidence", namespace="/display")
-@login_required
 def do_create_custom_evidence(data: dict) -> None:
     logger.info(f"Client: {request.sid} is creating custom evidence...")
 
@@ -330,7 +319,6 @@ def do_create_custom_evidence(data: dict) -> None:
 
 # noinspection PyUnresolvedReferences
 @socketio.on("create_custom_screenshot", namespace="/display")
-@login_required
 def do_create_custom_screenshot(data: dict) -> None:
     logger.info(f"Client: {request.sid} is creating custom screenshot...")
 
@@ -339,7 +327,6 @@ def do_create_custom_screenshot(data: dict) -> None:
 
 # noinspection PyUnresolvedReferences
 @socketio.on("see_custom_screenshot", namespace="/display")
-@login_required
 def do_see_custom_screenshot(req_data: dict) -> None:
     logger.info(f"Client: {request.sid} is requesting to see custom screenshot...")
 
@@ -365,7 +352,6 @@ def do_see_custom_screenshot(req_data: dict) -> None:
 
 # noinspection PyUnresolvedReferences
 @socketio.on("set_defaced", namespace="/display")
-@login_required
 def do_set_defaced(req_data: dict) -> None:
     logger.info(
         f"Client: {request.sid} is setting {req_data['data']} "
