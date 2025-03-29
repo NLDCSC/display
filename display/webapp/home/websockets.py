@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 from flask import copy_current_request_context, request, render_template
 from flask_login import current_user
@@ -192,7 +193,7 @@ def do_change_display_tab(data: dict) -> None:
 
 @socketio.on("get_hash_screenshot", namespace="/display")
 def do_get_hash_screenshot(
-    url_hash: str, tab_hash: str, last_element: bool = False
+    url_hashes: List[str], tab_hash: str, last_element: bool = False
 ) -> None:
     global clients
 
@@ -200,24 +201,28 @@ def do_get_hash_screenshot(
 
     req_client = clients.get(request.sid)
 
+    last_element = len(url_hashes)
+
     if req_client.current_tab_hash == tab_hash:
 
-        url_screenshot = sh.get_hash_screenshot(url_hash=url_hash)
+        for url_hash in url_hashes:
+            last_element -= 1
+            url_screenshot = sh.get_hash_screenshot(url_hash=url_hash)
 
-        @copy_current_request_context
-        def cfm_received(client_id: str, data: dict) -> None:
-            cfm_received_data(client_id=client_id, data=data)
+            @copy_current_request_context
+            def cfm_received(client_id: str, data: dict) -> None:
+                cfm_received_data(client_id=client_id, data=data)
 
-        emit(
-            "push_hash_screenshot",
-            {
-                "url_screenshot": url_screenshot,
-                "tab_hash": tab_hash,
-                "last_element": last_element,
-            },
-            to=req_client.sid,
-            callback=cfm_received,
-        )
+            emit(
+                "push_hash_screenshot",
+                {
+                    "url_screenshot": url_screenshot,
+                    "tab_hash": tab_hash,
+                    "last_element": last_element == 0,
+                },
+                to=req_client.sid,
+                callback=cfm_received,
+            )
     else:
         logger.warning(f"Client {req_client.sid} has changed tabs; disregarding...")
 
