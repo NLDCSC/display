@@ -20,8 +20,6 @@ services:
     depends_on:
       flask_web:
         condition: service_healthy
-      flask_ws:
-        condition: service_healthy
     env_file:
       - .env
     ports:
@@ -100,12 +98,6 @@ services:
     networks:
       backend:
         ipv4_address: 172.16.30.6
-    healthcheck:
-      test: curl --fail http://localhost:5050 || exit 1
-      interval: 30s
-      timeout: 5s
-      retries: 1
-      start_period: 30s
 
   celery_daemon:
     image: display-dev-celery_daemon

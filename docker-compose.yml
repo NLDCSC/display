@@ -56,12 +56,6 @@ services:
       - "./docker_data/flask:/app/data"
     networks:
       - backend
-    healthcheck:
-      test: curl --fail http://localhost:5050 || exit 1
-      interval: 30s
-      timeout: 5s
-      retries: 1
-      start_period: 30s
 
   ha_proxy:
     image: display-splash-ha_proxy
