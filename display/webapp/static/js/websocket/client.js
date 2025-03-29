@@ -2,6 +2,9 @@ namespace = '/display';
 
 var socket = io(namespace);
 
+var start_time;
+var ping_pong_interval;
+
 $(document).ready(function () {
 
     // Event handler for new connections.
@@ -113,6 +116,8 @@ $(document).ready(function () {
 
         } else if ("html_data" in msg) {
 
+            ClearPingInterval();
+
             let tab_hash = msg["tab_hash"]
             let tab_content = $("#content_" + tab_hash)
 
@@ -122,16 +127,13 @@ $(document).ready(function () {
 
             let images_containers = $('div[id^=do_open-sc_'+ tab_hash +']')
 
-            images_containers.each(function(value){
-                let isLastElement = value === images_containers.length - 1;
+            let all_url_hashes = []
 
-                if (isLastElement) {
-                    socket.emit("get_hash_screenshot", images_containers[value].attributes["data-id"].nodeValue, tab_hash, isLastElement)
-                } else {
-                    socket.emit("get_hash_screenshot", images_containers[value].attributes["data-id"].nodeValue, tab_hash)
-                }
-
+            images_containers.each(function(index, element) {
+                all_url_hashes.push($(element).attr("data-id"));
             })
+
+            socket.emit("get_hash_screenshot", all_url_hashes, tab_hash)
 
             SetAllEventListeners();
             JustifyTabContent(tab_hash);
@@ -205,6 +207,7 @@ $(document).ready(function () {
                     AdjustLayoutFullscreen();
                 }
                 JustifyTabContent(msg["tab_hash"]);
+                SetPingInterval();
             }
         }
 
@@ -328,11 +331,7 @@ $(document).ready(function () {
     // message. The server then responds with a "pong" message and the
     // round trip time is measured.
     let ping_pong_times = [];
-    let start_time;
-    window.setInterval(function () {
-        start_time = (new Date).getTime();
-        socket.emit('my_ping');
-    }, 1000);
+    SetPingInterval();
 
     // Handler for the "pong" message. When the pong is received, the
     // time from the ping is stored, and the average of the last 30
@@ -349,3 +348,15 @@ $(document).ready(function () {
     });
 
 });
+
+function SetPingInterval() {
+    ping_pong_interval = window.setInterval(function () {
+        start_time = (new Date).getTime();
+        socket.emit('my_ping');
+    }, 1000);
+}
+
+
+function ClearPingInterval() {
+    window.clearInterval(ping_pong_interval);
+}
