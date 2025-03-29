@@ -144,7 +144,7 @@ $(document).ready(function () {
         $('.template-row').hide();
 
         if (cb) {
-            cb(client_id = socket.sid, data = msg["tab_hash"]);
+            cb(socket.id, msg["tab_hash"]);
         }
 
     });
@@ -192,7 +192,7 @@ $(document).ready(function () {
             }
 
             if (cb) {
-                cb(client_id = socket.sid, data = msg["tab_hash"]);
+                cb(socket.id, msg["tab_hash"]);
             }
 
             if (msg["last_element"]) {
@@ -311,18 +311,16 @@ $(document).ready(function () {
     });
 
     socket.on('con_request', function (msg, cb) {
-
         if (cb) {
             cb();
         }
     });
 
     socket.on('async_request', function (msg, cb) {
-
         $('#async_mode').text(msg.data);
 
         if (cb) {
-            cb(client_id = socket.sid, data = msg.data);
+            cb(socket.id, msg.data);
         }
     });
 
