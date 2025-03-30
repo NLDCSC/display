@@ -1128,7 +1128,7 @@ function SetTabClick(evt) {
 
     let tab_hash = attrs["data-hash"].nodeValue;
 
-    $("#tab_change_loading").show()
+    $("#loading_indicators").show()
     $("#content_" + tab_hash).addClass("grey_out")
 
     window.socket.emit("change_display_tab", {"tab_name": selected_tab, "tab_hash": tab_hash});
