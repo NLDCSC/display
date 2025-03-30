@@ -17,7 +17,7 @@ from display.core.parsers.display_config_parser import DisplayConfigParser
 from display.core.screenshots.utils import (
     get_mod_time,
     get_compare_image,
-    getB64_screenshot,
+    get_b64_screenshot,
 )
 from display.webapp.app.models import DefacementTracker
 from display.webapp.config import Config
@@ -144,7 +144,7 @@ class ScreenShotHandler(object):
 
         ret_data = {
             "sc_id": url_hash,
-            "sc_src": getB64_screenshot(url_hash),
+            "sc_src": get_b64_screenshot(url_hash),
             "mod_time": get_mod_time(url_hash),
             "changed": get_compare_image(url_hash),
             "defaced": self.is_defaced(picture_hash=url_hash),
@@ -153,14 +153,21 @@ class ScreenShotHandler(object):
         return ret_data
 
     def get_picture_hash(self, picture_hash: str) -> str:
-        try:
-            with open(
-                os.path.join(self.config.SCREENSHOT_LOCATION, f"{picture_hash}.png"),
-                "rb",
-            ) as f:
-                # noinspection InsecureHash
-                return hashlib.md5(f.read()).hexdigest()
-        except FileNotFoundError:
+
+        picture_hash_location = os.path.join(
+            self.config.SCREENSHOT_LOCATION, f"{picture_hash}.png"
+        )
+        if os.path.exists(picture_hash_location):
+            try:
+                with open(
+                    picture_hash_location,
+                    "rb",
+                ) as f:
+                    # noinspection InsecureHash
+                    return hashlib.md5(f.read()).hexdigest()
+            except FileNotFoundError:
+                return ""
+        else:
             return ""
 
     def is_defaced(self, picture_hash: str) -> int:
@@ -192,7 +199,7 @@ class ScreenShotHandler(object):
                         ret_data.append(
                             {
                                 "sc_id": each,
-                                "sc_src": getB64_screenshot(each),
+                                "sc_src": get_b64_screenshot(each),
                                 "mod_time": get_mod_time(each),
                                 "changed": is_changed,
                                 "defaced": self.is_defaced(picture_hash=each),
@@ -237,7 +244,7 @@ class ScreenShotHandler(object):
             ret_data.append(
                 {
                     "sc_id": the_hash,
-                    "sc_src": getB64_screenshot(the_hash),
+                    "sc_src": get_b64_screenshot(the_hash),
                     "mod_time": get_mod_time(the_hash, evidence_shot=evidence_shot),
                     "changed": is_changed,
                     "defaced": self.is_defaced(picture_hash=the_hash),
@@ -275,9 +282,9 @@ class ScreenShotHandler(object):
             if os.path.exists(evidence_path):
                 photo = Image.open(evidence_path)
             else:
-                try:
+                if os.path.exists(normal_path):
                     photo = Image.open(normal_path)
-                except FileNotFoundError:
+                else:
                     # no picture found; storing error picture
                     with open(
                         os.path.join(
