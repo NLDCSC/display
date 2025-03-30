@@ -208,6 +208,10 @@ body {
     width: 100px;
 }
 
+#loading_indicators{
+    display: none;
+}
+
 #tab_change_loading {
     position: absolute;
     top: 53%;
@@ -217,7 +221,6 @@ body {
     -moz-transform: translateY(-50%);
     -webkit-transform: translateY(-50%);
     -o-transform: translateY(-50%);
-    display: none;
 }
 
 .grey_out {

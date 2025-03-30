@@ -25,7 +25,8 @@ services:
     ports:
       - "127.0.0.1:8000:80"
     networks:
-      - backend
+      backend:
+        ipv4_address: 172.16.30.2
 
   flask_web:
     image: display-dev-flask_web
@@ -133,7 +134,8 @@ services:
     volumes:
       - "./docker-data/flask:/app/data"
     networks:
-      - backend
+      backend:
+        ipv4_address: 172.16.30.10
 
   celery_beat:
     image: display-dev-celery_beat
@@ -169,7 +171,8 @@ services:
     volumes:
       - "./docker-data/flask:/app/data"
     networks:
-      - backend
+      backend:
+        ipv4_address: 172.16.30.11
 
   redis:
     image: display-dev-redis

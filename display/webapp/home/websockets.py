@@ -20,7 +20,7 @@ from display.core.general.constants import (
 )
 from display.core.parsers.display_config_parser import DisplayConfigParser
 from display.core.screenshots.screenshot_handler import ScreenShotHandler
-from display.core.screenshots.utils import getB64_screenshot
+from display.core.screenshots.utils import get_b64_screenshot
 from display.webapp.app.models import DefacementTracker
 from display.webapp.run import socketio, db
 
@@ -307,7 +307,7 @@ def do_see_custom_screenshot(req_data: dict) -> None:
 
     sh.set_timestamp_to_picture(filename=req_data["data"])
 
-    data = getB64_screenshot(filename=req_data["data"], with_timestamp=True)
+    data = get_b64_screenshot(filename=req_data["data"], with_timestamp=True)
 
     emit(
         "show_screenshot",

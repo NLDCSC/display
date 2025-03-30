@@ -150,10 +150,15 @@
         <div class="no-config">Configuration is empty; go to settings (admin only!) to provide one...</div>
     {% endif %}
     {% include "partials/template_row.html" %}
-    <div id="tab_change_loading">
-        <div class="loading-container">
-            <div class="loading"></div>
-            <div id="loading-text">loading</div>
+    <div id="loading_indicators">
+        <div class="meter">
+            <span style="width: 0%"></span>
+        </div>
+        <div id="tab_change_loading">
+            <div class="loading-container">
+                <div class="loading"></div>
+                <div id="loading-text">loading</div>
+            </div>
         </div>
     </div>
     {% for key in all_display_sources %}

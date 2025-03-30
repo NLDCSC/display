@@ -52,24 +52,30 @@ def get_mod_time(
 def get_compare_image(filename):
     cs = CompareScreenshots()
 
-    try:
-        not_changed = cs.compare_images(
-            os.path.join(config.SCREENSHOT_LOCATION, f"{filename}.png"),
-            os.path.join(config.SCREENSHOT_LOCATION, f"{filename}_old.png"),
-        )
-        if not_changed:
-            return "1"
-        else:
+    current_sc_location = os.path.join(config.SCREENSHOT_LOCATION, f"{filename}.png")
+    old_sc_location = os.path.join(config.SCREENSHOT_LOCATION, f"{filename}_old.png")
+
+    if os.path.exists(current_sc_location) and os.path.exists(old_sc_location):
+        try:
+            not_changed = cs.compare_images(
+                current_sc_location,
+                old_sc_location,
+            )
+            if not_changed:
+                return "1"
+            else:
+                return "0"
+        except FileNotFoundError:
             return "0"
-    except FileNotFoundError:
-        return "0"
-    except cv2.error:
-        return "0"
-    except ValueError:
+        except cv2.error:
+            return "0"
+        except ValueError:
+            return "0"
+    else:
         return "0"
 
 
-def getB64_screenshot(filename, with_timestamp=False):
+def get_b64_screenshot(filename, with_timestamp=False):
     try:
         if with_timestamp:
             the_filename = os.path.join(
@@ -80,15 +86,20 @@ def getB64_screenshot(filename, with_timestamp=False):
                 config.SCREENSHOT_LOCATION, f"{filename}_min.png"
             )
 
-        with open(the_filename, "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read())
-        return f"data:image/png;base64, {encoded_string.decode('utf-8')}"
-    except Exception:
-        with open(
-            os.path.join(
-                my_file_location, "../../webapp/static", "img/noScreenShot.png"
-            ),
-            "rb",
-        ) as image_file:
-            encoded_string = base64.b64encode(image_file.read())
-        return f"data:image/png;base64, {encoded_string.decode('utf-8')}"
+        if os.path.exists(the_filename):
+            with open(the_filename, "rb") as image_file:
+                encoded_string = base64.b64encode(image_file.read())
+            return f"data:image/png;base64, {encoded_string.decode('utf-8')}"
+        else:
+            return get_no_screenshot_b64_image_string()
+    except Exception as e:
+        return get_no_screenshot_b64_image_string()
+
+
+def get_no_screenshot_b64_image_string() -> str:
+    with open(
+        os.path.join(my_file_location, "../../webapp/static", "img/noScreenShot.png"),
+        "rb",
+    ) as image_file:
+        encoded_string = base64.b64encode(image_file.read())
+    return f"data:image/png;base64, {encoded_string.decode('utf-8')}"

@@ -4,6 +4,8 @@ var socket = io(namespace);
 
 var start_time;
 var ping_pong_interval;
+var total_screenshot_count = 0;
+var current_screenshot_iteration = 0;
 
 $(document).ready(function () {
 
@@ -104,7 +106,7 @@ $(document).ready(function () {
 
             SetTabContentFilter();
 
-            $("#tab_change_loading").hide()
+            $("#loading_indicators").hide()
             tab_content.removeClass("grey_out")
 
             SetAllEventListeners();
@@ -133,6 +135,12 @@ $(document).ready(function () {
                 all_url_hashes.push($(element).attr("data-id"));
             })
 
+            $(".meter > span").width("0%")
+
+            total_screenshot_count = all_url_hashes.length;
+            current_screenshot_iteration = 0;
+            SetProgressbarWidth()
+
             socket.emit("get_hash_screenshot", all_url_hashes, tab_hash)
 
             SetAllEventListeners();
@@ -154,6 +162,8 @@ $(document).ready(function () {
     socket.on('push_hash_screenshot', function (msg, cb) {
 
         if (msg["url_screenshot"] !== 'undefined') {
+            current_screenshot_iteration += 1;
+            SetProgressbarWidth();
 
             let tab_content = $("#content_" + msg["tab_hash"])
 
@@ -200,7 +210,7 @@ $(document).ready(function () {
             if (msg["last_element"]) {
                 SetTabContentFilter();
 
-                $("#tab_change_loading").hide()
+                $("#loading_indicators").hide()
                 tab_content.removeClass("grey_out")
 
                 if (window.FULL_SCREEN === true) {
@@ -356,7 +366,18 @@ function SetPingInterval() {
     }, 1000);
 }
 
-
 function ClearPingInterval() {
     window.clearInterval(ping_pong_interval);
+}
+
+function SetProgressbarWidth() {
+    let current_progress = current_screenshot_iteration / total_screenshot_count * 100
+    $(".meter > span").width(current_progress + "%")
+    if (current_progress === 100) {
+        ClearProgressbar();
+    }
+}
+
+function ClearProgressbar() {
+    $(".meter > span").width("0%")
 }
