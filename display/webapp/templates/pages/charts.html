@@ -3,16 +3,20 @@
 {% block head_css %}
     <link href="{{ url_for('static', filename='css/bootstrap/bootstrap.min.css') }}" rel="stylesheet" />
     <link href="{{ url_for('static', filename='css/defacement_chart.min.css') }}" rel="stylesheet"/>
+    <link href="{{ url_for('static', filename='css/sweetalert2/bootstrap-4.min.css') }}" rel="stylesheet"/>
 {% endblock %}
 
 {% block head_scripts %}
     <script type="text/javascript" src="{{ url_for('static', filename='js/plotly/plotly.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/sweetalert2/sweetalert2.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/defacements.js') }}"></script>
 {% endblock %}
 
 {% block body %}
     <div class="card">
         <div class="card-header">
-            <h4 class="card-title mb-0">Defacements</h4>
+            <h4 class="card-title">Defacements</h4>
+            <small class="small text-muted mb-0">Refreshes every minute unless a saved view is used.</small>
         </div>
         <div class="card-body">
             <div id="defacement_chart"></div>
@@ -21,8 +25,9 @@
 {% endblock %}
 
 {% block body_scripts %}
+
     <script>
-        var layout = {
+        let layout = {
             paper_bgcolor: "#191c24",
             plot_bgcolor: "#191c24",
             modebar: {
@@ -70,8 +75,10 @@
                 }
             ]
         };
-
-        var options = {
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        let view_id = urlParams.get('view-id');
+        let options = {
             displaylogo: false,
             displayModeBar: true,
             modeBarButtonsToRemove: ['lasso2d', "select2d"],
@@ -87,25 +94,22 @@
                         height: gd._fullLayout.height,
                     })
                 }
+            }, {
+                name: 'Share view',
+                icon: Plotly.Icons.pencil,
+                click: function(gd) {
+                    return save_view(gd)
+                }
             }, 'zoom2d', 'pan2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d'
             ], []]
         }
 
-        {% if scatter_data is defined %}
-            var data = [
-                {% for each in scatter_data %}
-                    {
-                        x: [{% for dtg in each.x %}"{{ dtg|timestamptodatetime }}"{% if not loop.last %}, {% endif %}{% endfor %}],
-                        y: {{ each.y }},
-                        type: "{{ each.type }}",
-                        name: "{{ each.name }}",
-                    }{% if not loop.last %},{% endif %}
-                {% endfor %}
-            ];
-        {% else %}
-            var data = [];
-        {% endif %}
+        // Initial render of the plot based on all data or a saved view
+        create_plot(view_id);
 
-        Plotly.newPlot('defacement_chart', data, layout, options);
+        // Update data every minute unless a saved view is used.
+        if (view_id === null) {
+            setInterval(update_plot, 60000);
+        }
     </script>
 {% endblock %}
