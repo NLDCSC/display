@@ -21,6 +21,7 @@ const create_plot = function (view_id) {
             }
         })
         .catch(res => {
+            console.log(res);
             if (res.status === 404) {
                 Swal.fire({
                     title: "FAILED to fetch data!",
@@ -94,14 +95,24 @@ const update_plot = function () {
         .then(plot_data => {
             const gd = document.getElementById('defacement_chart');
             // Maintain visibility status, otherwise it's reset on every refresh.
-            plot_data = plot_data.map((team_data, index) => {
-                team_data.visible = gd.data[index].visible
+            const team_visibility = {};
+            gd.data.forEach(elem => {
+                team_visibility[elem.name] = elem.visible ?? true;
+            });
+            plot_data = plot_data.map(team_data => {
+                const team_name = team_data.name;
+                if (team_name in team_visibility){
+                    team_data.visible = team_visibility[team_name];
+                } else {
+                    team_data.visible = true;
+                }
                 return team_data
             });
             gd.data = plot_data;
             Plotly.redraw(gd);
         })
         .catch(res => {
+            console.log(res);
             if (res.status === 404) {
                 Swal.fire({
                     title: "FAILED to refresh data!",
