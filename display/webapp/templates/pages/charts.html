@@ -85,7 +85,7 @@
             responsive: true,
             modeBarButtons: [[{
                 name: 'Download chart',
-                icon: Plotly.Icons.camera,
+                icon: Plotly.Icons.disk,
                 click: function (gd) {
                     Plotly.downloadImage(gd, {
                         filename: 'defacements_graph',
@@ -96,7 +96,7 @@
                 }
             }, {
                 name: 'Share view',
-                icon: Plotly.Icons.pencil,
+                icon: Plotly.Icons.camera,
                 click: function(gd) {
                     return save_view(gd)
                 }
