@@ -31,7 +31,7 @@ def blueteam(env, val: str) -> bool:
 @home.app_template_filter()
 def md5(eval_ctx, value):
     # noinspection InsecureHash
-    return hashlib.md5(value.encode("utf-8")).hexdigest()[:6]
+    return hashlib.md5(value.encode("utf-8")).hexdigest()[:8]
 
 
 @pass_eval_context

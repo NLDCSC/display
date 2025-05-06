@@ -42,7 +42,7 @@ class Target(Validations):
     @staticmethod
     def get_hash(hash_input: bytes) -> str:
         # noinspection InsecureHash
-        return hashlib.md5(hash_input).hexdigest()[:6]
+        return hashlib.md5(hash_input).hexdigest()[:8]
 
     def to_data_mapping(self):
         the_dict = asdict(self)
@@ -83,7 +83,7 @@ class TargetGroup:
     @staticmethod
     def get_hash(hash_input: bytes) -> str:
         # noinspection InsecureHash
-        return hashlib.md5(hash_input).hexdigest()[:6]
+        return hashlib.md5(hash_input).hexdigest()[:8]
 
 
 @dataclass_json
