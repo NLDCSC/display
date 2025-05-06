@@ -309,9 +309,13 @@ function SetDisplayFilter() {
         }
     });
 
+    get_list_cookie("display-top-filter").forEach(function (value) {
+        $("#cb_head_" + value).prop('checked', false)
+    })
+
     get_list_cookie("display-tab-filter").forEach(function (value) {
-        $("#cbtab_tar_" + value).prop('checked', false)
         $("#cbtab_head_" + value).prop('checked', false)
+
     })
 
     $("#check_all_tar").off().on("click", function () {
@@ -737,10 +741,11 @@ function OpenTracelog() {
 
 function SetTabVisibility(el) {
 
+    let tab_value;
     if (typeof el === 'string' || el instanceof String) {
-        var tab_value = el
+        tab_value = el
     } else {
-        var tab_value = el.target.value
+        tab_value = el.target.value
     }
 
     let tab_element = $("#tab_" + tab_value)
@@ -783,7 +788,7 @@ function SetTabContentFilter(tab_value = null) {
 
     let get_items = $('div[id^="item_"]')
 
-    filter_data = get_list_cookie("display-tab-filter")
+    let filter_data = get_list_cookie("display-tab-filter")
 
     if (tab_value === null) {
         if (filter_data.length > 1){
@@ -892,7 +897,7 @@ function SetTabContentFilter(tab_value = null) {
 
 function JustifyTabContent(tab_hash, filtered = false) {
 
-    filter_data = get_list_cookie("display-tab-filter")
+    let filter_data = get_list_cookie("display-tab-filter")
 
     // distribute the remaining visible items evenly over the rows (depending on screen size)
 
@@ -1039,7 +1044,7 @@ function CloseDisplayFilter() {
     let check_visible = $('button[id^="tab_"]:visible')
 
     if (!check_visible.hasClass('active')){
-        check_visible.trigger('click');
+        check_visible[0].click();
     }
 
     $("#popup-filter").hide()
@@ -1053,7 +1058,7 @@ function ReEnableDisplayFilter() {
     let check_visible = $('button[id^="tab_"]:visible')
 
     if (!check_visible.hasClass('active')){
-        check_visible.trigger('click')
+        check_visible[0].click()
     }
 }
 

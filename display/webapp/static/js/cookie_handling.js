@@ -6,13 +6,13 @@ function add_list_cookie(key, val) {
 
     let a = Cookies.get(key)
     if(typeof a === 'undefined') {
-        Cookies.set(key, "," + val, { sameSite: 'lax' })
+        Cookies.set(key, JSON.stringify([val]), { sameSite: 'lax' })
         return true
     } else {
-        let items = a.split(',')
+        let items = JSON.parse(a)
         items.push(val)
         items = items.filter(onlyUnique)
-        Cookies.set(key, items.join(','), { sameSite: 'lax' })
+        Cookies.set(key, JSON.stringify(items), { sameSite: 'lax' })
         return true
     }
 
@@ -21,12 +21,12 @@ function add_list_cookie(key, val) {
 function remove_from_list_cookie(key, val) {
 
     let a = Cookies.get(key)
-    let items = a.split(',')
+    let items = JSON.parse(a)
 
     let indx = items.indexOf(val);
     if (indx !== -1) items.splice(indx, 1);
     items = items.filter(onlyUnique)
-    Cookies.set(key, items.join(','), { sameSite: 'lax' })
+    Cookies.set(key, JSON.stringify(items), { sameSite: 'lax' })
     return true
 }
 
@@ -36,7 +36,7 @@ function get_list_cookie(key) {
     if(typeof a === 'undefined') {
         return []
     } else {
-        return a.split(',')
+        return JSON.parse(a)
     }
 
 }
