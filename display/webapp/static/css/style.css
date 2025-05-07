@@ -828,3 +828,11 @@ div.dt-paging {
     overflow: auto;
     height: calc(100vh - 110px);
 }
+
+#swal2-content, #swal2-title {
+  color: rgba(0,0,0,.5);
+}
+
+#no-data-shown {
+  display: none;
+}

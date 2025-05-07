@@ -825,8 +825,14 @@ function SetTabContentFilter(tab_value = null) {
             })
         } else {
             let check_visible = $('button[id^="tab_"]:visible').filter(".active")
-            let tab_hash = check_visible[0].attributes['data-hash'].nodeValue
-            JustifyTabContent(tab_hash)
+            if (check_visible.length > 0){
+                $("#no-data-shown").hide()
+                let tab_hash = check_visible[0].attributes['data-hash'].nodeValue
+                JustifyTabContent(tab_hash)
+            } else {
+                $("#no-data-shown").show();
+                $('div[id^="content_"].active').hide()
+            }
         }
     } else {
         let filtered_contents = get_items.filter('div[id*=' + tab_value +']:hidden')
@@ -1039,13 +1045,23 @@ function CloseSettings() {
 }
 
 function CloseDisplayFilter() {
+    $("#no-data-shown").hide()
+    const current_tab = $('button[id^="tab_"].active')
+
     DestroyScrollingTabs()
     InitScrollingTabs()
 
-    let check_visible = $('button[id^="tab_"]:visible')
+    const check_visible_tabs = $('button[id^="tab_"]:visible')
+    const check_visible_content = $('div[id^="row"]:visible')
+    if (check_visible_tabs.length === 0 || check_visible_content.length === 0){
+        $("#popup-filter").hide();
+        $("#no-data-shown").show();
+        $('div[id^="content_"].active').hide()
+        return
+    }
 
-    if (!check_visible.hasClass('active')){
-        check_visible[0].click();
+    if (!current_tab.hasClass('active')){
+        check_visible_tabs[0].click();
     }
 
     $("#popup-filter").hide()
@@ -1056,10 +1072,17 @@ function ReEnableDisplayFilter() {
         SetTabVisibility(tab_val = value)
     })
 
-    let check_visible = $('button[id^="tab_"]:visible')
+    const check_visible_tabs = $('button[id^="tab_"]:visible')
+    $("#no-data-shown").hide();
+    if (check_visible_tabs.length === 0){
+        $("#no-data-shown").show();
+        $('div[id^="content_"].active').hide()
+        return
+    }
 
-    if (!check_visible.hasClass('active')){
-        check_visible[0].click()
+
+    if (!check_visible_tabs.hasClass('active')){
+        check_visible_tabs[0].click()
     }
 }
 
