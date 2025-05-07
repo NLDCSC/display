@@ -311,11 +311,12 @@ function SetDisplayFilter() {
 
     get_list_cookie("display-top-filter").forEach(function (value) {
         $("#cb_head_" + value).prop('checked', false)
+        $("#cb_tar_" + value).prop('checked', false)
     })
 
     get_list_cookie("display-tab-filter").forEach(function (value) {
         $("#cbtab_head_" + value).prop('checked', false)
-
+        $("#cbtab_tar_" + value).prop('checked', false)
     })
 
     $("#check_all_tar").off().on("click", function () {
