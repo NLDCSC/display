@@ -53,17 +53,18 @@ def sso_callback():
         logger.info(f"User: {username} is not allowed to login via OIDC....")
         sso.logout()
         abort(401)
-
-    account = db.session.scalar(select(Users).filter(Users.username == username))
-
-    if user_allowed and not admin_allowed:
-        # not yet in group; fetching group id
-        new_group = db.session.scalar(select(Groups).filter(Groups.name == "user"))
-        group_id = new_group.id
     elif admin_allowed:
         # thus admin
         new_group = db.session.scalar(select(Groups).filter(Groups.name == "admin"))
         group_id = new_group.id
+    else:
+        # user_allowed
+        # not yet in group; fetching group id
+        new_group = db.session.scalar(select(Groups).filter(Groups.name == "user"))
+        group_id = new_group.id
+
+    # Not case-sensitive.
+    account = db.session.scalar(select(Users).filter(Users.username == username))
 
     if account:
         # password validation is done by oidc; just log the user in
