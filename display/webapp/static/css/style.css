@@ -104,12 +104,14 @@
   font-size: small;
   transition: all 1.5s ease-out;
 }
+
 @media (min-width: 768px) and (max-width: 1199px) {
   .mod-time {
     font-size: 11px;
     padding-top: 3px;
   }
 }
+
 @media (min-width: 1200px) and (max-width: 1600px) {
   .mod-time {
     font-size: 11px;
@@ -120,16 +122,19 @@
 .sc-header {
   font-size: 1rem;
 }
+
 @media (min-width: 768px) and (max-width: 1199px) {
   .sc-header {
     font-size: 0.8rem;
   }
 }
+
 @media (min-width: 1200px) and (max-width: 1400px) {
   .sc-header {
     font-size: 0.8rem;
   }
 }
+
 @media (min-width: 1401px) and (max-width: 1600px) {
   .sc-header {
     font-size: 0.9rem;
@@ -158,6 +163,7 @@
   margin-bottom: 5px;
   min-height: 30px;
 }
+
 @media (max-width: 768px) {
   #defacement_chart {
     display: none;
@@ -195,6 +201,7 @@
     margin-bottom: 20px;
   }
 }
+
 @media (max-width: 950px) {
   .con-details-text {
     display: none;
@@ -229,7 +236,7 @@
 }
 
 .mod-time.active,
-.sc-header.active{
+.sc-header.active {
   color: #ead710;
   transition: all 1.5s ease-out;
 }
@@ -324,6 +331,7 @@ div[id^="actions_"] {
 }
 
 @media (min-width: 1200px) and (max-width: 1600px) {
+
   .create-evidence,
   .create-screenshot,
   .open-url,
@@ -401,22 +409,22 @@ div[id^="actions_"] {
   height: auto;
 }
 
-#tab-selector{
+#tab-selector {
   position: absolute;
   left: 545px;
 }
 
-div.dropdown-multicol2{
+div.dropdown-multicol2 {
   width: 20em;
 }
 
-div.dropdown-multicol2>div.dropdown-col{
-  display:inline-block;
+div.dropdown-multicol2>div.dropdown-col {
+  display: inline-block;
   width: 32%;
 }
 
-div.dropdown-row>a.dropdown-item{
-  display:inline-block;
+div.dropdown-row>a.dropdown-item {
+  display: inline-block;
   width: 32%;
 }
 
@@ -574,6 +582,14 @@ div.float-right.user-details div.dropdown.show div.dropdown-menu.show {
   max-width: 100% !important;
 }
 
+#tracelog-wrapper {
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 65vh;
+  min-width: 100%;
+  display: block;
+}
+
 .dataTables_wrapper .dataTable thead .sorting::after {
   right: 0.8rem;
   line-height: 1.5;
@@ -621,7 +637,7 @@ div#display-tracelog_paginate.dataTables_paginate.paging_simple_numbers {
 }
 
 div#display-tracelog_wrapper.dataTables_wrapper.dt-bootstrap5.no-footer div.row {
-  margin-right: 0 ;
+  margin-right: 0;
   margin-left: 0;
 }
 
@@ -632,7 +648,8 @@ div#display-tracelog_wrapper.dataTables_wrapper.dt-bootstrap5.no-footer div.row 
 
 table#display-tracelog.table.table-striped.table-dark.dataTable.no-footer thead tr th {
   position: sticky;
-  top: 0px;  /* 0px if you don't have a navbar, but something is required */
+  top: 0px;
+  /* 0px if you don't have a navbar, but something is required */
   background: #212529;
 }
 
@@ -654,15 +671,31 @@ table#display-tracelog.table.table-striped.table-dark.dataTable.no-footer thead 
 }
 
 @keyframes blinkshadow {
-  0% { box-shadow: 0 0 10px 5px #c83e3e; }
-  50% { box-shadow: none; }
-  100% { box-shadow: 0 0 10px 5px #c83e3e; }
+  0% {
+    box-shadow: 0 0 10px 5px #c83e3e;
+  }
+
+  50% {
+    box-shadow: none;
+  }
+
+  100% {
+    box-shadow: 0 0 10px 5px #c83e3e;
+  }
 }
 
 @-webkit-keyframes blinkshadow {
-  0% { box-shadow: 0 0 10px 5px #c83e3e; }
-  50% { box-shadow: 0 0 0; }
-  100% { box-shadow: 0 0 10px 5px #c83e3e; }
+  0% {
+    box-shadow: 0 0 10px 5px #c83e3e;
+  }
+
+  50% {
+    box-shadow: 0 0 0;
+  }
+
+  100% {
+    box-shadow: 0 0 10px 5px #c83e3e;
+  }
 }
 
 .popup_tracelog div#tracelog-wrapper div#display-tracelog_wrapper.dataTables_wrapper.dt-bootstrap5.no-footer div.row.dt-row div.col-sm-12 {
@@ -765,11 +798,11 @@ table#display-tracelog.table.table-striped.table-dark.dataTable.no-footer thead 
   border-radius: 2px;
   line-height: 1;
   background-clip: padding-box;
-  transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+  transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
   box-shadow: none;
 }
 
-.dt-bootstrap5  label {
+.dt-bootstrap5 label {
   font-weight: 400;
   white-space: nowrap;
   text-align: left;
@@ -819,12 +852,12 @@ div.dt-paging {
 }
 
 #search_filter_text {
-    color: #787777;
-    font-style: italic;
-    font-size: small;
+  color: #787777;
+  font-style: italic;
+  font-size: small;
 }
 
-#DisplayContent{
-    overflow: auto;
-    height: calc(100vh - 110px);
+#DisplayContent {
+  overflow: auto;
+  height: calc(100vh - 110px);
 }
