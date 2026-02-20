@@ -1,0 +1,46 @@
+---
+image: nexus-hub.tech.ccdcoe.org/python:3.11
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+stages:
+  - deploy
+
+include:
+  - component: $CI_SERVER_FQDN/ccdcoe/cicd-c2/deploy_docker@main
+    inputs:
+      stage: deploy
+      image_name: "display-flask-web"
+      docker_file: ".docker/images/flask/dockerfile-flask"
+  - component: $CI_SERVER_FQDN/ccdcoe/cicd-c2/deploy_docker@main
+    inputs:
+      stage: deploy
+      image_name: "display-flask-ws"
+      docker_file: ".docker/images/flask/dockerfile-flask"
+  - component: $CI_SERVER_FQDN/ccdcoe/cicd-c2/deploy_docker@main
+    inputs:
+      stage: deploy
+      image_name: "display-celery-beat"
+      docker_file: ".docker/images/celery_beat/dockerfile-celery_beat"
+  - component: $CI_SERVER_FQDN/ccdcoe/cicd-c2/deploy_docker@main
+    inputs:
+      stage: deploy
+      image_name: "display-celery-daemon"
+      docker_file: ".docker/images/celery_daemon/dockerfile-celery_daemon"
+  - component: $CI_SERVER_FQDN/ccdcoe/cicd-c2/deploy_docker@main
+    inputs:
+      stage: deploy
+      image_name: "display-redis"
+      docker_file: ".docker/images/redis/dockerfile-redis"
+  - component: $CI_SERVER_FQDN/ccdcoe/cicd-c2/deploy_docker@main
+    inputs:
+      stage: deploy
+      image_name: "display-mysql"
+      docker_file: ".docker/images/mysql/dockerfile-mysql"
+  - component: $CI_SERVER_FQDN/ccdcoe/cicd-c2/deploy_docker@main
+    inputs:
+      stage: deploy
+      image_name: "display-init-db"
+      docker_file: ".docker/images/init_db/dockerfile-init-db"
