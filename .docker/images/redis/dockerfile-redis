@@ -1,4 +1,4 @@
-FROM redis:latest
+FROM docker.io/redis:latest
 
 EXPOSE 6379
 

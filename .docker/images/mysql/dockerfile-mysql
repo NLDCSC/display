@@ -1,3 +1,3 @@
-FROM mysql:latest
+FROM docker.io/mysql:latest
 
 EXPOSE 3306
