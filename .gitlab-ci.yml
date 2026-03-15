@@ -8,6 +8,10 @@ workflow:
 stages:
   - deploy
 
+variables:
+  FS_USER: $FS_USERNAME
+  FS_PASS: $FS_PASSWORD
+
 include:
   - component: $CI_SERVER_FQDN/ccdcoe/cicd-c2/deploy_docker@main
     inputs:
