@@ -1,3 +1,3 @@
-FROM haproxy:latest
+FROM docker.io/haproxy:latest
 
 COPY .docker/images/haproxy/haproxy.cfg /usr/local/etc/haproxy/haproxy.cfg
