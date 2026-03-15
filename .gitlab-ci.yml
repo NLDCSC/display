@@ -44,3 +44,13 @@ include:
       stage: deploy
       image_name: "display-init-db"
       docker_file: ".docker/images/init_db/dockerfile-init-db"
+  - component: $CI_SERVER_FQDN/ccdcoe/cicd-c2/deploy_docker@main
+    inputs:
+      stage: deploy
+      image_name: "splash-ha-proxy"
+      docker_file: ".docker/images/haproxy/ha_proxy"
+  - component: $CI_SERVER_FQDN/ccdcoe/cicd-c2/deploy_docker@main
+    inputs:
+      stage: deploy
+      image_name: "splash"
+      docker_file: ".docker/images/splash/splash_screen"
