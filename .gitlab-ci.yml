@@ -54,3 +54,12 @@ include:
       stage: deploy
       image_name: "splash"
       docker_file: ".docker/images/splash/splash_screen"
+  - component: $CI_SERVER_FQDN/ccdcoe/cicd-c2/deploy_fs@main
+    inputs:
+      fs_user: ${FS_USER}
+      fs_pass: ${FS_PASS}
+      fs_ignore: ${FS_IGNORE}
+    rules:
+      - if: ($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE != "trigger")
+      - if: ($CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH) && $CI_PIPELINE_SOURCE != "trigger"
+      - when: never
