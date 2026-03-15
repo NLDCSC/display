@@ -1,4 +1,6 @@
 from dotenv import load_dotenv
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
 
 load_dotenv(".env")
 
@@ -707,7 +709,11 @@ def execute_on_node(entries, scroll_percent=0):
 
             logger.info(f"Setting up webdriver....")
 
-            with webdriver.Firefox() as driver:
+            options = Options()
+            options.binary_location = "/usr/bin/firefox"
+            service = Service(executable_path="/snap/bin/geckodriver")
+
+            with webdriver.Firefox(options=options, service=service) as driver:
 
                 for entry in entries:
                     driver.set_page_load_timeout(int(entry["timeout"]))
