@@ -43,7 +43,7 @@ class Config(object):
     )
 
     LOG_FILE_PATH: str = os.getenv("LOG_FILE_PATH", "/app/data/logs/")
-    LOG_FILE_NAME: str = os.getenv("LOG_FILE_NAME", "certexmon.log")
+    LOG_FILE_NAME: str = os.getenv("LOG_FILE_NAME", "display.log")
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     LOG_PURGE_TIME: int = int(os.getenv("LOG_PURGE_TIME", 4))  # in days
 

@@ -51,13 +51,13 @@ include:
   - component: $CI_SERVER_FQDN/ccdcoe/cicd-c2/deploy_docker@main
     inputs:
       stage: deploy
-      image_name: "splash-ha-proxy"
-      docker_file: ".docker/images/haproxy/ha_proxy"
+      image_name: "splash"
+      docker_file: ".docker/images/splash/splash_screen"
   - component: $CI_SERVER_FQDN/ccdcoe/cicd-c2/deploy_docker@main
     inputs:
       stage: deploy
-      image_name: "splash"
-      docker_file: ".docker/images/splash/splash_screen"
+      image_name: "display-node"
+      docker_file: ".docker/images/node/dockerfile-node"
   - component: $CI_SERVER_FQDN/ccdcoe/cicd-c2/deploy_fs@main
     inputs:
       fs_user: ${FS_USER}

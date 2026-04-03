@@ -706,13 +706,15 @@ def execute_on_node(entries, scroll_percent=0):
 
             logger.info(f"Setting up webdriver....")
 
-            options = Options()
-            options.add_argument('--no-sandbox')
-            options.add_argument('--disable-dev-shm-usage')
-
-            service = Service(executable_path="/snap/bin/geckodriver")
-
-            with webdriver.Firefox(options=options, service=service) as driver:
+            # These settings should be applied to the nodes when moving towards 24.04; for 22.04 it should stay as is.
+            # options = Options()
+            # options.add_argument('--no-sandbox')
+            # options.add_argument('--disable-dev-shm-usage')
+            #
+            # service = Service(executable_path="/snap/bin/geckodriver")
+            #
+            # with webdriver.Firefox(options=options, service=service) as driver:
+            with webdriver.Firefox() as driver:
 
                 for entry in entries:
                     driver.set_page_load_timeout(int(entry["timeout"]))

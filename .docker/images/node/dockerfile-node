@@ -1,0 +1,110 @@
+ARG BASE_TAG="develop"
+ARG BASE_IMAGE="core-ubuntu-jammy"
+FROM docker.io/kasmweb/$BASE_IMAGE:$BASE_TAG
+USER root
+
+ENV HOME=/home/kasm-default-profile
+ENV STARTUPDIR=/dockerstartup
+ENV INST_SCRIPTS=$STARTUPDIR/install
+WORKDIR $HOME
+
+######### Customize Container Here ###########
+
+ENV PYTHONFAULTHANDLER=1 \
+  PYTHONUNBUFFERED=1 \
+  PYTHONHASHSEED=random \
+  PIP_NO_CACHE_DIR=off \
+  PIP_DISABLE_PIP_VERSION_CHECK=on \
+  PIP_DEFAULT_TIMEOUT=100 \
+  # Poetry's configuration:
+  POETRY_NO_INTERACTION=1 \
+  POETRY_HOME='/usr/local'
+
+# Install Utilities
+COPY ./.docker/images/node/src/ubuntu/install/misc $INST_SCRIPTS/misc/
+RUN bash $INST_SCRIPTS/misc/install_tools.sh && rm -rf $INST_SCRIPTS/misc/
+
+# Install Google Chrome
+#COPY ./.docker/images/node/src/ubuntu/install/chrome $INST_SCRIPTS/chrome/
+#RUN bash $INST_SCRIPTS/chrome/install_chrome.sh  && rm -rf $INST_SCRIPTS/chrome/
+
+# Install Firefox
+COPY ./.docker/images/node/src/ubuntu/install/firefox/ $INST_SCRIPTS/firefox/
+COPY ./.docker/images/node/src/ubuntu/install/firefox/firefox.desktop $HOME/Desktop/
+RUN bash $INST_SCRIPTS/firefox/install_firefox.sh && rm -rf $INST_SCRIPTS/firefox/
+
+# Install Custom Certificate Authority
+# COPY ./src/ubuntu/install/certificates $INST_SCRIPTS/certificates/
+# RUN bash $INST_SCRIPTS/certificates/install_ca_cert.sh && rm -rf $INST_SCRIPTS/certificates/
+
+RUN apt update && \
+    apt install -y python3-pip pkg-config python3-dev default-libmysqlclient-dev build-essential libsqlite3-dev \
+    libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev libbz2-dev zlib1g-dev xvfb \
+    libreadline-dev libssl-dev && \
+    pip install --upgrade pip
+
+COPY ./.docker/files/flask/install.sh .
+RUN sed -i -e 's/\r$//' ./install.sh
+
+RUN ./install.sh
+
+RUN rm ./install.sh
+
+# System deps:
+RUN curl -sSL https://install.python-poetry.org | python3 -
+
+ENV PATH="/home/basicuser/.local/bin:${PATH}"
+
+WORKDIR /app
+# Copy only requirements to cache them in docker layer and prevent reinstalling them if there are no dep changes
+COPY poetry.lock pyproject.toml /app/
+
+RUN curl https://pyenv.run | bash
+
+RUN echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc && \
+    echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc && \
+    echo 'eval "$(pyenv init -)"' >> ~/.bashrc && \
+    echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile && \
+    echo '[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile && \
+    echo 'eval "$(pyenv init -)"' >> ~/.bash_profile && \
+    echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.profile && \
+    echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.profile && \
+    echo 'eval "$(pyenv init -)"' >> ~/.profile && \
+    poetry config virtualenvs.in-project true
+
+
+RUN /home/kasm-default-profile/.pyenv/bin/pyenv install 3.11 && \
+    /home/kasm-default-profile/.pyenv/bin/pyenv global 3.11
+
+RUN bash -lc "cd /app && /home/kasm-default-profile/.pyenv/bin/pyenv virtualenv 3.11 display dest ./.venv" && \
+    bash -lc "cd /app && /home/kasm-default-profile/.pyenv/bin/pyenv local 3.11"
+
+# Project initialization:
+RUN bash -lc "cd /app && poetry install --only=main --no-interaction --no-ansi"
+
+COPY . /app
+
+RUN mkdir -p /app/data/config && \
+    mkdir -p /app/data/logs && \
+    mkdir -p /app/data/timeline && \
+    mkdir -p /app/data/screenshots
+
+######### End Customizations ###########
+
+RUN echo "cd /app && poetry run celery -A display.celery_app.display_daemon worker \
+    -Q nodes -c 4 -O fair -n swarm_worker@%h --loglevel=INFO --without-heartbeat --without-gossip \
+    --without-mingle &" > $STARTUPDIR/custom_startup.sh && \
+    chmod +x $STARTUPDIR/custom_startup.sh
+
+RUN chown 1000:0 $HOME
+RUN $STARTUPDIR/set_user_permission.sh $HOME
+
+ENV HOME=/home/kasm-user
+WORKDIR $HOME
+RUN mkdir -p $HOME && chown -R 1000:0 $HOME
+
+WORKDIR /app
+ENV REDIS_URL='redis://display.berylia.org:6379/'
+RUN chown -R 1000:0 /app
+
+USER 1000
