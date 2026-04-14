@@ -1012,7 +1012,7 @@ def delete_old_log_entries():
 
     with get_db_session(True) as db:
         # calculate delta in seconds;
-        time_delta = config.LOG_PURGE_TIME * 60 * 60 * 24
+        time_delta = int(config.LOG_PURGE_TIME * 60 * 60 * 24)
 
         all_logs = db.execute(
             delete(Tracelog).filter(
