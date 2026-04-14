@@ -1012,7 +1012,17 @@ def delete_old_log_entries():
 
     with get_db_session(True) as db:
         # calculate delta in seconds;
-        time_delta = int(config.LOG_PURGE_TIME * 60 * 60 * 24)
+        try:
+            purge_time = int(config.LOG_PURGE_TIME)
+        except ValueError:
+            try:
+                purge_time = float(config.LOG_PURGE_TIME)
+            except Exception as e:
+                logger.error(f"Couldn't get purge time(FROM: {config.LOG_PURGE_TIME}): {e}")
+                # default to 1
+                purge_time = 1
+
+        time_delta = int(purge_time * 60 * 60 * 24)
 
         all_logs = db.execute(
             delete(Tracelog).filter(
