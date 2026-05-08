@@ -177,7 +177,7 @@
     display: none;
   }
 
-  #gitlab-link {
+  #github-link {
     display: none;
   }
 
@@ -552,7 +552,7 @@ div#pills-tabContent.tab-content {
   border-top: 1px solid #2c2e33;
 }
 
-#gitlab-link a,
+#github-link a,
 #wiki-link a,
 #api-doc-link a {
   color: white;
