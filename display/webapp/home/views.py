@@ -116,7 +116,8 @@ def get_screenshot(filename):
 
 
 def get_timeline_data(url_hash):
-    logger.info(f"Fetching timeline data for hash: {url_hash}")
+    safe_url_hash = str(url_hash).replace("\r", "").replace("\n", "")
+    logger.info(f"Fetching timeline data for hash: {safe_url_hash}")
     ret_data = []
 
     # cap the timeline_data to the first 250 items
