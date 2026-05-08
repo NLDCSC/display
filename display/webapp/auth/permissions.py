@@ -210,7 +210,7 @@ def require_apikey(view_function):
             return view_function(*args, **kwargs)
         else:
             logger.warning(
-                f"Unauthorized address trying to use API: {request.remote_addr}"
+                f"Unauthorized address trying to use API: {_sanitize_for_log(request.remote_addr)}"
             )
             abort(401)
 
@@ -226,14 +226,15 @@ def require_admin_apikey(view_function):
         ):
             if not get_admin_apiauth_object_by_key(request.headers.get("Access-Token")):
                 logger.warning(
-                    f"Unauthorized address trying to use admin protected endpoints: {request.remote_addr}"
+                    f"Unauthorized address trying to use admin protected "
+                    f"endpoints: {_sanitize_for_log(request.remote_addr)}"
                 )
                 abort(401)
             else:
                 return view_function(*args, **kwargs)
         else:
             logger.warning(
-                f"Unauthorized address trying to use API: {request.remote_addr}"
+                f"Unauthorized address trying to use API: {_sanitize_for_log(request.remote_addr)}"
             )
             abort(401)
 
@@ -251,14 +252,15 @@ def api_read_protected(decorator_name):
                     request.headers.get("Access-Token"), decorator_name, 1
                 ):
                     logger.warning(
-                        f"Unauthorized address trying to use {decorator_name} protected endpoints: {request.remote_addr}"
+                        f"Unauthorized address trying to use {decorator_name} protected "
+                        f"endpoints: {_sanitize_for_log(request.remote_addr)}"
                     )
                     abort(403)
                 else:
                     return fn(*args, **kwargs)
             else:
                 logger.warning(
-                    f"Missing API key or API key is incorrect: {request.remote_addr}"
+                    f"Missing API key or API key is incorrect: {_sanitize_for_log(request.remote_addr)}"
                 )
                 abort(401)
 
@@ -278,7 +280,8 @@ def api_write_protected(decorator_name):
                     request.headers.get("Access-Token"), decorator_name, 2
                 ):
                     logger.warning(
-                        f"Unauthorized address trying to use {decorator_name} protected endpoints: {request.remote_addr}"
+                        f"Unauthorized address trying to use {decorator_name} protected "
+                        f"endpoints: {_sanitize_for_log(request.remote_addr)}"
                     )
                     abort(403)
                 else:
