@@ -85,7 +85,7 @@ class ScreenShotHandler(object):
     @staticmethod
     def get_hash(hash_input: bytes) -> str:
         # noinspection InsecureHash
-        return hashlib.md5(hash_input).hexdigest()[:6]
+        return hashlib.md5(hash_input).hexdigest()[:8]
 
     def get_tab_by_hash(self, the_hash: str) -> str:
 

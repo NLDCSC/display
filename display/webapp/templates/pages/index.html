@@ -45,9 +45,6 @@
                     <div id="display-header-row" class="row margin_bottom">
                         <div class="col-12">
                             <h4 class="card-title pos-abs">DISPLAY
-                                <button id="display-filter" type="button" class="btn btn-outline" title="Filter settings">
-                                    <span class="mdi mdi-filter-outline"></span>
-                                </button>
                                 <button id="gitlab-link" type="button" class="btn btn-outline" title="Gitlab issues">
                                     <a href="https://git.ex.c-lab.ee/ls/display.berylia.org/-/issues" target="_blank">
                                         <span class="mdi mdi-gitlab"></span>
@@ -74,6 +71,9 @@
                                 </button>
                                 <button id="defacement_chart" type="button" class="btn btn-outline" title="Goto Defacement chart">
                                     <span class="mdi mdi-chart-line"></span>
+                                </button>
+                                <button id="display-filter" type="button" class="btn btn-outline" title="Filter settings">
+                                    <span class="mdi mdi-filter-outline"></span>
                                 </button>
                                 <button id="tab-rotate" type="button" class="btn btn-outline btn-outline-success btn-outline-danger" title="Enable/disable tab rotation on visible tabs">
                                     <img src="{{ url_for('static', filename='img/tab_rotate.png') }}" alt="tab_rotate">
@@ -164,6 +164,12 @@
 
             });
 
+        const check_visible_tabs = $('button[id^="tab_"]:visible')
+        const check_visible_content = $('div[id^="row"]:visible')
+        if (check_visible_tabs.length === 0 || check_visible_content.length === 0){
+            $("#no-data-shown").show();
+        }
+
         });
         $(window).on("resize", function() {
             $('.img-wrap').hide();
@@ -185,6 +191,8 @@
             //    $(this).trigger('resizeCutColumns');
             //}, 50);
             $(this).trigger('resizeCutColumns');
+
+
         });
 
         $(window).on('resizeEnd', resizeEnd);

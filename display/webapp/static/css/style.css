@@ -331,7 +331,6 @@ div[id^="actions_"] {
 }
 
 @media (min-width: 1200px) and (max-width: 1600px) {
-
   .create-evidence,
   .create-screenshot,
   .open-url,
@@ -860,4 +859,12 @@ div.dt-paging {
 #DisplayContent {
   overflow: auto;
   height: calc(100vh - 110px);
+}
+
+#swal2-content, #swal2-title {
+  color: rgba(0,0,0,.5);
+}
+
+#no-data-shown {
+  display: none;
 }
