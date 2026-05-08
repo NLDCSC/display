@@ -2,6 +2,7 @@ import collections
 import json
 import logging
 import os
+import re
 
 from flask import (
     render_template,
@@ -33,6 +34,12 @@ logger = logging.getLogger(__name__)
 config = Config()
 
 display_config_parser = DisplayConfigParser()
+
+_SAFE_PATH_TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+
+
+def _is_safe_path_token(value: str) -> bool:
+    return isinstance(value, str) and bool(_SAFE_PATH_TOKEN_RE.fullmatch(value))
 
 
 @home.route("/")
@@ -97,6 +104,9 @@ def get_status():
 def get_screenshot(filename):
     safe_filename_for_log = filename.replace("\r", "").replace("\n", "")
     logger.info("Fetching screenshot from: %s", safe_filename_for_log)
+    if not _is_safe_path_token(filename):
+        return send_from_directory(current_app.static_folder, "img/noScreenShot.png")
+
     sh = ScreenShotHandler()
 
     try:
@@ -171,6 +181,9 @@ def get_timeline_picture(url_hash, filename):
 @home.route("/timeline/download_picture/<path:url_hash>/<path:filename>")
 @login_required
 def download_picture(url_hash, filename):
+    if not _is_safe_path_token(url_hash) or not _is_safe_path_token(filename):
+        return send_from_directory(current_app.static_folder, "img/noScreenShot.png")
+
     sh = ScreenShotHandler()
 
     timeline_root = os.path.realpath(current_app.config["TIMELINE_LOCATION"])
