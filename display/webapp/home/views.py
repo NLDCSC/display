@@ -97,6 +97,15 @@ def get_status():
 def get_screenshot(filename):
     safe_filename_for_log = filename.replace("\r", "").replace("\n", "")
     logger.info("Fetching screenshot from: %s", safe_filename_for_log)
+    if (
+        not isinstance(filename, str)
+        or filename.startswith(("/", "\\"))
+        or os.path.isabs(filename)
+        or ".." in filename
+        or "/" in filename
+        or "\\" in filename
+    ):
+        return send_from_directory(current_app.static_folder, "img/noScreenShot.png")
     sh = ScreenShotHandler()
 
     try:
@@ -139,6 +148,16 @@ def get_timeline_data(url_hash):
 @home.route("/timeline/<url_hash>")
 @login_required
 def timeline(url_hash):
+    if (
+        not isinstance(url_hash, str)
+        or url_hash.startswith(("/", "\\"))
+        or os.path.isabs(url_hash)
+        or ".." in url_hash
+        or "/" in url_hash
+        or "\\" in url_hash
+    ):
+        return render_template("pages/timeline.html", header="Display", timeline_data=[], timeline_url=None, last_screenshot_time="never")
+
     sh = ScreenShotHandler()
 
     timeline_url = sh.get_url_by_hash(the_hash=url_hash)
@@ -171,6 +190,22 @@ def get_timeline_picture(url_hash, filename):
 @home.route("/timeline/download_picture/<path:url_hash>/<path:filename>")
 @login_required
 def download_picture(url_hash, filename):
+    if (
+        not isinstance(url_hash, str)
+        or not isinstance(filename, str)
+        or url_hash.startswith(("/", "\\"))
+        or filename.startswith(("/", "\\"))
+        or os.path.isabs(url_hash)
+        or os.path.isabs(filename)
+        or ".." in url_hash
+        or ".." in filename
+        or "/" in url_hash
+        or "/" in filename
+        or "\\" in url_hash
+        or "\\" in filename
+    ):
+        return send_from_directory(current_app.static_folder, "img/noScreenShot.png")
+
     sh = ScreenShotHandler()
 
     timeline_root = os.path.realpath(current_app.config["TIMELINE_LOCATION"])
