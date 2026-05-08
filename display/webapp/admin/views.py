@@ -39,7 +39,8 @@ def parse_nested_list(param_string: str = None):
 
     for entry in first_split:
         if entry != "":
-            logger.info(f"Parsing defacement text entry for: {entry}")
+            safe_entry = entry.replace("\r", "").replace("\n", "")
+            logger.info(f"Parsing defacement text entry for: {safe_entry}")
             parsed_data = parse_qs(f"entry_field{entry}")
 
             ret_list.extend(parsed_data["entry_field"])
