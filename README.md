@@ -11,8 +11,8 @@ Inadvertently 'new' users will bump into these 'specifics' when setting up or op
 instance. In addition to this most of the development was done in the context of experimentation and
 (temporarily) exercise support; due to these facts the application lacks a lot of development best 
 practices in terms of documentation, architecture drawings or proper development instructions. 
-The maintainers are, obviously, aware of this; please don't hesitate to file issues (or even better PR's ;-) ) 
-for 'things' you mis / find. We'll try to accomodate / support to our full extend wherever possible. 
+The maintainers are, obviously, aware of this; please don't hesitate to file issues or start discussions (or even 
+better PR's ;-) ) for 'things' you mis / find. We'll try to accomodate / support to our full extend wherever possible. 
 
 <!-- start into-documentation -->
 ## Purpose
