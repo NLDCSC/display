@@ -173,10 +173,15 @@ def get_timeline_picture(url_hash, filename):
 def download_picture(url_hash, filename):
     sh = ScreenShotHandler()
 
+    timeline_root = os.path.realpath(current_app.config["TIMELINE_LOCATION"])
+    requested_path = os.path.realpath(
+        os.path.join(timeline_root, f"{url_hash}/{filename}.png")
+    )
+    if os.path.commonpath([timeline_root, requested_path]) != timeline_root:
+        return send_from_directory(current_app.static_folder, "img/noScreenShot.png")
+
     data = sh.set_timestamp_to_picture(
-        filename=os.path.join(
-            current_app.config["TIMELINE_LOCATION"], f"{url_hash}/{filename}.png"
-        ),
+        filename=requested_path,
         filename_is_full_path=True,
         url_hash=url_hash,
     )

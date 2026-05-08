@@ -262,6 +262,13 @@ class ScreenShotHandler(object):
 
         return ret_data
 
+    def _safe_path_in_base(self, base_dir: str, relative_path: str) -> str:
+        base_real = os.path.realpath(base_dir)
+        target_real = os.path.realpath(os.path.join(base_real, relative_path))
+        if os.path.commonpath([base_real, target_real]) != base_real:
+            raise ValueError("Invalid path outside allowed directory")
+        return target_real
+
     def set_timestamp_to_picture(
         self,
         filename: str,
@@ -271,11 +278,11 @@ class ScreenShotHandler(object):
     ) -> None | BytesIO:
 
         if not filename_is_full_path:
-            normal_path = os.path.join(
+            normal_path = self._safe_path_in_base(
                 self.config.SCREENSHOT_LOCATION, f"{filename}.png"
             )
 
-            evidence_path = os.path.join(
+            evidence_path = self._safe_path_in_base(
                 self.config.SCREENSHOT_LOCATION, f"{filename}_eve.png"
             )
 
@@ -296,7 +303,9 @@ class ScreenShotHandler(object):
 
                     self.logger.debug(f"Setting error picture for {filename}")
                     with open(
-                        os.path.join(config.SCREENSHOT_LOCATION, f"{filename}.png"),
+                        self._safe_path_in_base(
+                            config.SCREENSHOT_LOCATION, f"{filename}.png"
+                        ),
                         "wb",
                     ) as f:
                         f.write(data)
