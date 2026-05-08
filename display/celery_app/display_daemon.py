@@ -2,9 +2,9 @@ from dotenv import load_dotenv
 
 load_dotenv(".env")
 
-import contextlib
 import base64
 import collections
+import contextlib
 import json
 import logging
 import math
@@ -12,22 +12,15 @@ import os
 import shutil
 import time
 import uuid
-
-import sqlalchemy
-
 from io import BytesIO
 from pathlib import Path
-from selenium.common import TimeoutException
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.wait import WebDriverWait
 from typing import Optional
 
-from kombu import Queue
+import sqlalchemy
 from celery import Celery
-from sqlalchemy import delete, select
-from selenium import webdriver
+from celery.backends.database import SessionManager
 from celery.result import AsyncResult, allow_join_result
+from celery.schedules import crontab
 from celery.signals import (
     task_prerun,
     worker_process_init,
@@ -38,39 +31,45 @@ from celery.signals import (
     after_task_publish,
     beat_init,
 )
-from celery.schedules import crontab
 from celery.utils.log import get_task_logger
 from flask_socketio import SocketIO
-from celery.backends.database import SessionManager
+from kombu import Queue
+from nldcsc.flask_plugins.flask_redis import FlaskRedis
+from nldcsc.loggers.app_logger import AppLogger
+from pyvirtualdisplay.smartdisplay import SmartDisplay
+from selenium import webdriver
+from selenium.common import TimeoutException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.wait import WebDriverWait
+from sqlalchemy import delete, select
 
+from display.core.database_logging.trace_log import TraceLogEntry
+from display.core.defacements.defacement_assessment import DefacementAssessment
+from display.core.files.dedub_files import DeduplicateFilesInFolder
 from display.core.general.constants import (
     tracelog_action,
     tracelog_result,
     task_result,
 )
+from display.core.general.utils import chunks
+from display.core.parsers.display_config_parser import DisplayConfigParser
+from display.core.parsers.screenshot_source_config_parser import (
+    ScreenshotSourceConfigParser,
+)
+from display.core.redis_utils.redis_utils_class import RedisUtils
+from display.core.screenshots.async_screenshots import AsyncScreenshots
+from display.core.screenshots.screenshot_handler import ScreenShotHandler
+from display.core.tasks.task_result import TaskResult
 from display.webapp.app.models import (
     Tracelog,
     TemplateTexts,
     Defacements,
     DefacementTracker,
 )
-from display.core.screenshots.screenshot_handler import ScreenShotHandler
-from display.core.files.dedub_files import DeduplicateFilesInFolder
 from display.webapp.config import Config
-from display.core.screenshots.async_screenshots import AsyncScreenshots
-from display.core.general.utils import chunks
-from display.core.parsers.display_config_parser import DisplayConfigParser
-from display.core.database_logging.trace_log import TraceLogEntry
-from display.core.tasks.task_result import TaskResult
-from display.core.redis_utils.redis_utils_class import RedisUtils
-from display.core.parsers.screenshot_source_config_parser import (
-    ScreenshotSourceConfigParser,
-)
-from display.core.defacements.defacement_assessment import DefacementAssessment
-
-from pyvirtualdisplay.smartdisplay import SmartDisplay
-from nldcsc.loggers.app_logger import AppLogger
-from nldcsc.flask_plugins.flask_redis import FlaskRedis
 
 logging.setLoggerClass(AppLogger)
 
@@ -707,6 +706,14 @@ def execute_on_node(entries, scroll_percent=0):
 
             logger.info(f"Setting up webdriver....")
 
+            # These settings should be applied to the nodes when moving towards 24.04; for 22.04 it should stay as is.
+            # options = Options()
+            # options.add_argument('--no-sandbox')
+            # options.add_argument('--disable-dev-shm-usage')
+            #
+            # service = Service(executable_path="/snap/bin/geckodriver")
+            #
+            # with webdriver.Firefox(options=options, service=service) as driver:
             with webdriver.Firefox() as driver:
 
                 for entry in entries:
@@ -1005,7 +1012,17 @@ def delete_old_log_entries():
 
     with get_db_session(True) as db:
         # calculate delta in seconds;
-        time_delta = config.LOG_PURGE_TIME * 60 * 60 * 24
+        try:
+            purge_time = int(config.LOG_PURGE_TIME)
+        except ValueError:
+            try:
+                purge_time = float(config.LOG_PURGE_TIME)
+            except Exception as e:
+                logger.error(f"Couldn't get purge time(FROM: {config.LOG_PURGE_TIME}): {e}")
+                # default to 1
+                purge_time = 1
+
+        time_delta = int(purge_time * 60 * 60 * 24)
 
         all_logs = db.execute(
             delete(Tracelog).filter(
