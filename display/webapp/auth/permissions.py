@@ -15,6 +15,10 @@ logging.setLoggerClass(AppLogger)
 logger = logging.getLogger(__name__)
 
 
+def _sanitize_for_log(value):
+    return str(value).replace("\r", "").replace("\n", "")
+
+
 def admin_required(fn):
     """
     Decorator (@admin_required) that enforces that only users within the ADMIN group are allowed on that specific
@@ -281,7 +285,7 @@ def api_write_protected(decorator_name):
                     return fn(*args, **kwargs)
             else:
                 logger.warning(
-                    f"Missing API key or API key is incorrect: {request.remote_addr}"
+                    f"Missing API key or API key is incorrect: {_sanitize_for_log(request.remote_addr)}"
                 )
                 abort(401)
 
