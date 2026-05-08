@@ -95,7 +95,8 @@ def get_status():
 @home.route("/screenshot/<path:filename>")
 @login_required
 def get_screenshot(filename):
-    logger.info(f"Fetching screenshot from: {filename}")
+    safe_filename_for_log = filename.replace("\r", "").replace("\n", "")
+    logger.info("Fetching screenshot from: %s", safe_filename_for_log)
     sh = ScreenShotHandler()
 
     try:
