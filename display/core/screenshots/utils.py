@@ -1,5 +1,6 @@
 import base64
 import os
+import re
 
 import cv2
 from nldcsc.generic.times import timestampTOdatetimestring
@@ -34,8 +35,23 @@ def _validate_full_path_under_allowed_roots(path: str) -> str:
     raise FileNotFoundError("Invalid path")
 
 
+def _validate_safe_segment(value: str) -> str:
+    if not isinstance(value, str):
+        raise FileNotFoundError("Invalid path")
+    if value.startswith(("/", "\\")) or os.path.isabs(value):
+        raise FileNotFoundError("Invalid path")
+    if ".." in value or "/" in value or "\\" in value:
+        raise FileNotFoundError("Invalid path")
+    if not re.fullmatch(r"[A-Za-z0-9._:-]+", value):
+        raise FileNotFoundError("Invalid path")
+    return value
+
+
 def _screenshot_path(filename: str, suffix: str) -> str:
-    return _safe_join_under_root(config.SCREENSHOT_LOCATION, f"{filename}{suffix}.png")
+    safe_filename = _validate_safe_segment(filename)
+    return _safe_join_under_root(
+        config.SCREENSHOT_LOCATION, f"{safe_filename}{suffix}.png"
+    )
 
 
 def get_mod_time(
