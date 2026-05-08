@@ -262,6 +262,17 @@ class ScreenShotHandler(object):
 
         return ret_data
 
+    def _is_safe_path_token(self, value: str) -> bool:
+        return (
+            isinstance(value, str)
+            and value != ""
+            and not value.startswith(("/", "\\"))
+            and not os.path.isabs(value)
+            and ".." not in value
+            and "/" not in value
+            and "\\" not in value
+        )
+
     def set_timestamp_to_picture(
         self,
         filename: str,
@@ -271,6 +282,10 @@ class ScreenShotHandler(object):
     ) -> None | BytesIO:
 
         if not filename_is_full_path:
+            if not self._is_safe_path_token(filename):
+                self.logger.warning("Rejected unsafe screenshot path token: %s", filename)
+                raise ValueError("Unsafe screenshot path")
+
             screenshot_root = os.path.realpath(self.config.SCREENSHOT_LOCATION)
             normal_path = os.path.realpath(
                 os.path.join(screenshot_root, f"{filename}.png")
@@ -310,7 +325,12 @@ class ScreenShotHandler(object):
 
             url_hash = filename
         else:
-            photo = Image.open(filename)
+            timeline_root = os.path.realpath(self.config.TIMELINE_LOCATION)
+            requested_path = os.path.realpath(filename)
+            if os.path.commonpath([timeline_root, requested_path]) != timeline_root:
+                self.logger.warning("Rejected unsafe timeline path: %s", filename)
+                raise ValueError("Unsafe timeline path")
+            photo = Image.open(requested_path)
             url_hash = url_hash
 
         # make the image editable

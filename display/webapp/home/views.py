@@ -35,6 +35,18 @@ config = Config()
 display_config_parser = DisplayConfigParser()
 
 
+def _is_safe_path_token(value):
+    return (
+        isinstance(value, str)
+        and value != ""
+        and not value.startswith(("/", "\\"))
+        and not os.path.isabs(value)
+        and ".." not in value
+        and "/" not in value
+        and "\\" not in value
+    )
+
+
 @home.route("/")
 @login_required
 def index():
@@ -97,14 +109,7 @@ def get_status():
 def get_screenshot(filename):
     safe_filename_for_log = filename.replace("\r", "").replace("\n", "")
     logger.info("Fetching screenshot from: %s", safe_filename_for_log)
-    if (
-        not isinstance(filename, str)
-        or filename.startswith(("/", "\\"))
-        or os.path.isabs(filename)
-        or ".." in filename
-        or "/" in filename
-        or "\\" in filename
-    ):
+    if not _is_safe_path_token(filename):
         return send_from_directory(current_app.static_folder, "img/noScreenShot.png")
     sh = ScreenShotHandler()
 
@@ -148,14 +153,7 @@ def get_timeline_data(url_hash):
 @home.route("/timeline/<url_hash>")
 @login_required
 def timeline(url_hash):
-    if (
-        not isinstance(url_hash, str)
-        or url_hash.startswith(("/", "\\"))
-        or os.path.isabs(url_hash)
-        or ".." in url_hash
-        or "/" in url_hash
-        or "\\" in url_hash
-    ):
+    if not _is_safe_path_token(url_hash):
         return render_template("pages/timeline.html", header="Display", timeline_data=[], timeline_url=None, last_screenshot_time="never")
 
     sh = ScreenShotHandler()
@@ -190,20 +188,7 @@ def get_timeline_picture(url_hash, filename):
 @home.route("/timeline/download_picture/<path:url_hash>/<path:filename>")
 @login_required
 def download_picture(url_hash, filename):
-    if (
-        not isinstance(url_hash, str)
-        or not isinstance(filename, str)
-        or url_hash.startswith(("/", "\\"))
-        or filename.startswith(("/", "\\"))
-        or os.path.isabs(url_hash)
-        or os.path.isabs(filename)
-        or ".." in url_hash
-        or ".." in filename
-        or "/" in url_hash
-        or "/" in filename
-        or "\\" in url_hash
-        or "\\" in filename
-    ):
+    if not _is_safe_path_token(url_hash) or not _is_safe_path_token(filename):
         return send_from_directory(current_app.static_folder, "img/noScreenShot.png")
 
     sh = ScreenShotHandler()
