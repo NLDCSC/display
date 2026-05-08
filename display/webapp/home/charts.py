@@ -1,7 +1,7 @@
+import json
 import logging
 import time
 import uuid
-import json
 
 from flask import render_template, request, abort
 from flask_login import login_required

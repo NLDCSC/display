@@ -18,9 +18,9 @@ logger = sphinx.util.logging.getLogger(__name__)
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'Display'
-copyright = '2026, NLDCSC'
-author = 'Paul Tikken'
+project = "Display"
+copyright = "2026, NLDCSC"
+author = "Paul Tikken"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -44,7 +44,7 @@ myst_heading_anchors = 4
 
 suppress_warnings = ["myst.xref_missing"]
 
-templates_path = ['_templates']
+templates_path = ["_templates"]
 exclude_patterns = []
 
 intersphinx_mapping = {
@@ -55,8 +55,8 @@ intersphinx_mapping = {
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'furo'
-html_static_path = ['_static']
+html_theme = "furo"
+html_static_path = ["_static"]
 
 html_title = "Display"
 html_favicon = "_static/images/display.png"

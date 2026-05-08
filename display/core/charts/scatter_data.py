@@ -1,14 +1,16 @@
 import collections
 from dataclasses import dataclass, field
 from datetime import datetime
+
+from display.webapp.app.models import Defacements
 from ...core.parsers.display_settings_parser import (
     DisplaySettingsParser,
 )
-from display.webapp.app.models import Defacements
 
 settings_parser = DisplaySettingsParser()
 settings_obj = settings_parser.get_settings_obj()
 n_targets = len(settings_obj.targets)
+
 
 @dataclass
 class ScatterChartData:
@@ -20,6 +22,7 @@ class ScatterChartData:
 
     def __post_init__(self):
         self.hovertemplate = f"<b>{self.name}</b><br>At: %{{x|%Y-%m-%dT%H:%M:%SZ}}<br>Defacements: %{{y}}/{n_targets}"
+
 
 @dataclass
 class DefacementsContainer:

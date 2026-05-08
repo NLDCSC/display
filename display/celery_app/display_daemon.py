@@ -40,8 +40,6 @@ from pyvirtualdisplay.smartdisplay import SmartDisplay
 from selenium import webdriver
 from selenium.common import TimeoutException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from sqlalchemy import delete, select
@@ -1018,7 +1016,9 @@ def delete_old_log_entries():
             try:
                 purge_time = float(config.LOG_PURGE_TIME)
             except Exception as e:
-                logger.error(f"Couldn't get purge time(FROM: {config.LOG_PURGE_TIME}): {e}")
+                logger.error(
+                    f"Couldn't get purge time(FROM: {config.LOG_PURGE_TIME}): {e}"
+                )
                 # default to 1
                 purge_time = 1
 
