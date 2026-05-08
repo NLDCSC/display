@@ -32,8 +32,8 @@ def admin_required(fn):
                 f"User {current_user.username} tried to perform illegal action to admin protected endpoints!!"
             )
             abort(403)
-        else:
-            return fn(*args, **kwargs)
+
+        return fn(*args, **kwargs)
 
     return wrapper
 
@@ -55,8 +55,8 @@ def approval_required(fn):
                 f"User {current_user.username} tried to perform illegal action to approval protected endpoints!!"
             )
             abort(403)
-        else:
-            return fn(*args, **kwargs)
+
+        return fn(*args, **kwargs)
 
     return wrapper
 
@@ -71,7 +71,7 @@ def groups_allowed(groups: list):
         @wraps(fn)
         def wrapper(*args, **kwargs):
             if (
-                not current_user.get_user_group() in groups
+                current_user.get_user_group() not in groups
                 and not current_user.is_admin()
                 and not current_user.is_superuser()
             ):
@@ -79,8 +79,8 @@ def groups_allowed(groups: list):
                     f"User {current_user.username} tried to perform illegal action on protected endpoints!!"
                 )
                 abort(403)
-            else:
-                return fn(*args, **kwargs)
+
+            return fn(*args, **kwargs)
 
         return wrapper
 
@@ -158,7 +158,11 @@ def get_admin_apiauth_object_by_key(key, return_raw_user=False):
     Check if the key matches the configured key
     """
 
-    api_user = db.session.scalar(select(Users).filter(Users.api_key_lookup == key[:8]))
+    api_user = db.session.scalar(
+        select(Users).filter(
+            Users.api_key_lookup == key[:8], Users.active == user_active.ENABLED
+        )
+    )
 
     if return_raw_user:
         return api_user
@@ -177,7 +181,11 @@ def get_apiauth_object_by_key_and_decorator(key: str, decorator_name: str, level
     Check if the key matches the configured key
     """
 
-    api_user = db.session.scalar(select(Users).filter(Users.api_key_lookup == key[:8]))
+    api_user = db.session.scalar(
+        select(Users).filter(
+            Users.api_key_lookup == key[:8], Users.active == user_active.ENABLED
+        )
+    )
 
     if api_user is not None:
         if api_user.is_admin() or api_user.is_superuser():
