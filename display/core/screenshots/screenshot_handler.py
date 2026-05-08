@@ -271,13 +271,21 @@ class ScreenShotHandler(object):
     ) -> None | BytesIO:
 
         if not filename_is_full_path:
-            normal_path = os.path.join(
-                self.config.SCREENSHOT_LOCATION, f"{filename}.png"
+            screenshot_root = os.path.realpath(self.config.SCREENSHOT_LOCATION)
+            normal_path = os.path.realpath(
+                os.path.join(screenshot_root, f"{filename}.png")
             )
 
-            evidence_path = os.path.join(
-                self.config.SCREENSHOT_LOCATION, f"{filename}_eve.png"
+            evidence_path = os.path.realpath(
+                os.path.join(screenshot_root, f"{filename}_eve.png")
             )
+
+            if (
+                os.path.commonpath([screenshot_root, normal_path]) != screenshot_root
+                or os.path.commonpath([screenshot_root, evidence_path]) != screenshot_root
+            ):
+                self.logger.warning("Rejected unsafe screenshot path: %s", filename)
+                raise ValueError("Unsafe screenshot path")
 
             if os.path.exists(evidence_path):
                 photo = Image.open(evidence_path)
@@ -295,10 +303,7 @@ class ScreenShotHandler(object):
                         data = f.read()
 
                     self.logger.debug(f"Setting error picture for {filename}")
-                    with open(
-                        os.path.join(config.SCREENSHOT_LOCATION, f"{filename}.png"),
-                        "wb",
-                    ) as f:
+                    with open(normal_path, "wb") as f:
                         f.write(data)
 
                     photo = Image.open(normal_path)
