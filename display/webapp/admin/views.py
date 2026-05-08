@@ -152,7 +152,8 @@ def parse_nested_entries(param_string: str = None):
     try:
         for entry in first_split:
             if entry != "":
-                logger.info(f"Parsing settings entry for: {entry}")
+                safe_entry = entry.replace("\r", "\\r").replace("\n", "\\n")
+                logger.info(f"Parsing settings entry for: {safe_entry}")
                 parsed_data = parse_qs(f"name_field{entry}")
 
                 if "wait_on_id_field" in parsed_data:
