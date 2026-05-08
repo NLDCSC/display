@@ -11,6 +11,18 @@ config = Config()
 my_file_location = os.path.dirname(os.path.abspath(__file__))
 
 
+def _safe_join_under_root(root_path: str, *parts: str) -> str:
+    base = os.path.realpath(root_path)
+    candidate = os.path.realpath(os.path.join(base, *parts))
+    if os.path.commonpath([base, candidate]) != base:
+        raise FileNotFoundError("Invalid path")
+    return candidate
+
+
+def _screenshot_path(filename: str, suffix: str) -> str:
+    return _safe_join_under_root(config.SCREENSHOT_LOCATION, f"{filename}{suffix}.png")
+
+
 def get_mod_time(
     filename,
     no_timezone: bool = True,
@@ -28,9 +40,7 @@ def get_mod_time(
                 time = timestampTOdatetimestring(
                     int(
                         os.path.getmtime(
-                            os.path.join(
-                                config.SCREENSHOT_LOCATION, f"{filename}_eve.png"
-                            )
+                            _screenshot_path(filename, "_eve")
                         )
                     ),
                     no_timezone,
@@ -39,7 +49,7 @@ def get_mod_time(
                 time = timestampTOdatetimestring(
                     int(
                         os.path.getmtime(
-                            os.path.join(config.SCREENSHOT_LOCATION, f"{filename}.png")
+                            _screenshot_path(filename, "")
                         )
                     ),
                     no_timezone,
@@ -52,8 +62,8 @@ def get_mod_time(
 def get_compare_image(filename):
     cs = CompareScreenshots()
 
-    current_sc_location = os.path.join(config.SCREENSHOT_LOCATION, f"{filename}.png")
-    old_sc_location = os.path.join(config.SCREENSHOT_LOCATION, f"{filename}_old.png")
+    current_sc_location = _screenshot_path(filename, "")
+    old_sc_location = _screenshot_path(filename, "_old")
 
     if os.path.exists(current_sc_location) and os.path.exists(old_sc_location):
         try:
@@ -78,13 +88,9 @@ def get_compare_image(filename):
 def get_b64_screenshot(filename, with_timestamp=False):
     try:
         if with_timestamp:
-            the_filename = os.path.join(
-                config.SCREENSHOT_LOCATION, f"{filename}_ts.png"
-            )
+            the_filename = _screenshot_path(filename, "_ts")
         else:
-            the_filename = os.path.join(
-                config.SCREENSHOT_LOCATION, f"{filename}_min.png"
-            )
+            the_filename = _screenshot_path(filename, "_min")
 
         if os.path.exists(the_filename):
             with open(the_filename, "rb") as image_file:
