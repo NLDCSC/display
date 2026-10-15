@@ -1,0 +1,50 @@
+version: 2
+registries:
+  chainguard:
+    type: docker-registry
+    url: cgr.dev
+    username: ${{secrets.CHAINGUARD_PULL_TOKEN_USERNAME}}
+    password: ${{secrets.CHAINGUARD_PULL_TOKEN_PASSWORD}}
+  github-private:
+    type: git
+    url: https://github.com
+    username: x-access-token
+    password: ${{secrets.DEPENDABOT_GITHUB_TOKEN}}
+updates:
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "fix(deps)"
+  - package-ecosystem: docker
+    directories:
+      - "/.docker/images/celery_beat"
+      - "/.docker/images/celery_daemon"
+      - "/.docker/images/flask"
+      - "/.docker/images/init_db"
+      - "/.docker/images/mysql"
+      - "/.docker/images/node"
+      - "/.docker/images/redis"
+    registries:
+      - chainguard
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "fix(deps)"
+  - package-ecosystem: docker-compose
+    directory: "/"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
+  - package-ecosystem: github-actions
+    directory: "/"
+    registries:
+      - github-private
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 0
+    commit-message:
+      prefix: "chore(deps)"
