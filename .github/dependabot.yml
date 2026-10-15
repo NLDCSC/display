@@ -17,6 +17,10 @@ updates:
       interval: weekly
     commit-message:
       prefix: "fix(deps)"
+    groups:
+      all-dependencies:
+        patterns:
+          - "*"
   - package-ecosystem: docker
     directories:
       - "/.docker/images/celery_beat"
@@ -32,12 +36,20 @@ updates:
       interval: weekly
     commit-message:
       prefix: "fix(deps)"
+    groups:
+      all-dependencies:
+        patterns:
+          - "*"
   - package-ecosystem: docker-compose
     directory: "/"
     schedule:
       interval: weekly
     commit-message:
       prefix: "chore(deps)"
+    groups:
+      all-dependencies:
+        patterns:
+          - "*"
   - package-ecosystem: github-actions
     directory: "/"
     registries:
@@ -48,3 +60,7 @@ updates:
       default-days: 0
     commit-message:
       prefix: "chore(deps)"
+    groups:
+      all-dependencies:
+        patterns:
+          - "*"
