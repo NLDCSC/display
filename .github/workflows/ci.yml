@@ -13,18 +13,18 @@ on:
 
 jobs:
   test:
-    uses: NLDCSC/DCSC-shared/.github/workflows/ci-python.yml@bc0115a3d016f916258927f9f8db0fb121c912ce # v13.18.1
+    uses: NLDCSC/DCSC-shared/.github/workflows/ci-python.yml@ca535b80fe5ea613d3b333194d9a7b36518fbd55 # v13.18.3
     with:
       python-version: '3.14'
       min-coverage: 70
 
   security:
-    uses: NLDCSC/DCSC-shared/.github/workflows/ci-security.yml@bc0115a3d016f916258927f9f8db0fb121c912ce # v13.18.1
+    uses: NLDCSC/DCSC-shared/.github/workflows/ci-security.yml@ca535b80fe5ea613d3b333194d9a7b36518fbd55 # v13.18.3
     secrets:
       GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
   check:
-    uses: NLDCSC/DCSC-shared/.github/workflows/ci-conventional-commits.yml@bc0115a3d016f916258927f9f8db0fb121c912ce # v13.18.1
+    uses: NLDCSC/DCSC-shared/.github/workflows/ci-conventional-commits.yml@ca535b80fe5ea613d3b333194d9a7b36518fbd55 # v13.18.3
 
   container:
     needs:
@@ -36,7 +36,7 @@ jobs:
       packages: write
       id-token: write
       pull-requests: write
-    uses: NLDCSC/DCSC-shared/.github/workflows/ci-container.yml@bc0115a3d016f916258927f9f8db0fb121c912ce # v13.18.1
+    uses: NLDCSC/DCSC-shared/.github/workflows/ci-container.yml@ca535b80fe5ea613d3b333194d9a7b36518fbd55 # v13.18.3
     with:
       dockerfile-glob: |-
         .docker/images/celery_beat/dockerfile-celery_beat
@@ -55,7 +55,7 @@ jobs:
       pull-requests: write
       checks: write
       issues: write
-    uses: NLDCSC/DCSC-shared/.github/workflows/ci-lint-black.yml@bc0115a3d016f916258927f9f8db0fb121c912ce # v13.18.1
+    uses: NLDCSC/DCSC-shared/.github/workflows/ci-lint-black.yml@ca535b80fe5ea613d3b333194d9a7b36518fbd55 # v13.18.3
     with:
       head-repository: ${{ github.event.pull_request.head.repo.full_name || '' }}
 
@@ -68,7 +68,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
-    uses: NLDCSC/DCSC-shared/.github/workflows/release-gate.yml@bc0115a3d016f916258927f9f8db0fb121c912ce # v13.18.1
+    uses: NLDCSC/DCSC-shared/.github/workflows/release-gate.yml@ca535b80fe5ea613d3b333194d9a7b36518fbd55 # v13.18.3
     with:
       python-version: '3.14'
     secrets:
@@ -80,7 +80,7 @@ jobs:
       contents: write
       packages: write
       id-token: write
-    uses: NLDCSC/DCSC-shared/.github/workflows/release-container.yml@bc0115a3d016f916258927f9f8db0fb121c912ce # v13.18.1
+    uses: NLDCSC/DCSC-shared/.github/workflows/release-container.yml@ca535b80fe5ea613d3b333194d9a7b36518fbd55 # v13.18.3
     with:
       version: ${{ github.event.release.tag_name }}
       dockerfile-glob: |-
@@ -99,7 +99,7 @@ jobs:
       contents: read
       pages: write
       id-token: write
-    uses: NLDCSC/DCSC-shared/.github/workflows/deploy-docs-pages.yml@bc0115a3d016f916258927f9f8db0fb121c912ce # v13.18.1
+    uses: NLDCSC/DCSC-shared/.github/workflows/deploy-docs-pages.yml@ca535b80fe5ea613d3b333194d9a7b36518fbd55 # v13.18.3
     with:
       python-version: '3.14'
       poetry-version: 2.5.1
