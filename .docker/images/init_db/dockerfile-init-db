@@ -1,4 +1,4 @@
-FROM docker.io/python:3.11
+FROM docker.io/python:3.13
 ARG UID=1001
 ARG GID=1001
 
